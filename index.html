@@ -43,8 +43,8 @@
   .nav-tab.active{color:var(--ink);background:var(--brass);font-weight:600;}
 
   .page-container{flex:1;position:relative;overflow:hidden;}
-  .page{position:absolute;inset:0;display:none;}
-  .page.active{display:flex;}
+  .page-container>.page{position:absolute;inset:0;display:none;}
+  .page-container>.page.active{display:flex;}
 
   .app{display:flex;height:100%;width:100%;overflow:hidden;}
 
@@ -153,6 +153,7 @@
     .sidebar{width:100%;min-width:0;max-height:46vh;border-right:none;border-bottom:1px solid var(--line);}
     .gear-toolbar{flex-wrap:wrap;}
     .gear-grid{grid-template-columns:1fr;}
+    .garage-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));}
   }
 
   /* ---- Gear Room ---- */
@@ -216,6 +217,40 @@
   }
   .icon-btn:hover{border-color:var(--brass);}
   .gear-empty{padding:40px 24px;text-align:center;color:var(--muted);font-size:13px;}
+
+  /* ---- Garage (gear category chooser) ---- */
+  .garage-view{flex:1;display:flex;flex-direction:column;overflow-y:auto;width:100%;}
+  .garage-header{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    padding:22px 24px 4px;flex:none;
+  }
+  .garage-heading h2{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0;}
+  .garage-heading p{font-size:12.5px;color:var(--muted);margin:4px 0 0;}
+  .garage-grid{
+    flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:14px;padding:18px 24px 24px;align-content:start;
+  }
+  .garage-tile{
+    background:var(--panel);border:1px solid var(--line);border-radius:9px;
+    padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;
+    cursor:pointer;text-align:center;transition:border-color .15s ease, transform .1s ease;
+  }
+  .garage-tile:hover{border-color:var(--brass);transform:translateY(-2px);}
+  .garage-tile-icon{
+    width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:var(--panel-alt);color:var(--brass);flex:none;
+  }
+  .garage-tile.all-items .garage-tile-icon{color:var(--parchment);}
+  .garage-tile-icon svg{width:22px;height:22px;}
+  .garage-tile-name{font-size:13.5px;font-weight:500;color:var(--parchment);}
+  .garage-tile-count{font-size:11.5px;color:var(--muted);}
+  .garage-tile-weight{font-size:11px;color:var(--muted);}
+
+  /* ---- Category detail view ---- */
+  .category-view{flex:1;display:flex;flex-direction:column;overflow-y:auto;width:100%;}
+  .category-view-heading{display:flex;flex-direction:column;gap:1px;}
+  .category-view-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:0;white-space:nowrap;}
+  .category-view-count{font-size:11px;color:var(--muted);white-space:nowrap;}
 
   /* ---- Modal ---- */
   .modal-overlay{
@@ -359,48 +394,61 @@
 </div>
 
 <div class="gear-room page" id="pageGear">
-  <div class="gear-toolbar">
-    <input type="search" id="gearSearch" placeholder="Search gear…">
-    <select id="gearCategoryFilter">
-      <option value="">All categories</option>
-      <option>Backpack</option><option>Shelter</option><option>Sleep system</option>
-      <option>Clothing</option><option>Footwear</option><option>Cooking</option>
-      <option>Water</option><option>Navigation</option><option>Electronics</option>
-      <option>Safety</option><option>Hygiene</option><option>Food</option><option>Other</option>
-    </select>
-    <select id="gearStatusFilter">
-      <option value="">All statuses</option>
-      <option value="active">Active</option>
-      <option value="retired">Retired</option>
-      <option value="loaned">Loaned</option>
-      <option value="wishlist">Wishlist</option>
-    </select>
-    <select id="gearSort">
-      <option value="name">Sort: Name</option>
-      <option value="weight">Sort: Weight</option>
-      <option value="category">Sort: Category</option>
-      <option value="price">Sort: Price</option>
-    </select>
-    <button class="primary-btn" id="addGearBtn">+ Add gear</button>
+
+  <div class="garage-view" id="garageView">
+    <div class="garage-header">
+      <div class="garage-heading">
+        <h2>The Garage</h2>
+        <p>Your gear, sorted by kind — click a shelf to see what's on it</p>
+      </div>
+      <button class="primary-btn" id="addGearBtnGarage">+ Add item</button>
+    </div>
+
+    <div class="gear-stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="gearStatCount">0</div>
+        <div class="stat-label">owned items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="gearStatWeight">0</div>
+        <div class="stat-label">total weight</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="gearStatValue">0</div>
+        <div class="stat-label">total value</div>
+      </div>
+    </div>
+
+    <div class="garage-grid" id="garageGrid"></div>
   </div>
 
-  <div class="gear-stats-row">
-    <div class="stat-card">
-      <div class="stat-num" id="gearStatCount">0</div>
-      <div class="stat-label">owned items</div>
+  <div class="category-view" id="categoryView" style="display:none;">
+    <div class="gear-toolbar">
+      <button class="ghost-btn" id="backToGarageBtn">&larr; Garage</button>
+      <div class="category-view-heading">
+        <h3 class="category-view-title" id="categoryViewTitle">All items</h3>
+        <span class="category-view-count" id="categoryViewCount"></span>
+      </div>
+      <input type="search" id="gearSearch" placeholder="Search this shelf…">
+      <select id="gearStatusFilter">
+        <option value="">All statuses</option>
+        <option value="active">Active</option>
+        <option value="retired">Retired</option>
+        <option value="loaned">Loaned</option>
+        <option value="wishlist">Wishlist</option>
+      </select>
+      <select id="gearSort">
+        <option value="name">Sort: Name</option>
+        <option value="weight">Sort: Weight</option>
+        <option value="category">Sort: Category</option>
+        <option value="price">Sort: Price</option>
+      </select>
+      <button class="primary-btn" id="addGearBtn">+ Add item</button>
     </div>
-    <div class="stat-card">
-      <div class="stat-num" id="gearStatWeight">0</div>
-      <div class="stat-label">total weight</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="gearStatValue">0</div>
-      <div class="stat-label">total value</div>
-    </div>
+
+    <div class="gear-grid" id="gearGrid"></div>
   </div>
 
-  <div class="gear-grid" id="gearGrid"></div>
-  <div class="gear-empty" id="gearEmpty" style="display:none;">No gear yet — click "+ Add gear" to start your inventory.</div>
 </div>
 </div>
 
@@ -931,18 +979,40 @@
     'Footwear':'#6B8F8A','Cooking':'#C9695A','Water':'#5B7B7A','Navigation':'#D9B26F',
     'Electronics':'#9AA39C','Safety':'#C9695A','Hygiene':'#8FA096','Food':'#B08968','Other':'#8FA096'
   };
+  const GEAR_CATEGORIES = [
+    'Backpack','Shelter','Sleep system','Clothing','Footwear','Cooking',
+    'Water','Navigation','Electronics','Safety','Hygiene','Food','Other'
+  ];
+  const ICON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
+  const GEAR_ICONS = {
+    All: '<svg '+ICON_ATTRS+'><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+    Backpack: '<svg '+ICON_ATTRS+'><path d="M8 8V6a4 4 0 0 1 8 0v2"/><rect x="5" y="8" width="14" height="13" rx="2.5"/><path d="M9 8v3.5h6V8"/><line x1="9" y1="16" x2="15" y2="16"/></svg>',
+    Shelter: '<svg '+ICON_ATTRS+'><path d="M12 3 21 20H3Z"/><path d="M8 20 12 12 16 20"/></svg>',
+    'Sleep system': '<svg '+ICON_ATTRS+'><path d="M9 3.5a3 3 0 0 1 6 0V7H9Z"/><path d="M8 7c-1.6 2-1.6 5.5-1.6 8.5C6.4 19.5 8.7 21.5 12 21.5s5.6-2 5.6-6c0-3 0-6.5-1.6-8.5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>',
+    Clothing: '<svg '+ICON_ATTRS+'><path d="M8 4 4 7v4h3v9h10v-9h3V7l-4-3-3 2Z"/><line x1="12" y1="10" x2="12" y2="20"/></svg>',
+    Footwear: '<svg '+ICON_ATTRS+'><path d="M5 3v8.5L2 14v4.5C2 19.5 2.5 20 3.5 20h17c1 0 1.5-.5 1.5-1.5v-1c0-1.3-.9-2.4-2.2-2.9L13 12V3Z"/><line x1="5" y1="8" x2="9.5" y2="8"/></svg>',
+    Cooking: '<svg '+ICON_ATTRS+'><rect x="4" y="9" width="16" height="10" rx="1.5"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="20" y1="9" x2="22" y2="9"/><path d="M8 9V6.5a4 4 0 0 1 8 0V9"/></svg>',
+    Water: '<svg '+ICON_ATTRS+'><path d="M12 2.5s7 8 7 12.7a7 7 0 0 1-14 0C5 10.5 12 2.5 12 2.5Z"/></svg>',
+    Navigation: '<svg '+ICON_ATTRS+'><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5 13 13l-4.5 2.5L11 11Z"/></svg>',
+    Electronics: '<svg '+ICON_ATTRS+'><rect x="7" y="2.5" width="10" height="19" rx="2"/><line x1="7" y1="17.5" x2="17" y2="17.5"/></svg>',
+    Safety: '<svg '+ICON_ATTRS+'><path d="M12 2.5 20 5.5V11c0 5-3.5 8.7-8 10.5-4.5-1.8-8-5.5-8-10.5V5.5Z"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/></svg>',
+    Hygiene: '<svg '+ICON_ATTRS+'><path d="M10 2h4v3l2 2.3V20a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V7.3L10 5Z"/><line x1="9" y1="11" x2="15" y2="11"/></svg>',
+    Food: '<svg '+ICON_ATTRS+'><path d="M6 2v7.5M4 2v4a2 2 0 0 0 4 0V2M6 11v11"/><path d="M18 2c-2 0-3.2 3-3.2 6.2S16 11 18 11v11"/></svg>',
+    Other: '<svg '+ICON_ATTRS+'><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><line x1="12" y1="13" x2="12" y2="21"/></svg>'
+  };
   const OWNED_STATUSES = ['active','retired','loaned']; // everything except wishlist counts as "owned"
+
+  let currentGearCategory = null; // null = garage view, 'ALL' = all items, or a category string
 
   function uid(){ return 'g_' + Math.random().toString(36).slice(2,10); }
 
   function filteredSortedGear(){
     const q = (document.getElementById('gearSearch').value || '').trim().toLowerCase();
-    const cat = document.getElementById('gearCategoryFilter').value;
     const status = document.getElementById('gearStatusFilter').value;
     const sortBy = document.getElementById('gearSort').value;
 
     let list = gearItems.filter(g=>{
-      if(cat && g.category !== cat) return false;
+      if(currentGearCategory && currentGearCategory !== 'ALL' && g.category !== currentGearCategory) return false;
       if(status && g.status !== status) return false;
       if(q){
         const hay = [g.name, g.brand, g.model, g.category, (g.tags||[]).join(' ')].join(' ').toLowerCase();
@@ -983,11 +1053,14 @@
     const grid = document.getElementById('gearGrid');
     const list = filteredSortedGear();
     grid.innerHTML = '';
-    document.getElementById('gearEmpty').style.display = gearItems.length ? 'none' : 'block';
-    if(!gearItems.length) return;
 
     if(!list.length){
-      grid.innerHTML = '<div class="gear-empty" style="grid-column:1/-1;">No gear matches your search or filters.</div>';
+      const q = document.getElementById('gearSearch').value.trim();
+      const status = document.getElementById('gearStatusFilter').value;
+      const msg = (q || status)
+        ? 'No gear matches your search or filters.'
+        : 'Nothing on this shelf yet — click "+ Add item" to add one.';
+      grid.innerHTML = '<div class="gear-empty" style="grid-column:1/-1;">'+msg+'</div>';
       return;
     }
 
@@ -1018,9 +1091,72 @@
     });
   }
 
-  function refreshGear(){
+  function renderGarage(){
+    const grid = document.getElementById('garageGrid');
+    grid.innerHTML = '';
+
+    const allOwnedCount = gearItems.filter(g=>OWNED_STATUSES.includes(g.status)).reduce((s,g)=>s+(g.quantity||1),0);
+    const allTile = document.createElement('div');
+    allTile.className = 'garage-tile all-items';
+    allTile.innerHTML =
+      '<div class="garage-tile-icon">'+GEAR_ICONS.All+'</div>'+
+      '<div class="garage-tile-name">All items</div>'+
+      '<div class="garage-tile-count">'+allOwnedCount+' owned</div>';
+    allTile.addEventListener('click', ()=> showCategory('ALL'));
+    grid.appendChild(allTile);
+
+    GEAR_CATEGORIES.forEach(cat=>{
+      const owned = gearItems.filter(g=>g.category===cat && OWNED_STATUSES.includes(g.status));
+      const count = owned.reduce((s,g)=>s+(g.quantity||1),0);
+      const weight = owned.reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
+      const tile = document.createElement('div');
+      tile.className = 'garage-tile';
+      tile.innerHTML =
+        '<div class="garage-tile-icon">'+(GEAR_ICONS[cat]||GEAR_ICONS.Other)+'</div>'+
+        '<div class="garage-tile-name">'+escapeHtml(cat)+'</div>'+
+        '<div class="garage-tile-count">'+count+' owned</div>'+
+        (weight ? '<div class="garage-tile-weight">'+formatWeight(weight)+'</div>' : '');
+      tile.addEventListener('click', ()=> showCategory(cat));
+      grid.appendChild(tile);
+    });
+  }
+
+  function updateCategoryViewHeader(){
+    const cat = currentGearCategory;
+    const items = cat === 'ALL' ? gearItems : gearItems.filter(g=>g.category===cat);
+    const owned = items.filter(g=>OWNED_STATUSES.includes(g.status));
+    const count = owned.reduce((s,g)=>s+(g.quantity||1),0);
+    const weight = owned.reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
+    document.getElementById('categoryViewTitle').textContent = cat === 'ALL' ? 'All items' : cat;
+    document.getElementById('categoryViewCount').textContent = count + ' owned' + (weight ? ' · ' + formatWeight(weight) : '');
+  }
+
+  function showGarage(){
+    currentGearCategory = null;
+    document.getElementById('garageView').style.display = 'flex';
+    document.getElementById('categoryView').style.display = 'none';
     renderGearStats();
+    renderGarage();
+  }
+
+  function showCategory(cat){
+    currentGearCategory = cat;
+    document.getElementById('garageView').style.display = 'none';
+    document.getElementById('categoryView').style.display = 'flex';
+    document.getElementById('gearSearch').value = '';
+    document.getElementById('gearStatusFilter').value = '';
+    updateCategoryViewHeader();
     renderGearGrid();
+  }
+
+  function refreshGear(){
+    if(currentGearCategory === null){
+      renderGearStats();
+      renderGarage();
+    } else {
+      updateCategoryViewHeader();
+      renderGearGrid();
+    }
   }
 
   async function duplicateGear(id){
@@ -1040,12 +1176,14 @@
     refreshGear();
   }
 
-  function openGearModal(id){
+  function openGearModal(id, presetCategory){
     const g = id ? gearItems.find(x=>x.id===id) : null;
     document.getElementById('gearModalTitle').textContent = g ? 'Edit gear' : 'Add gear';
     document.getElementById('gearId').value = g ? g.id : '';
     document.getElementById('gearName').value = g ? g.name : '';
-    document.getElementById('gearCategory').value = g ? (g.category || 'Other') : 'Other';
+    document.getElementById('gearCategory').value = g
+      ? (g.category || 'Other')
+      : (presetCategory && presetCategory !== 'ALL' ? presetCategory : 'Other');
     document.getElementById('gearBrand').value = g ? (g.brand || '') : '';
     document.getElementById('gearModel').value = g ? (g.model || '') : '';
     document.getElementById('gearWeight').value = g && g.weightGrams != null ? g.weightGrams : '';
@@ -1138,12 +1276,14 @@
       document.getElementById('pageMap').classList.toggle('active', page==='map');
       document.getElementById('pageGear').classList.toggle('active', page==='gear');
       if(page === 'map') setTimeout(()=> map.invalidateSize(), 50);
-      if(page === 'gear') refreshGear();
+      if(page === 'gear') showGarage();
     });
   });
 
   // ---- Gear Room wiring ----
-  document.getElementById('addGearBtn').addEventListener('click', ()=> openGearModal(null));
+  document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openGearModal(null, null));
+  document.getElementById('addGearBtn').addEventListener('click', ()=> openGearModal(null, currentGearCategory));
+  document.getElementById('backToGarageBtn').addEventListener('click', showGarage);
   document.getElementById('gearModalClose').addEventListener('click', closeGearModal);
   document.getElementById('gearCancelBtn').addEventListener('click', closeGearModal);
   document.getElementById('gearModalOverlay').addEventListener('click', (e)=>{
@@ -1152,7 +1292,6 @@
   document.getElementById('gearForm').addEventListener('submit', handleGearFormSubmit);
   document.getElementById('gearDeleteBtn').addEventListener('click', handleGearDelete);
   document.getElementById('gearSearch').addEventListener('input', renderGearGrid);
-  document.getElementById('gearCategoryFilter').addEventListener('change', renderGearGrid);
   document.getElementById('gearStatusFilter').addEventListener('change', renderGearGrid);
   document.getElementById('gearSort').addEventListener('change', renderGearGrid);
 
@@ -1215,6 +1354,7 @@
     }
     await loadAll();
     await loadGear();
+    showGarage();
     refreshEverything();
     if(tracks.length || googlePoints.length){
       const b = L.latLngBounds(allPoints());
