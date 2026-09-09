@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Waypoints</title>
-<meta name="description" content="Map your travels from GPX tracks and location history">
+<title>Hike-in-one</title>
+<meta name="description" content="Your hikes, gear, and trips — all in one place">
 <meta name="theme-color" content="#0F1714">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
@@ -13,15 +13,15 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
 <style>
   :root{
-    --ink:#0F1714;
-    --panel:#152019;
-    --panel-alt:#1B2721;
-    --brass:#C89B5C;
-    --brass-soft:rgba(200,155,92,0.16);
-    --parchment:#EDE6D5;
-    --muted:#8FA096;
-    --line:rgba(237,230,213,0.10);
-    --danger:#C9695A;
+    --ink:#0E1B33;
+    --panel:#132A4E;
+    --panel-alt:#1B3A64;
+    --brass:#E2764F;
+    --brass-soft:rgba(226,118,79,0.18);
+    --parchment:#F3EDE1;
+    --muted:#7FA398;
+    --line:rgba(243,237,225,0.12);
+    --danger:#C23B2E;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;height:100%;background:var(--ink);color:var(--parchment);font-family:'Inter',sans-serif;}
@@ -331,12 +331,25 @@
 <body>
 <nav class="top-nav">
   <div class="top-nav-brand">
-    <svg width="20" height="20" viewBox="0 0 26 26" fill="none">
-      <circle cx="13" cy="13" r="11.5" stroke="#C89B5C" stroke-width="1.2"/>
-      <path d="M13 4 L13 8 M13 18 L13 22 M4 13 L8 13 M18 13 L22 13" stroke="#C89B5C" stroke-width="1.2"/>
-      <path d="M13 13 L17 7 L13 13 L9 19 Z" fill="#EDE6D5"/>
+    <svg width="20" height="20" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="97" fill="#0E1B33" stroke="#E2764F" stroke-width="4"/>
+      <circle cx="100" cy="100" r="94" fill="#1B3E86"/>
+      <path d="M6 150 Q40 118 100 132 Q160 146 194 120 L194 194 L6 194 Z" fill="#1E7A5C"/>
+      <path d="M6 165 Q50 140 100 150 Q150 160 194 138 L194 194 L6 194 Z" fill="#166248"/>
+      <g fill="#E2A377" stroke="#12100C" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+        <circle cx="40" cy="107" r="9"/>
+        <path d="M34 117 Q40 132 36 152 L48 152 Q45 132 46 117 Z"/>
+        <path d="M32 119 Q23 111 20 102 M47 120 Q57 122 61 123"/>
+        <circle cx="100" cy="96" r="10"/>
+        <path d="M93 106 Q100 124 95 149 L108 149 Q104 124 107 106 Z"/>
+        <path d="M91 108 Q76 100 62 121 M108 108 Q124 99 138 120"/>
+        <circle cx="160" cy="108" r="9"/>
+        <path d="M154 118 Q160 133 155 152 L167 152 Q164 133 166 118 Z"/>
+        <path d="M152 120 Q142 122 138 123 M166 119 Q176 108 179 100"/>
+      </g>
+      <circle cx="100" cy="100" r="94" fill="none" stroke="#12100C" stroke-width="2" opacity="0.3"/>
     </svg>
-    Waypoints
+    Hike-in-one
   </div>
   <div class="nav-tabs">
     <button class="nav-tab active" data-page="map">Map</button>
@@ -349,14 +362,27 @@
 <div class="app page active" id="pageMap">
   <div class="sidebar">
     <div class="brand">
-      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-        <circle cx="13" cy="13" r="11.5" stroke="#C89B5C" stroke-width="1.2"/>
-        <path d="M13 4 L13 8 M13 18 L13 22 M4 13 L8 13 M18 13 L22 13" stroke="#C89B5C" stroke-width="1.2"/>
-        <path d="M13 13 L17 7 L13 13 L9 19 Z" fill="#EDE6D5"/>
+      <svg width="26" height="26" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="97" fill="#0E1B33" stroke="#E2764F" stroke-width="4"/>
+        <circle cx="100" cy="100" r="94" fill="#1B3E86"/>
+        <path d="M6 150 Q40 118 100 132 Q160 146 194 120 L194 194 L6 194 Z" fill="#1E7A5C"/>
+        <path d="M6 165 Q50 140 100 150 Q150 160 194 138 L194 194 L6 194 Z" fill="#166248"/>
+        <g fill="#E2A377" stroke="#12100C" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+          <circle cx="40" cy="107" r="9"/>
+          <path d="M34 117 Q40 132 36 152 L48 152 Q45 132 46 117 Z"/>
+          <path d="M32 119 Q23 111 20 102 M47 120 Q57 122 61 123"/>
+          <circle cx="100" cy="96" r="10"/>
+          <path d="M93 106 Q100 124 95 149 L108 149 Q104 124 107 106 Z"/>
+          <path d="M91 108 Q76 100 62 121 M108 108 Q124 99 138 120"/>
+          <circle cx="160" cy="108" r="9"/>
+          <path d="M154 118 Q160 133 155 152 L167 152 Q164 133 166 118 Z"/>
+          <path d="M152 120 Q142 122 138 123 M166 119 Q176 108 179 100"/>
+        </g>
+        <circle cx="100" cy="100" r="94" fill="none" stroke="#12100C" stroke-width="2" opacity="0.3"/>
       </svg>
       <div class="brand-text">
-        <h1>Waypoints</h1>
-        <p>Every place you've been, mapped</p>
+        <h1>Hike-in-one</h1>
+        <p>Your hikes, gear, and trips — all in one place</p>
       </div>
     </div>
 

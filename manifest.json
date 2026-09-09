@@ -1,7 +1,7 @@
 {
-  "name": "Waypoints",
-  "short_name": "Waypoints",
-  "description": "Map your travels from GPX tracks and location history",
+  "name": "Hike-in-one",
+  "short_name": "Hike-in-one",
+  "description": "Your hikes, gear, and trips — all in one place",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
