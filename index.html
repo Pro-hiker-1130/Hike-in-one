@@ -133,6 +133,25 @@
   .trip-gear-empty{padding:24px 20px;text-align:center;color:var(--muted);font-size:13px;}
   .trip-gear-summary{font-size:12.5px;color:var(--muted);}
 
+  /* ---- Trips ---- */
+  .trip-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:14px;
+    display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:border-color .15s ease;
+  }
+  .trip-card:hover{border-color:var(--brass);}
+  .trip-card-name{font-size:14.5px;font-weight:500;color:var(--parchment);}
+  .trip-card-notes{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .trip-card-meta{font-size:12px;color:var(--muted);}
+  .trip-detail-section{padding:4px 24px 20px;}
+  .trip-detail-section-head{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px;}
+  .trip-track-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:9px 14px;border:1px solid var(--line);border-radius:6px;background:var(--panel);
+  }
+  .trip-track-row + .trip-track-row{margin-top:6px;}
+  .trip-track-row-name{font-size:13px;color:var(--parchment);}
+  .trip-track-row-meta{font-size:12px;color:var(--muted);white-space:nowrap;}
+
   .footer{padding:14px 20px;border-top:1px solid var(--line);margin-top:auto;}
   .clear-btn{
     width:100%;background:transparent;border:1px solid rgba(201,105,90,0.4);
@@ -322,6 +341,7 @@
   <div class="nav-tabs">
     <button class="nav-tab active" data-page="map">Map</button>
     <button class="nav-tab" data-page="gear">Gear Room</button>
+    <button class="nav-tab" data-page="trips">Trips</button>
   </div>
 </nav>
 
@@ -472,6 +492,70 @@
   </div>
 
 </div>
+
+<div class="gear-room page" id="pageTrips">
+
+  <div class="garage-view" id="tripsListView">
+    <div class="garage-header">
+      <div class="garage-heading">
+        <h2>Trips</h2>
+        <p>Group your GPX tracks into a trip, then pack gear for it</p>
+      </div>
+      <button class="primary-btn" id="addTripBtn">+ New trip</button>
+    </div>
+    <div class="gear-grid" id="tripCardsGrid"></div>
+    <div class="gear-empty" id="tripsEmpty" style="display:none;">No trips yet — click "+ New trip" to group some tracks.</div>
+  </div>
+
+  <div class="category-view" id="tripDetailView" style="display:none;">
+    <div class="gear-toolbar">
+      <button class="ghost-btn" id="backToTripsBtn">&larr; Trips</button>
+      <div class="category-view-heading">
+        <h3 class="category-view-title" id="tripDetailTitle">Trip</h3>
+        <span class="category-view-count" id="tripDetailSubtitle"></span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="ghost-btn" id="tripViewOnMapBtn">View on map</button>
+        <button class="ghost-btn" id="tripEditBtn">Edit</button>
+      </div>
+    </div>
+
+    <div class="gear-stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="tripStatTracks">0</div>
+        <div class="stat-label">tracks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="tripStatDistance">0</div>
+        <div class="stat-label">kilometers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="tripStatGearCount">0</div>
+        <div class="stat-label">gear items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="tripStatWeight">0</div>
+        <div class="stat-label">pack weight</div>
+      </div>
+    </div>
+
+    <div class="trip-detail-section">
+      <div class="trip-detail-section-head">
+        <p class="section-label" style="margin:0;">Tracks in this trip</p>
+      </div>
+      <div id="tripTrackList"></div>
+    </div>
+
+    <div class="trip-detail-section">
+      <div class="trip-detail-section-head">
+        <p class="section-label" style="margin:0;">Gear</p>
+        <button class="ghost-btn" id="tripGearEditBtn">Edit gear</button>
+      </div>
+      <div id="tripGearSummaryList"></div>
+    </div>
+  </div>
+
+</div>
 </div>
 
 <div class="modal-overlay" id="gearModalOverlay" style="display:none;">
@@ -607,6 +691,37 @@
         <button type="button" class="primary-btn" id="tripGearSaveBtn">Save</button>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="tripModalOverlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="tripModalTitle">New trip</h3>
+      <button class="modal-close" id="tripModalClose" type="button">&times;</button>
+    </div>
+    <form class="modal-form" id="tripForm">
+      <input type="hidden" id="tripId">
+      <div class="form-field">
+        <label for="tripName">Name *</label>
+        <input type="text" id="tripName" required maxlength="120">
+      </div>
+      <div class="form-field">
+        <label for="tripNotes">Notes</label>
+        <textarea id="tripNotes" maxlength="500" placeholder="Dates, route notes…"></textarea>
+      </div>
+      <div class="form-field">
+        <label>Tracks in this trip</label>
+        <div class="trip-gear-list" id="tripTrackPicker"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="danger-btn" id="tripDeleteBtn" style="display:none;">Delete</button>
+        <div style="display:flex;gap:8px;margin-left:auto;">
+          <button type="button" class="ghost-btn" id="tripCancelBtn">Cancel</button>
+          <button type="submit" class="primary-btn">Save</button>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -858,6 +973,16 @@
     gearItems = g ? JSON.parse(g) : [];
   }
 
+  // ---- Trips persistence ----
+  const STORAGE_TRIPS = 'waypoints-trips-v1';
+  let trips = []; // {id, name, notes, trackIds:[], gearIds:[], createdAt}
+
+  async function saveTrips(){ await storeSet(STORAGE_TRIPS, JSON.stringify(trips)); }
+  async function loadTrips(){
+    const t = await storeGet(STORAGE_TRIPS);
+    trips = t ? JSON.parse(t) : [];
+  }
+
 
   // ---- Rendering ----
   function allPoints(){
@@ -963,7 +1088,7 @@
       });
       item.querySelector('.track-gear-btn').addEventListener('click', (e)=>{
         e.stopPropagation();
-        openTripGearModal(t.id);
+        openGearPickerModal('track', t.id);
       });
       item.querySelector('.track-remove').addEventListener('click', (e)=>{
         e.stopPropagation();
@@ -979,8 +1104,14 @@
     return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  // ---- Trip gear modal ----
-  let tripGearModalTrackId = null;
+  // ---- Gear picker modal (links gear to either a track or a trip) ----
+  let gearPickerTarget = null; // {kind:'track'|'trip', id}
+
+  function gearPickerTargetObject(){
+    if(!gearPickerTarget) return null;
+    const arr = gearPickerTarget.kind === 'trip' ? trips : tracks;
+    return arr.find(x=>x.id===gearPickerTarget.id);
+  }
 
   function updateTripGearWeightSummary(){
     const checked = Array.from(document.querySelectorAll('#tripGearList input[type="checkbox"]:checked'));
@@ -993,11 +1124,11 @@
       : 'No gear selected';
   }
 
-  function openTripGearModal(trackId){
-    const track = tracks.find(t=>t.id===trackId);
-    if(!track) return;
-    tripGearModalTrackId = trackId;
-    document.getElementById('tripGearModalTitle').textContent = 'Gear for "'+track.name+'"';
+  function openGearPickerModal(kind, id){
+    const target = (kind === 'trip' ? trips : tracks).find(x=>x.id===id);
+    if(!target) return;
+    gearPickerTarget = {kind, id};
+    document.getElementById('tripGearModalTitle').textContent = 'Gear for "'+target.name+'"';
 
     const list = document.getElementById('tripGearList');
     list.innerHTML = '';
@@ -1005,7 +1136,7 @@
     if(!owned.length){
       list.innerHTML = '<div class="trip-gear-empty">No gear in your inventory yet — add some in the Gear Room first.</div>';
     } else {
-      const linked = new Set(track.gearIds || []);
+      const linked = new Set(target.gearIds || []);
       owned.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(g=>{
         const row = document.createElement('label');
         row.className = 'trip-gear-row';
@@ -1021,22 +1152,200 @@
     document.getElementById('tripGearModalOverlay').style.display = 'flex';
   }
 
-  function closeTripGearModal(){
+  function closeGearPickerModal(){
     document.getElementById('tripGearModalOverlay').style.display = 'none';
-    tripGearModalTrackId = null;
+    gearPickerTarget = null;
   }
 
-  async function saveTripGear(){
-    if(!tripGearModalTrackId) return;
-    const track = tracks.find(t=>t.id===tripGearModalTrackId);
-    if(track){
-      track.gearIds = Array.from(document.querySelectorAll('#tripGearList input[type="checkbox"]:checked')).map(cb=>cb.dataset.id);
-      await saveTracks();
-      renderTracks();
-      updateLayers();
-      renderTrackList();
+  async function saveGearPicker(){
+    const target = gearPickerTargetObject();
+    if(target){
+      target.gearIds = Array.from(document.querySelectorAll('#tripGearList input[type="checkbox"]:checked')).map(cb=>cb.dataset.id);
+      if(gearPickerTarget.kind === 'trip'){
+        await saveTrips();
+        if(currentTripId === target.id) renderTripDetail();
+        renderTripCards();
+      } else {
+        await saveTracks();
+        renderTracks();
+        updateLayers();
+        renderTrackList();
+      }
     }
-    closeTripGearModal();
+    closeGearPickerModal();
+  }
+
+  // ---- Trips ----
+  let currentTripId = null;
+
+  function tripTracks(trip){
+    if(!trip.trackIds || !trip.trackIds.length) return [];
+    return trip.trackIds.map(id=>tracks.find(t=>t.id===id)).filter(Boolean);
+  }
+  function tripDistanceKm(trip){
+    return tripTracks(trip).reduce((s,t)=>s+t.distanceKm,0);
+  }
+  function tripGearItemsList(trip){
+    if(!trip.gearIds || !trip.gearIds.length) return [];
+    return trip.gearIds.map(id=>gearItems.find(g=>g.id===id)).filter(Boolean);
+  }
+  function tripGearWeight(trip){
+    return tripGearItemsList(trip).reduce((s,g)=>s+(g.weightGrams||0),0);
+  }
+
+  function renderTripCards(){
+    const grid = document.getElementById('tripCardsGrid');
+    grid.innerHTML = '';
+    document.getElementById('tripsEmpty').style.display = trips.length ? 'none' : 'block';
+    if(!trips.length) return;
+
+    trips.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(trip=>{
+      const tks = tripTracks(trip);
+      const dist = tripDistanceKm(trip);
+      const gearList = tripGearItemsList(trip);
+      const weight = tripGearWeight(trip);
+      const card = document.createElement('div');
+      card.className = 'trip-card';
+      card.innerHTML =
+        '<div class="trip-card-name">'+escapeHtml(trip.name)+'</div>'+
+        (trip.notes ? '<div class="trip-card-notes">'+escapeHtml(trip.notes)+'</div>' : '')+
+        '<div class="trip-card-meta">'+tks.length+' track'+(tks.length!==1?'s':'')+' · '+dist.toFixed(1)+' km</div>'+
+        '<div class="trip-card-meta">'+gearList.length+' gear item'+(gearList.length!==1?'s':'')+(weight?' · '+formatWeight(weight):'')+'</div>';
+      card.addEventListener('click', ()=> showTripDetail(trip.id));
+      grid.appendChild(card);
+    });
+  }
+
+  function showTripsList(){
+    currentTripId = null;
+    document.getElementById('tripsListView').style.display = 'flex';
+    document.getElementById('tripDetailView').style.display = 'none';
+    renderTripCards();
+  }
+
+  function showTripDetail(id){
+    currentTripId = id;
+    document.getElementById('tripsListView').style.display = 'none';
+    document.getElementById('tripDetailView').style.display = 'flex';
+    renderTripDetail();
+  }
+
+  function renderTripDetail(){
+    const trip = trips.find(t=>t.id===currentTripId);
+    if(!trip){ showTripsList(); return; }
+    const tks = tripTracks(trip);
+    const dist = tripDistanceKm(trip);
+    const gearList = tripGearItemsList(trip);
+    const weight = tripGearWeight(trip);
+
+    document.getElementById('tripDetailTitle').textContent = trip.name;
+    document.getElementById('tripDetailSubtitle').textContent = trip.notes || '';
+    document.getElementById('tripStatTracks').textContent = tks.length;
+    document.getElementById('tripStatDistance').textContent = dist.toFixed(1);
+    document.getElementById('tripStatGearCount').textContent = gearList.length;
+    document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
+
+    const trackList = document.getElementById('tripTrackList');
+    trackList.innerHTML = '';
+    if(!tks.length){
+      trackList.innerHTML = '<div class="trip-gear-empty">No tracks linked yet — click Edit to add some.</div>';
+    } else {
+      tks.forEach(t=>{
+        const row = document.createElement('div');
+        row.className = 'trip-track-row';
+        row.innerHTML =
+          '<span class="trip-track-row-name">'+escapeHtml(t.name)+'</span>'+
+          '<span class="trip-track-row-meta">'+(t.date?escapeHtml(t.date)+' · ':'')+t.distanceKm.toFixed(1)+' km</span>';
+        trackList.appendChild(row);
+      });
+    }
+
+    const gearListEl = document.getElementById('tripGearSummaryList');
+    gearListEl.innerHTML = '';
+    if(!gearList.length){
+      gearListEl.innerHTML = '<div class="trip-gear-empty">No gear linked yet — click Edit gear to add some.</div>';
+    } else {
+      gearList.forEach(g=>{
+        const row = document.createElement('div');
+        row.className = 'trip-track-row';
+        row.innerHTML =
+          '<span class="trip-track-row-name">'+escapeHtml(g.name)+'</span>'+
+          '<span class="trip-track-row-meta">'+formatWeight(g.weightGrams)+'</span>';
+        gearListEl.appendChild(row);
+      });
+    }
+  }
+
+  function openTripModal(id){
+    const trip = id ? trips.find(t=>t.id===id) : null;
+    document.getElementById('tripModalTitle').textContent = trip ? 'Edit trip' : 'New trip';
+    document.getElementById('tripId').value = trip ? trip.id : '';
+    document.getElementById('tripName').value = trip ? trip.name : '';
+    document.getElementById('tripNotes').value = trip ? (trip.notes || '') : '';
+
+    const picker = document.getElementById('tripTrackPicker');
+    picker.innerHTML = '';
+    if(!tracks.length){
+      picker.innerHTML = '<div class="trip-gear-empty">No tracks uploaded yet — add GPX files on the Map tab first.</div>';
+    } else {
+      const linked = new Set(trip ? (trip.trackIds || []) : []);
+      tracks.forEach(t=>{
+        const row = document.createElement('label');
+        row.className = 'trip-gear-row';
+        row.innerHTML =
+          '<input type="checkbox" data-id="'+t.id+'"'+(linked.has(t.id)?' checked':'')+'>'+
+          '<span class="trip-gear-row-name">'+escapeHtml(t.name)+'<span class="trip-gear-row-cat">'+(t.date?escapeHtml(t.date):'')+'</span></span>'+
+          '<span class="trip-gear-row-weight">'+t.distanceKm.toFixed(1)+' km</span>';
+        picker.appendChild(row);
+      });
+    }
+
+    const delBtn = document.getElementById('tripDeleteBtn');
+    delBtn.style.display = trip ? 'inline-block' : 'none';
+    delBtn.textContent = 'Delete';
+    delBtn.dataset.armed = '';
+
+    document.getElementById('tripModalOverlay').style.display = 'flex';
+    document.getElementById('tripName').focus();
+  }
+
+  function closeTripModal(){
+    document.getElementById('tripModalOverlay').style.display = 'none';
+  }
+
+  async function handleTripFormSubmit(e){
+    e.preventDefault();
+    const name = document.getElementById('tripName').value.trim();
+    if(!name) return;
+    const id = document.getElementById('tripId').value;
+    const trackIds = Array.from(document.querySelectorAll('#tripTrackPicker input[type="checkbox"]:checked')).map(cb=>cb.dataset.id);
+    const notes = document.getElementById('tripNotes').value.trim();
+
+    if(id){
+      const trip = trips.find(t=>t.id===id);
+      if(trip){ trip.name = name; trip.notes = notes; trip.trackIds = trackIds; }
+    } else {
+      trips.push({id: 'trip_'+Math.random().toString(36).slice(2,10), name, notes, trackIds, gearIds: [], createdAt: Date.now()});
+    }
+    await saveTrips();
+    closeTripModal();
+    if(id && currentTripId === id) renderTripDetail();
+    renderTripCards();
+  }
+
+  async function handleTripDelete(){
+    const btn = document.getElementById('tripDeleteBtn');
+    if(btn.dataset.armed !== '1'){
+      btn.dataset.armed = '1';
+      btn.textContent = 'Click again to confirm';
+      setTimeout(()=>{ btn.dataset.armed=''; btn.textContent='Delete'; }, 3000);
+      return;
+    }
+    const id = document.getElementById('tripId').value;
+    trips = trips.filter(t=>t.id!==id);
+    await saveTrips();
+    closeTripModal();
+    showTripsList();
   }
 
   function setStatus(msg, isError){
@@ -1399,8 +1708,10 @@
       const page = tab.dataset.page;
       document.getElementById('pageMap').classList.toggle('active', page==='map');
       document.getElementById('pageGear').classList.toggle('active', page==='gear');
+      document.getElementById('pageTrips').classList.toggle('active', page==='trips');
       if(page === 'map') setTimeout(()=> map.invalidateSize(), 50);
       if(page === 'gear') showGarage();
+      if(page === 'trips') showTripsList();
     });
   });
 
@@ -1419,13 +1730,37 @@
   document.getElementById('gearStatusFilter').addEventListener('change', renderGearGrid);
   document.getElementById('gearSort').addEventListener('change', renderGearGrid);
 
-  // ---- Trip gear wiring ----
-  document.getElementById('tripGearModalClose').addEventListener('click', closeTripGearModal);
-  document.getElementById('tripGearCancelBtn').addEventListener('click', closeTripGearModal);
-  document.getElementById('tripGearSaveBtn').addEventListener('click', saveTripGear);
+  // ---- Gear picker wiring ----
+  document.getElementById('tripGearModalClose').addEventListener('click', closeGearPickerModal);
+  document.getElementById('tripGearCancelBtn').addEventListener('click', closeGearPickerModal);
+  document.getElementById('tripGearSaveBtn').addEventListener('click', saveGearPicker);
   document.getElementById('tripGearModalOverlay').addEventListener('click', (e)=>{
-    if(e.target.id === 'tripGearModalOverlay') closeTripGearModal();
+    if(e.target.id === 'tripGearModalOverlay') closeGearPickerModal();
   });
+
+  // ---- Trips wiring ----
+  document.getElementById('addTripBtn').addEventListener('click', ()=> openTripModal(null));
+  document.getElementById('backToTripsBtn').addEventListener('click', showTripsList);
+  document.getElementById('tripEditBtn').addEventListener('click', ()=> openTripModal(currentTripId));
+  document.getElementById('tripGearEditBtn').addEventListener('click', ()=> openGearPickerModal('trip', currentTripId));
+  document.getElementById('tripViewOnMapBtn').addEventListener('click', ()=>{
+    const trip = trips.find(t=>t.id===currentTripId);
+    if(!trip) return;
+    const tks = tripTracks(trip);
+    if(!tks.length) return;
+    document.querySelector('.nav-tab[data-page="map"]').click();
+    setTimeout(()=>{
+      const b = L.latLngBounds(tks.flatMap(t=>t.points));
+      if(b.isValid()) map.fitBounds(b, {padding:[40,40]});
+    }, 100);
+  });
+  document.getElementById('tripModalClose').addEventListener('click', closeTripModal);
+  document.getElementById('tripCancelBtn').addEventListener('click', closeTripModal);
+  document.getElementById('tripModalOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'tripModalOverlay') closeTripModal();
+  });
+  document.getElementById('tripForm').addEventListener('submit', handleTripFormSubmit);
+  document.getElementById('tripDeleteBtn').addEventListener('click', handleTripDelete);
 
   // ---- Wiring ----
   document.getElementById('gpxInput').addEventListener('change', e=>handleGpxFiles(e.target.files));
@@ -1486,6 +1821,7 @@
     }
     await loadAll();
     await loadGear();
+    await loadTrips();
     showGarage();
     refreshEverything();
     if(tracks.length || googlePoints.length){
