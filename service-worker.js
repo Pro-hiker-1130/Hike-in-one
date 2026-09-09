@@ -1,5 +1,5 @@
-const CACHE_NAME = 'waypoints-v2';
-const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'waypoints-v3';
+const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './countries-50m.geo.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

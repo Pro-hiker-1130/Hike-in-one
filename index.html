@@ -89,34 +89,17 @@
   .toggle-4 button{padding:7px 4px;font-size:11.5px;}
 
   .stats-row{display:flex;gap:10px;}
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .stat-card{flex:1;background:var(--panel-alt);border-radius:6px;padding:10px 12px;}
-  .stat-num{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--parchment);}
+  .stat-num{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--parchment);cursor:default;}
   .stat-label{font-size:11px;color:var(--muted);margin-top:2px;}
 
-  .track-list{flex:1;overflow-y:auto;padding:8px 12px 16px;}
-  .track-item{
-    display:flex;align-items:center;justify-content:space-between;gap:8px;
-    padding:9px 10px;border-radius:5px;cursor:pointer;
-  }
-  .track-item:hover{background:var(--panel-alt);}
-  .track-color-dot{width:8px;height:8px;border-radius:50%;flex:none;margin-right:8px;}
-  .track-item-main{display:flex;align-items:center;overflow:hidden;flex:1;}
-  .track-text{display:flex;flex-direction:column;overflow:hidden;}
-  .track-name{font-size:13px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .track-meta{font-size:11px;color:var(--muted);}
-  .track-item-actions{display:flex;align-items:center;gap:2px;flex:none;}
+  .track-color-dot{width:8px;height:8px;border-radius:50%;flex:none;margin-right:8px;display:inline-block;vertical-align:middle;}
   .track-remove{
     background:none;border:none;color:var(--muted);font-size:16px;line-height:1;
     cursor:pointer;padding:2px 6px;border-radius:4px;flex:none;
   }
   .track-remove:hover{color:var(--danger);background:rgba(201,105,90,0.12);}
-  .track-gear-btn{
-    background:none;border:none;color:var(--muted);cursor:pointer;
-    padding:4px 5px;border-radius:4px;flex:none;display:flex;align-items:center;justify-content:center;
-  }
-  .track-gear-btn:hover{color:var(--brass);background:var(--brass-soft);}
-  .track-gear-btn svg{width:14px;height:14px;}
-  .empty-list{font-size:12.5px;color:var(--muted);padding:14px 10px;}
 
   /* ---- Trip gear picker ---- */
   .trip-gear-list{max-height:340px;overflow-y:auto;}
@@ -183,7 +166,13 @@
   .leaflet-popup-content-wrapper{background:var(--panel);color:var(--parchment);border-radius:6px;}
   .leaflet-popup-tip{background:var(--panel);}
   .leaflet-popup-content{font-family:'Inter',sans-serif;font-size:12.5px;}
+  .leaflet-popup-content a.popup-trip-link{color:var(--brass);font-weight:600;}
   .leaflet-container a.leaflet-popup-close-button{color:var(--muted);}
+  .leaflet-tooltip{
+    background:var(--panel);color:var(--parchment);border:1px solid var(--line);
+    border-radius:5px;font-family:'Inter',sans-serif;font-size:12px;box-shadow:none;
+  }
+  .leaflet-tooltip-top:before{border-top-color:var(--panel);}
 
   a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
     outline:2px solid var(--brass);outline-offset:2px;
@@ -387,18 +376,25 @@
     </div>
 
     <div class="section">
-      <p class="section-label">Add data</p>
-      <label class="dropzone" for="gpxInput" id="gpxDropzone">
-        <input type="file" id="gpxInput" accept=".gpx" multiple hidden>
-        <span class="dropzone-title">Add GPX tracks</span>
-        <span class="dropzone-sub">Garmin or Strava exports — drop files or click</span>
-      </label>
-      <label class="dropzone" for="googleInput" id="googleDropzone">
-        <input type="file" id="googleInput" accept=".json" hidden>
-        <span class="dropzone-title">Add Google location history</span>
-        <span class="dropzone-sub">Records.json or a Timeline export</span>
-      </label>
-      <div class="upload-status" id="uploadStatus"></div>
+      <p class="section-label">Overview</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="statTrips">0</div>
+          <div class="stat-label">trips</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statTracks">0</div>
+          <div class="stat-label">tracks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statCountries" title="">0</div>
+          <div class="stat-label">countries</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statDistance">0</div>
+          <div class="stat-label">kilometers</div>
+        </div>
+      </div>
     </div>
 
     <div class="section">
@@ -421,26 +417,13 @@
     </div>
 
     <div class="section">
-      <p class="section-label">Overview</p>
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-num" id="statTracks">0</div>
-          <div class="stat-label">tracks</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="statDistance">0</div>
-          <div class="stat-label">kilometers</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="statPoints">0</div>
-          <div class="stat-label">GPS points</div>
-        </div>
-      </div>
-    </div>
-
-    <p class="section-label" style="padding:14px 20px 0;">Tracks</p>
-    <div class="track-list" id="trackList">
-      <div class="empty-list">No tracks yet.</div>
+      <p class="section-label">Location history</p>
+      <label class="dropzone" for="googleInput" id="googleDropzone">
+        <input type="file" id="googleInput" accept=".json" hidden>
+        <span class="dropzone-title">Add Google location history</span>
+        <span class="dropzone-sub">Records.json or a Timeline export</span>
+      </label>
+      <div class="upload-status" id="uploadStatus"></div>
     </div>
 
     <div class="footer">
@@ -456,7 +439,7 @@
     </div>
     <div class="empty-hint" id="emptyHint">
       <h2>Nothing plotted yet</h2>
-      <p>Add a GPX file on the left to start filling in the map</p>
+      <p>Add GPX tracks to a trip on the Trips tab to start filling in the map</p>
     </div>
   </div>
 </div>
@@ -737,6 +720,15 @@
         <textarea id="tripNotes" maxlength="500" placeholder="Dates, route notes…"></textarea>
       </div>
       <div class="form-field">
+        <label>Add GPX tracks</label>
+        <label class="dropzone" for="tripGpxInput" id="tripGpxDropzone">
+          <input type="file" id="tripGpxInput" accept=".gpx" multiple hidden>
+          <span class="dropzone-title">Add GPX tracks</span>
+          <span class="dropzone-sub">Garmin or Strava exports — drop files or click</span>
+        </label>
+        <div class="upload-status" id="tripUploadStatus"></div>
+      </div>
+      <div class="form-field">
         <label>Tracks in this trip</label>
         <div class="trip-gear-list" id="tripTrackPicker"></div>
       </div>
@@ -863,6 +855,64 @@
       name, date, distanceKm,
       points: downsample(points, MAX_STORED_POINTS_PER_TRACK)
     };
+  }
+
+  // ---- Country detection (offline point-in-polygon against a bundled,
+  // simplified world map) so "visited countries" works with no network calls
+  // and no API keys. ----
+  let countriesGeoPromise = null;
+  function loadCountriesGeo(){
+    if(!countriesGeoPromise){
+      countriesGeoPromise = fetch('countries-50m.geo.json').then(r=>r.json()).catch(()=>({features:[]}));
+    }
+    return countriesGeoPromise;
+  }
+  function pointInRing(pt, ring){
+    let inside = false;
+    const x = pt[0], y = pt[1];
+    for(let i=0, j=ring.length-1; i<ring.length; j=i++){
+      const xi=ring[i][0], yi=ring[i][1], xj=ring[j][0], yj=ring[j][1];
+      const intersect = ((yi>y) !== (yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi);
+      if(intersect) inside = !inside;
+    }
+    return inside;
+  }
+  function pointInPolygon(pt, polygon){
+    if(!pointInRing(pt, polygon[0])) return false;
+    for(let k=1;k<polygon.length;k++) if(pointInRing(pt, polygon[k])) return false;
+    return true;
+  }
+  function countryForLatLon(lat, lon, geo){
+    const pt = [lon, lat];
+    for(const f of geo.features){
+      const g = f.geometry;
+      const hit = g.type === 'Polygon' ? pointInPolygon(pt, g.coordinates)
+        : g.type === 'MultiPolygon' ? g.coordinates.some(poly=>pointInPolygon(pt, poly))
+        : false;
+      if(hit) return f.properties.name;
+    }
+    return null;
+  }
+  async function detectTrackCountries(track){
+    const geo = await loadCountriesGeo();
+    const pts = track.points;
+    if(!geo.features || !geo.features.length || !pts.length){ track.countries = track.countries || []; return; }
+    const maxSamples = 30;
+    const stride = Math.max(1, Math.floor(pts.length / maxSamples));
+    const found = new Set();
+    for(let i=0;i<pts.length;i+=stride){
+      const c = countryForLatLon(pts[i][0], pts[i][1], geo);
+      if(c) found.add(c);
+    }
+    const last = pts[pts.length-1];
+    const c = countryForLatLon(last[0], last[1], geo);
+    if(c) found.add(c);
+    track.countries = Array.from(found);
+  }
+  function allVisitedCountries(){
+    const set = new Set();
+    tracks.forEach(t=> (t.countries||[]).forEach(c=> set.add(c)));
+    return set;
   }
 
   function parseGoogleJSON(obj){
@@ -1018,34 +1068,74 @@
     return pts;
   }
 
-  // ---- Trip gear (links gear items to a track) ----
-  function trackGearItems(t){
-    if(!t.gearIds || !t.gearIds.length) return [];
-    return t.gearIds.map(id=>gearItems.find(g=>g.id===id)).filter(Boolean);
+  // ---- Track ↔ trip coloring ----
+  // Tracks that belong to the same trip share one color, so a multi-day
+  // trip reads as a single line family on the map; tracks with no trip yet
+  // each get their own color.
+  function findTrackTrip(trackId){
+    return trips.find(tr => (tr.trackIds||[]).includes(trackId)) || null;
+  }
+  function computeTrackColors(){
+    const groupKey = {};
+    tracks.forEach(t=>{
+      const trip = findTrackTrip(t.id);
+      groupKey[t.id] = trip ? 'trip:'+trip.id : 'track:'+t.id;
+    });
+    const order = [];
+    const seen = new Set();
+    tracks.forEach(t=>{
+      const k = groupKey[t.id];
+      if(!seen.has(k)){ seen.add(k); order.push(k); }
+    });
+    const keyColor = {};
+    order.forEach((k,i)=> keyColor[k] = COLORS[i % COLORS.length]);
+    const result = {};
+    tracks.forEach(t=> result[t.id] = keyColor[groupKey[t.id]]);
+    return result;
   }
 
-  function trackGearSummaryText(t){
-    const items = trackGearItems(t);
-    if(!items.length) return '';
-    const weight = items.reduce((s,g)=>s+(g.weightGrams||0),0);
-    return items.length+' item'+(items.length>1?'s':'')+(weight?' · '+formatWeight(weight):'');
+  function goToTripFromMap(tripId){
+    document.querySelector('.nav-tab[data-page="trips"]').click();
+    showTripDetail(tripId);
   }
 
   function renderTracks(){
     trackLayerGroup.clearLayers();
-    tracks.forEach((t,i)=>{
-      const color = COLORS[i % COLORS.length];
+    const trackColors = computeTrackColors();
+    tracks.forEach((t)=>{
+      const color = trackColors[t.id];
       const line = L.polyline(t.points, {color, weight:2.5, opacity:0.85});
-      const gearSummary = trackGearSummaryText(t);
-      line.bindPopup(
+      const trip = findTrackTrip(t.id);
+      let popupHtml =
         '<strong>'+escapeHtml(t.name)+'</strong><br>'+
         (t.date ? escapeHtml(t.date)+', ' : '') +
-        t.distanceKm.toFixed(1)+' km'+
-        (gearSummary ? '<br>Gear: '+escapeHtml(gearSummary) : '')
-      );
+        t.distanceKm.toFixed(1)+' km';
+      if(trip){
+        const tripGear = tripGearItemsList(trip);
+        if(tripGear.length){
+          const tripWeight = tripGearWeight(trip);
+          popupHtml += '<br>Gear: '+tripGear.length+' item'+(tripGear.length>1?'s':'')+(tripWeight?' · '+formatWeight(tripWeight):'');
+        }
+        popupHtml += '<br><a href="#" class="popup-trip-link" data-trip-id="'+trip.id+'">'+escapeHtml(trip.name)+' &rarr;</a>';
+      }
+      line.bindPopup(popupHtml);
+      line.bindTooltip(trip ? trip.name : t.name, {sticky:true, direction:'top', opacity:0.92});
+      line.on('mouseover', function(){ this.setStyle({weight:5, opacity:1}); this.bringToFront(); });
+      line.on('mouseout', function(){ this.setStyle({weight:2.5, opacity:0.85}); });
       trackLayerGroup.addLayer(line);
     });
   }
+
+  map.on('popupopen', (e)=>{
+    const el = e.popup.getElement();
+    const link = el && el.querySelector('.popup-trip-link');
+    if(link){
+      link.addEventListener('click', (evt)=>{
+        evt.preventDefault();
+        goToTripFromMap(link.dataset.tripId);
+      });
+    }
+  });
 
   function renderHeat(){
     if(heatLayer){ map.removeLayer(heatLayer); heatLayer = null; }
@@ -1072,72 +1162,26 @@
     renderHeat();
     updateLayers();
     renderStats();
-    renderTrackList();
     document.getElementById('emptyHint').style.display = allPoints().length ? 'none' : 'block';
   }
 
   function renderStats(){
+    document.getElementById('statTrips').textContent = trips.length;
     document.getElementById('statTracks').textContent = tracks.length;
     const dist = tracks.reduce((s,t)=>s+t.distanceKm,0);
     document.getElementById('statDistance').textContent = dist >= 1000 ? (dist/1000).toFixed(1)+'k' : Math.round(dist);
-    const pts = tracks.reduce((s,t)=>s+t.points.length,0) + googlePoints.length;
-    document.getElementById('statPoints').textContent = pts >= 1000 ? (pts/1000).toFixed(1)+'k' : pts;
-  }
-
-  function renderTrackList(){
-    const list = document.getElementById('trackList');
-    list.innerHTML = '';
-    if(!tracks.length){
-      list.innerHTML = '<div class="empty-list">No tracks yet.</div>';
-      return;
-    }
-    tracks.forEach((t,i)=>{
-      const item = document.createElement('div');
-      item.className = 'track-item';
-      const gearSummary = trackGearSummaryText(t);
-      item.innerHTML =
-        '<div class="track-item-main">'+
-          '<span class="track-color-dot" style="background:'+COLORS[i%COLORS.length]+'"></span>'+
-          '<span class="track-text">'+
-            '<span class="track-name">'+escapeHtml(t.name)+'</span>'+
-            '<span class="track-meta">'+(t.date?escapeHtml(t.date)+', ':'')+t.distanceKm.toFixed(1)+' km'+
-              (gearSummary ? ' · '+escapeHtml(gearSummary) : '')+
-            '</span>'+
-          '</span>'+
-        '</div>'+
-        '<div class="track-item-actions">'+
-          '<button class="track-gear-btn" title="Trip gear" data-id="'+t.id+'">'+GEAR_ICONS.Backpack+'</button>'+
-          '<button class="track-remove" title="Remove" data-id="'+t.id+'">&times;</button>'+
-        '</div>';
-      item.querySelector('.track-item-main').addEventListener('click', ()=>{
-        map.fitBounds(L.latLngBounds(t.points), {padding:[40,40]});
-      });
-      item.querySelector('.track-gear-btn').addEventListener('click', (e)=>{
-        e.stopPropagation();
-        openGearPickerModal('track', t.id);
-      });
-      item.querySelector('.track-remove').addEventListener('click', (e)=>{
-        e.stopPropagation();
-        tracks = tracks.filter(x=>x.id!==t.id);
-        saveTracks();
-        refreshEverything();
-      });
-      list.appendChild(item);
-    });
+    const countries = allVisitedCountries();
+    const countriesEl = document.getElementById('statCountries');
+    countriesEl.textContent = countries.size;
+    countriesEl.title = countries.size ? Array.from(countries).sort().join(', ') : '';
   }
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  // ---- Gear picker modal (links gear to either a track or a trip) ----
-  let gearPickerTarget = null; // {kind:'track'|'trip', id}
-
-  function gearPickerTargetObject(){
-    if(!gearPickerTarget) return null;
-    const arr = gearPickerTarget.kind === 'trip' ? trips : tracks;
-    return arr.find(x=>x.id===gearPickerTarget.id);
-  }
+  // ---- Gear picker modal (links gear to a trip) ----
+  let gearPickerTripId = null;
 
   function updateTripGearWeightSummary(){
     const checked = Array.from(document.querySelectorAll('#tripGearList input[type="checkbox"]:checked'));
@@ -1150,11 +1194,11 @@
       : 'No gear selected';
   }
 
-  function openGearPickerModal(kind, id){
-    const target = (kind === 'trip' ? trips : tracks).find(x=>x.id===id);
-    if(!target) return;
-    gearPickerTarget = {kind, id};
-    document.getElementById('tripGearModalTitle').textContent = 'Gear for "'+target.name+'"';
+  function openGearPickerModal(tripId){
+    const trip = trips.find(x=>x.id===tripId);
+    if(!trip) return;
+    gearPickerTripId = tripId;
+    document.getElementById('tripGearModalTitle').textContent = 'Gear for "'+trip.name+'"';
 
     const list = document.getElementById('tripGearList');
     list.innerHTML = '';
@@ -1162,7 +1206,7 @@
     if(!owned.length){
       list.innerHTML = '<div class="trip-gear-empty">No gear in your inventory yet — add some in the Gear Room first.</div>';
     } else {
-      const linked = new Set(target.gearIds || []);
+      const linked = new Set(trip.gearIds || []);
       owned.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(g=>{
         const row = document.createElement('label');
         row.className = 'trip-gear-row';
@@ -1180,23 +1224,18 @@
 
   function closeGearPickerModal(){
     document.getElementById('tripGearModalOverlay').style.display = 'none';
-    gearPickerTarget = null;
+    gearPickerTripId = null;
   }
 
   async function saveGearPicker(){
-    const target = gearPickerTargetObject();
-    if(target){
-      target.gearIds = Array.from(document.querySelectorAll('#tripGearList input[type="checkbox"]:checked')).map(cb=>cb.dataset.id);
-      if(gearPickerTarget.kind === 'trip'){
-        await saveTrips();
-        if(currentTripId === target.id) renderTripDetail();
-        renderTripCards();
-      } else {
-        await saveTracks();
-        renderTracks();
-        updateLayers();
-        renderTrackList();
-      }
+    const trip = trips.find(x=>x.id===gearPickerTripId);
+    if(trip){
+      trip.gearIds = Array.from(document.querySelectorAll('#tripGearList input[type="checkbox"]:checked')).map(cb=>cb.dataset.id);
+      await saveTrips();
+      if(currentTripId === trip.id) renderTripDetail();
+      renderTripCards();
+      renderTracks();
+      updateLayers();
     }
     closeGearPickerModal();
   }
@@ -1225,15 +1264,17 @@
     document.getElementById('tripsEmpty').style.display = trips.length ? 'none' : 'block';
     if(!trips.length) return;
 
+    const trackColors = computeTrackColors();
     trips.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(trip=>{
       const tks = tripTracks(trip);
       const dist = tripDistanceKm(trip);
       const gearList = tripGearItemsList(trip);
       const weight = tripGearWeight(trip);
+      const dotColor = tks.length ? trackColors[tks[0].id] : null;
       const card = document.createElement('div');
       card.className = 'trip-card';
       card.innerHTML =
-        '<div class="trip-card-name">'+escapeHtml(trip.name)+'</div>'+
+        '<div class="trip-card-name">'+(dotColor?'<span class="track-color-dot" style="background:'+dotColor+'"></span>':'')+escapeHtml(trip.name)+'</div>'+
         (trip.notes ? '<div class="trip-card-notes">'+escapeHtml(trip.notes)+'</div>' : '')+
         '<div class="trip-card-meta">'+tks.length+' track'+(tks.length!==1?'s':'')+' · '+dist.toFixed(1)+' km</div>'+
         '<div class="trip-card-meta">'+gearList.length+' gear item'+(gearList.length!==1?'s':'')+(weight?' · '+formatWeight(weight):'')+'</div>';
@@ -1271,6 +1312,7 @@
     document.getElementById('tripStatGearCount').textContent = gearList.length;
     document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
 
+    const trackColors = computeTrackColors();
     const trackList = document.getElementById('tripTrackList');
     trackList.innerHTML = '';
     if(!tks.length){
@@ -1280,7 +1322,7 @@
         const row = document.createElement('div');
         row.className = 'trip-track-row';
         row.innerHTML =
-          '<span class="trip-track-row-name">'+escapeHtml(t.name)+'</span>'+
+          '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+'</span>'+
           '<span class="trip-track-row-meta">'+(t.date?escapeHtml(t.date)+' · ':'')+t.distanceKm.toFixed(1)+' km</span>';
         trackList.appendChild(row);
       });
@@ -1302,29 +1344,53 @@
     }
   }
 
+  function currentPickerChecked(){
+    return new Set(Array.from(document.querySelectorAll('#tripTrackPicker input[type="checkbox"]:checked')).map(cb=>cb.dataset.id));
+  }
+
+  function renderTripTrackPicker(checkedIds){
+    const picker = document.getElementById('tripTrackPicker');
+    picker.innerHTML = '';
+    if(!tracks.length){
+      picker.innerHTML = '<div class="trip-gear-empty">No tracks yet — add GPX files above.</div>';
+      return;
+    }
+    tracks.forEach(t=>{
+      const row = document.createElement('div');
+      row.className = 'trip-gear-row';
+      row.innerHTML =
+        '<label style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;">'+
+          '<input type="checkbox" data-id="'+t.id+'"'+(checkedIds.has(t.id)?' checked':'')+'>'+
+          '<span class="trip-gear-row-name">'+escapeHtml(t.name)+'<span class="trip-gear-row-cat">'+(t.date?escapeHtml(t.date):'')+'</span></span>'+
+        '</label>'+
+        '<span class="trip-gear-row-weight">'+t.distanceKm.toFixed(1)+' km</span>'+
+        '<button type="button" class="track-remove" title="Delete track">&times;</button>';
+      row.querySelector('.track-remove').addEventListener('click', async (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        const id = t.id;
+        const stillChecked = currentPickerChecked();
+        stillChecked.delete(id);
+        tracks = tracks.filter(x=>x.id!==id);
+        trips.forEach(tr=>{ tr.trackIds = (tr.trackIds||[]).filter(x=>x!==id); });
+        await saveTracks();
+        await saveTrips();
+        renderTripTrackPicker(stillChecked);
+        renderStats();
+      });
+      picker.appendChild(row);
+    });
+  }
+
   function openTripModal(id){
     const trip = id ? trips.find(t=>t.id===id) : null;
     document.getElementById('tripModalTitle').textContent = trip ? 'Edit trip' : 'New trip';
     document.getElementById('tripId').value = trip ? trip.id : '';
     document.getElementById('tripName').value = trip ? trip.name : '';
     document.getElementById('tripNotes').value = trip ? (trip.notes || '') : '';
+    document.getElementById('tripUploadStatus').textContent = '';
+    document.getElementById('tripUploadStatus').className = 'upload-status';
 
-    const picker = document.getElementById('tripTrackPicker');
-    picker.innerHTML = '';
-    if(!tracks.length){
-      picker.innerHTML = '<div class="trip-gear-empty">No tracks uploaded yet — add GPX files on the Map tab first.</div>';
-    } else {
-      const linked = new Set(trip ? (trip.trackIds || []) : []);
-      tracks.forEach(t=>{
-        const row = document.createElement('label');
-        row.className = 'trip-gear-row';
-        row.innerHTML =
-          '<input type="checkbox" data-id="'+t.id+'"'+(linked.has(t.id)?' checked':'')+'>'+
-          '<span class="trip-gear-row-name">'+escapeHtml(t.name)+'<span class="trip-gear-row-cat">'+(t.date?escapeHtml(t.date):'')+'</span></span>'+
-          '<span class="trip-gear-row-weight">'+t.distanceKm.toFixed(1)+' km</span>';
-        picker.appendChild(row);
-      });
-    }
+    renderTripTrackPicker(new Set(trip ? (trip.trackIds || []) : []));
 
     const delBtn = document.getElementById('tripDeleteBtn');
     delBtn.style.display = trip ? 'inline-block' : 'none';
@@ -1337,6 +1403,30 @@
 
   function closeTripModal(){
     document.getElementById('tripModalOverlay').style.display = 'none';
+  }
+
+  async function handleTripGpxFiles(fileList){
+    const files = Array.from(fileList);
+    if(!files.length) return;
+    const statusEl = document.getElementById('tripUploadStatus');
+    statusEl.className = 'upload-status';
+    statusEl.textContent = 'Processing '+files.length+' file'+(files.length>1?'s':'')+'…';
+    const {added, failed, newIds} = await parseAndAddGpxFiles(files);
+    if(added){
+      renderStats();
+      const checked = currentPickerChecked();
+      newIds.forEach(id=>checked.add(id));
+      renderTripTrackPicker(checked);
+    }
+    if(added && !failed.length){
+      statusEl.textContent = 'Added '+added+' track'+(added>1?'s':'')+'.';
+    } else if(added && failed.length){
+      statusEl.textContent = 'Added '+added+', skipped: '+failed.join(', ');
+      statusEl.className = 'upload-error';
+    } else {
+      statusEl.textContent = 'Could not read: '+failed.join(', ');
+      statusEl.className = 'upload-error';
+    }
   }
 
   async function handleTripFormSubmit(e){
@@ -1357,6 +1447,9 @@
     closeTripModal();
     if(id && currentTripId === id) renderTripDetail();
     renderTripCards();
+    renderTracks();
+    updateLayers();
+    renderStats();
   }
 
   async function handleTripDelete(){
@@ -1372,6 +1465,9 @@
     await saveTrips();
     closeTripModal();
     showTripsList();
+    renderTracks();
+    updateLayers();
+    renderStats();
   }
 
   function setStatus(msg, isError){
@@ -1381,34 +1477,33 @@
   }
 
   // ---- File handling ----
-  async function handleGpxFiles(fileList){
+  // GPX tracks are added from the Trips tab (each trip owns a set of
+  // tracks); this core parses/stores them and is shared by that flow.
+  async function parseAndAddGpxFiles(fileList){
     const files = Array.from(fileList);
-    if(!files.length) return;
-    setStatus('Processing '+files.length+' file'+(files.length>1?'s':'')+'…');
-    let added = 0, failed = [];
+    let added = 0, failed = [], newIds = [];
     for(const file of files){
       try{
         const text = await file.text();
         const track = parseGPX(text, file.name);
         tracks.push(track);
+        newIds.push(track.id);
         added++;
       }catch(err){
         failed.push(file.name);
       }
     }
-    if(added) await saveTracks();
-    refreshEverything();
-    if(added && !failed.length){
-      setStatus('Added '+added+' track'+(added>1?'s':'')+'.');
-    } else if(added && failed.length){
-      setStatus('Added '+added+', skipped: '+failed.join(', '));
-    } else {
-      setStatus('Could not read: '+failed.join(', '), true);
+    if(added){
+      await saveTracks();
+      // Country lookup runs after the initial save so the UI isn't blocked
+      // on fetching/parsing the world map; each new track is saved again
+      // once its countries are known.
+      Promise.all(newIds.map(id=>{
+        const t = tracks.find(x=>x.id===id);
+        return t ? detectTrackCountries(t) : Promise.resolve();
+      })).then(()=>{ saveTracks(); renderStats(); });
     }
-    if(tracks.length){
-      const b = L.latLngBounds(tracks.flatMap(t=>t.points));
-      if(b.isValid()) map.fitBounds(b, {padding:[40,40]});
-    }
+    return {added, failed, newIds};
   }
 
   async function handleGoogleFile(file){
@@ -1768,7 +1863,7 @@
   document.getElementById('addTripBtn').addEventListener('click', ()=> openTripModal(null));
   document.getElementById('backToTripsBtn').addEventListener('click', showTripsList);
   document.getElementById('tripEditBtn').addEventListener('click', ()=> openTripModal(currentTripId));
-  document.getElementById('tripGearEditBtn').addEventListener('click', ()=> openGearPickerModal('trip', currentTripId));
+  document.getElementById('tripGearEditBtn').addEventListener('click', ()=> openGearPickerModal(currentTripId));
   document.getElementById('tripViewOnMapBtn').addEventListener('click', ()=>{
     const trip = trips.find(t=>t.id===currentTripId);
     if(!trip) return;
@@ -1789,19 +1884,31 @@
   document.getElementById('tripDeleteBtn').addEventListener('click', handleTripDelete);
 
   // ---- Wiring ----
-  document.getElementById('gpxInput').addEventListener('change', e=>handleGpxFiles(e.target.files));
   document.getElementById('googleInput').addEventListener('change', e=>handleGoogleFile(e.target.files[0]));
 
-  ['gpxDropzone','googleDropzone'].forEach(id=>{
+  ['googleDropzone'].forEach(id=>{
     const zone = document.getElementById(id);
     zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
     zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
     zone.addEventListener('drop', e=>{
       e.preventDefault(); zone.classList.remove('dragover');
-      if(id==='gpxDropzone') handleGpxFiles(e.dataTransfer.files);
-      else handleGoogleFile(e.dataTransfer.files[0]);
+      handleGoogleFile(e.dataTransfer.files[0]);
     });
   });
+
+  document.getElementById('tripGpxInput').addEventListener('change', e=>{
+    handleTripGpxFiles(e.target.files);
+    e.target.value = '';
+  });
+  (function(){
+    const zone = document.getElementById('tripGpxDropzone');
+    zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e=>{
+      e.preventDefault(); zone.classList.remove('dragover');
+      handleTripGpxFiles(e.dataTransfer.files);
+    });
+  })();
 
   document.querySelectorAll('.view-toggle:not(#basemapToggle) button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1853,6 +1960,17 @@
     if(tracks.length || googlePoints.length){
       const b = L.latLngBounds(allPoints());
       if(b.isValid()) map.fitBounds(b, {padding:[40,40]});
+    }
+
+    // Backfill country tags for tracks saved before this feature existed.
+    // Runs after first paint so it never blocks initial load.
+    const missingCountries = tracks.filter(t=> t.countries === undefined);
+    if(missingCountries.length){
+      (async()=>{
+        for(const t of missingCountries) await detectTrackCountries(t);
+        await saveTracks();
+        renderStats();
+      })();
     }
   })();
 
