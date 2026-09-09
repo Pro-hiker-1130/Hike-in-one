@@ -104,12 +104,34 @@
   .track-text{display:flex;flex-direction:column;overflow:hidden;}
   .track-name{font-size:13px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .track-meta{font-size:11px;color:var(--muted);}
+  .track-item-actions{display:flex;align-items:center;gap:2px;flex:none;}
   .track-remove{
     background:none;border:none;color:var(--muted);font-size:16px;line-height:1;
     cursor:pointer;padding:2px 6px;border-radius:4px;flex:none;
   }
   .track-remove:hover{color:var(--danger);background:rgba(201,105,90,0.12);}
+  .track-gear-btn{
+    background:none;border:none;color:var(--muted);cursor:pointer;
+    padding:4px 5px;border-radius:4px;flex:none;display:flex;align-items:center;justify-content:center;
+  }
+  .track-gear-btn:hover{color:var(--brass);background:var(--brass-soft);}
+  .track-gear-btn svg{width:14px;height:14px;}
   .empty-list{font-size:12.5px;color:var(--muted);padding:14px 10px;}
+
+  /* ---- Trip gear picker ---- */
+  .trip-gear-list{max-height:340px;overflow-y:auto;}
+  .trip-gear-row{
+    display:flex;align-items:center;gap:10px;padding:9px 20px;
+    border-bottom:1px solid var(--line);cursor:pointer;
+  }
+  .trip-gear-row:last-child{border-bottom:none;}
+  .trip-gear-row:hover{background:var(--panel-alt);}
+  .trip-gear-row input[type="checkbox"]{width:15px;height:15px;accent-color:var(--brass);flex:none;}
+  .trip-gear-row-name{flex:1;font-size:13px;color:var(--parchment);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .trip-gear-row-cat{font-size:11px;color:var(--muted);margin-left:6px;}
+  .trip-gear-row-weight{font-size:12px;color:var(--brass);white-space:nowrap;flex:none;}
+  .trip-gear-empty{padding:24px 20px;text-align:center;color:var(--muted);font-size:13px;}
+  .trip-gear-summary{font-size:12.5px;color:var(--muted);}
 
   .footer{padding:14px 20px;border-top:1px solid var(--line);margin-top:auto;}
   .clear-btn{
@@ -571,6 +593,23 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="tripGearModalOverlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="tripGearModalTitle">Trip gear</h3>
+      <button class="modal-close" id="tripGearModalClose" type="button">&times;</button>
+    </div>
+    <div class="trip-gear-list" id="tripGearList"></div>
+    <div class="modal-actions" style="padding:14px 20px;">
+      <div class="trip-gear-summary" id="tripGearWeightSummary"></div>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button type="button" class="ghost-btn" id="tripGearCancelBtn">Cancel</button>
+        <button type="button" class="primary-btn" id="tripGearSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
@@ -828,15 +867,30 @@
     return pts;
   }
 
+  // ---- Trip gear (links gear items to a track) ----
+  function trackGearItems(t){
+    if(!t.gearIds || !t.gearIds.length) return [];
+    return t.gearIds.map(id=>gearItems.find(g=>g.id===id)).filter(Boolean);
+  }
+
+  function trackGearSummaryText(t){
+    const items = trackGearItems(t);
+    if(!items.length) return '';
+    const weight = items.reduce((s,g)=>s+(g.weightGrams||0),0);
+    return items.length+' item'+(items.length>1?'s':'')+(weight?' · '+formatWeight(weight):'');
+  }
+
   function renderTracks(){
     trackLayerGroup.clearLayers();
     tracks.forEach((t,i)=>{
       const color = COLORS[i % COLORS.length];
       const line = L.polyline(t.points, {color, weight:2.5, opacity:0.85});
+      const gearSummary = trackGearSummaryText(t);
       line.bindPopup(
         '<strong>'+escapeHtml(t.name)+'</strong><br>'+
         (t.date ? escapeHtml(t.date)+', ' : '') +
-        t.distanceKm.toFixed(1)+' km'
+        t.distanceKm.toFixed(1)+' km'+
+        (gearSummary ? '<br>Gear: '+escapeHtml(gearSummary) : '')
       );
       trackLayerGroup.addLayer(line);
     });
@@ -889,17 +943,27 @@
     tracks.forEach((t,i)=>{
       const item = document.createElement('div');
       item.className = 'track-item';
+      const gearSummary = trackGearSummaryText(t);
       item.innerHTML =
         '<div class="track-item-main">'+
           '<span class="track-color-dot" style="background:'+COLORS[i%COLORS.length]+'"></span>'+
           '<span class="track-text">'+
             '<span class="track-name">'+escapeHtml(t.name)+'</span>'+
-            '<span class="track-meta">'+(t.date?escapeHtml(t.date)+', ':'')+t.distanceKm.toFixed(1)+' km</span>'+
+            '<span class="track-meta">'+(t.date?escapeHtml(t.date)+', ':'')+t.distanceKm.toFixed(1)+' km'+
+              (gearSummary ? ' · '+escapeHtml(gearSummary) : '')+
+            '</span>'+
           '</span>'+
         '</div>'+
-        '<button class="track-remove" title="Remove" data-id="'+t.id+'">&times;</button>';
+        '<div class="track-item-actions">'+
+          '<button class="track-gear-btn" title="Trip gear" data-id="'+t.id+'">'+GEAR_ICONS.Backpack+'</button>'+
+          '<button class="track-remove" title="Remove" data-id="'+t.id+'">&times;</button>'+
+        '</div>';
       item.querySelector('.track-item-main').addEventListener('click', ()=>{
         map.fitBounds(L.latLngBounds(t.points), {padding:[40,40]});
+      });
+      item.querySelector('.track-gear-btn').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        openTripGearModal(t.id);
       });
       item.querySelector('.track-remove').addEventListener('click', (e)=>{
         e.stopPropagation();
@@ -913,6 +977,66 @@
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---- Trip gear modal ----
+  let tripGearModalTrackId = null;
+
+  function updateTripGearWeightSummary(){
+    const checked = Array.from(document.querySelectorAll('#tripGearList input[type="checkbox"]:checked'));
+    const weight = checked.reduce((s,cb)=>{
+      const g = gearItems.find(x=>x.id===cb.dataset.id);
+      return s + (g && g.weightGrams ? g.weightGrams : 0);
+    },0);
+    document.getElementById('tripGearWeightSummary').textContent = checked.length
+      ? checked.length+' item'+(checked.length>1?'s':'')+' · '+formatWeight(weight)
+      : 'No gear selected';
+  }
+
+  function openTripGearModal(trackId){
+    const track = tracks.find(t=>t.id===trackId);
+    if(!track) return;
+    tripGearModalTrackId = trackId;
+    document.getElementById('tripGearModalTitle').textContent = 'Gear for "'+track.name+'"';
+
+    const list = document.getElementById('tripGearList');
+    list.innerHTML = '';
+    const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
+    if(!owned.length){
+      list.innerHTML = '<div class="trip-gear-empty">No gear in your inventory yet — add some in the Gear Room first.</div>';
+    } else {
+      const linked = new Set(track.gearIds || []);
+      owned.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(g=>{
+        const row = document.createElement('label');
+        row.className = 'trip-gear-row';
+        row.innerHTML =
+          '<input type="checkbox" data-id="'+g.id+'"'+(linked.has(g.id)?' checked':'')+'>'+
+          '<span class="trip-gear-row-name">'+escapeHtml(g.name)+'<span class="trip-gear-row-cat">'+escapeHtml(g.category||'')+'</span></span>'+
+          '<span class="trip-gear-row-weight">'+formatWeight(g.weightGrams)+'</span>';
+        row.querySelector('input').addEventListener('change', updateTripGearWeightSummary);
+        list.appendChild(row);
+      });
+    }
+    updateTripGearWeightSummary();
+    document.getElementById('tripGearModalOverlay').style.display = 'flex';
+  }
+
+  function closeTripGearModal(){
+    document.getElementById('tripGearModalOverlay').style.display = 'none';
+    tripGearModalTrackId = null;
+  }
+
+  async function saveTripGear(){
+    if(!tripGearModalTrackId) return;
+    const track = tracks.find(t=>t.id===tripGearModalTrackId);
+    if(track){
+      track.gearIds = Array.from(document.querySelectorAll('#tripGearList input[type="checkbox"]:checked')).map(cb=>cb.dataset.id);
+      await saveTracks();
+      renderTracks();
+      updateLayers();
+      renderTrackList();
+    }
+    closeTripGearModal();
   }
 
   function setStatus(msg, isError){
@@ -1294,6 +1418,14 @@
   document.getElementById('gearSearch').addEventListener('input', renderGearGrid);
   document.getElementById('gearStatusFilter').addEventListener('change', renderGearGrid);
   document.getElementById('gearSort').addEventListener('change', renderGearGrid);
+
+  // ---- Trip gear wiring ----
+  document.getElementById('tripGearModalClose').addEventListener('click', closeTripGearModal);
+  document.getElementById('tripGearCancelBtn').addEventListener('click', closeTripGearModal);
+  document.getElementById('tripGearSaveBtn').addEventListener('click', saveTripGear);
+  document.getElementById('tripGearModalOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'tripGearModalOverlay') closeTripGearModal();
+  });
 
   // ---- Wiring ----
   document.getElementById('gpxInput').addEventListener('change', e=>handleGpxFiles(e.target.files));
