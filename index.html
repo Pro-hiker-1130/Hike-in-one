@@ -275,6 +275,11 @@
   .garage-tile-name{font-size:13.5px;font-weight:500;color:var(--parchment);}
   .garage-tile-count{font-size:11.5px;color:var(--muted);}
   .garage-tile-weight{font-size:11px;color:var(--muted);}
+  .section-subhead{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 8px;flex:none;}
+  .mini-select{
+    background:var(--panel-alt);border:1px solid var(--line);color:var(--parchment);
+    font-size:12.5px;padding:7px 10px;border-radius:5px;
+  }
 
   /* ---- Category detail view ---- */
   .category-view{flex:1;display:flex;flex-direction:column;overflow-y:auto;width:100%;}
@@ -471,6 +476,55 @@
     </div>
 
     <div class="garage-grid" id="garageGrid"></div>
+
+    <div class="section-subhead">
+      <p class="section-label" style="margin:0;">Loadouts</p>
+      <button class="ghost-btn" id="addLoadoutBtn">+ New loadout</button>
+    </div>
+    <div class="gear-grid" id="loadoutCardsGrid" style="padding-top:0;"></div>
+    <div class="gear-empty" id="loadoutsEmpty" style="display:none;">No loadouts yet — build a reusable packing list to speed up planning your next trip.</div>
+  </div>
+
+  <div class="category-view" id="loadoutDetailView" style="display:none;">
+    <div class="gear-toolbar">
+      <button class="ghost-btn" id="backToGarageFromLoadoutBtn">&larr; Garage</button>
+      <div class="category-view-heading">
+        <h3 class="category-view-title" id="loadoutDetailTitle">Loadout</h3>
+        <span class="category-view-count" id="loadoutDetailSubtitle"></span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="ghost-btn" id="loadoutEditBtn">Edit</button>
+      </div>
+    </div>
+
+    <div class="gear-stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="loadoutStatCount">0</div>
+        <div class="stat-label">items</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="loadoutStatWeight">0</div>
+        <div class="stat-label">total weight</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="loadoutStatTrips">0</div>
+        <div class="stat-label">trips used on</div>
+      </div>
+    </div>
+
+    <div class="trip-detail-section">
+      <div class="trip-detail-section-head">
+        <p class="section-label" style="margin:0;">Items</p>
+      </div>
+      <div id="loadoutItemList"></div>
+    </div>
+
+    <div class="trip-detail-section">
+      <div class="trip-detail-section-head">
+        <p class="section-label" style="margin:0;">Used on</p>
+      </div>
+      <div id="loadoutTripsList"></div>
+    </div>
   </div>
 
   <div class="category-view" id="categoryView" style="display:none;">
@@ -558,7 +612,12 @@
     <div class="trip-detail-section">
       <div class="trip-detail-section-head">
         <p class="section-label" style="margin:0;">Gear</p>
-        <button class="ghost-btn" id="tripGearEditBtn">Edit gear</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select class="mini-select" id="tripLoadoutSelect">
+            <option value="">Apply a loadout…</option>
+          </select>
+          <button class="ghost-btn" id="tripGearEditBtn">Edit gear</button>
+        </div>
       </div>
       <div id="tripGearSummaryList"></div>
     </div>
@@ -736,6 +795,37 @@
         <button type="button" class="danger-btn" id="tripDeleteBtn" style="display:none;">Delete</button>
         <div style="display:flex;gap:8px;margin-left:auto;">
           <button type="button" class="ghost-btn" id="tripCancelBtn">Cancel</button>
+          <button type="submit" class="primary-btn">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="loadoutModalOverlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="loadoutModalTitle">New loadout</h3>
+      <button class="modal-close" id="loadoutModalClose" type="button">&times;</button>
+    </div>
+    <form class="modal-form" id="loadoutForm">
+      <input type="hidden" id="loadoutId">
+      <div class="form-field">
+        <label for="loadoutName">Name *</label>
+        <input type="text" id="loadoutName" required maxlength="120">
+      </div>
+      <div class="form-field">
+        <label for="loadoutNotes">Notes</label>
+        <textarea id="loadoutNotes" maxlength="500" placeholder="e.g. Summer 3-season kit"></textarea>
+      </div>
+      <div class="form-field">
+        <label>Items</label>
+        <div class="trip-gear-list" id="loadoutItemPicker"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="danger-btn" id="loadoutDeleteBtn" style="display:none;">Delete</button>
+        <div style="display:flex;gap:8px;margin-left:auto;">
+          <button type="button" class="ghost-btn" id="loadoutCancelBtn">Cancel</button>
           <button type="submit" class="primary-btn">Save</button>
         </div>
       </div>
@@ -1051,12 +1141,26 @@
 
   // ---- Trips persistence ----
   const STORAGE_TRIPS = 'waypoints-trips-v1';
-  let trips = []; // {id, name, notes, trackIds:[], gearIds:[], createdAt}
+  let trips = []; // {id, name, notes, trackIds:[], gearIds:[], loadoutId, createdAt}
 
   async function saveTrips(){ await storeSet(STORAGE_TRIPS, JSON.stringify(trips)); }
   async function loadTrips(){
     const t = await storeGet(STORAGE_TRIPS);
     trips = t ? JSON.parse(t) : [];
+  }
+
+  // ---- Loadouts persistence ----
+  // A loadout is a reusable named gear list. Applying one to a trip copies
+  // its items into that trip's own gear list (trip.gearIds) as a snapshot,
+  // so editing the trip afterward never changes the loadout template, and
+  // refining the loadout later never rewrites trips that already used it.
+  const STORAGE_LOADOUTS = 'waypoints-loadouts-v1';
+  let loadouts = []; // {id, name, notes, gearIds:[], createdAt}
+
+  async function saveLoadouts(){ await storeSet(STORAGE_LOADOUTS, JSON.stringify(loadouts)); }
+  async function loadLoadouts(){
+    const l = await storeGet(STORAGE_LOADOUTS);
+    loadouts = l ? JSON.parse(l) : [];
   }
 
 
@@ -1258,6 +1362,203 @@
     return tripGearItemsList(trip).reduce((s,g)=>s+(g.weightGrams||0),0);
   }
 
+  // ---- Gear usage (derived from trips, never stored separately so it
+  // can't drift out of sync with what a trip actually carried) ----
+  function tripPrimaryDate(trip){
+    const dates = tripTracks(trip).map(t=>t.date).filter(Boolean).sort();
+    return dates.length ? dates[dates.length-1] : null;
+  }
+  function gearUsageTrips(gearId){
+    return trips.filter(tr => (tr.gearIds||[]).includes(gearId));
+  }
+  function gearUsageSummary(gearId){
+    const used = gearUsageTrips(gearId);
+    if(!used.length) return '';
+    const dates = used.map(tripPrimaryDate).filter(Boolean).sort();
+    const last = dates.length ? dates[dates.length-1] : null;
+    return 'Used on '+used.length+' trip'+(used.length>1?'s':'')+(last?' · last '+last:'');
+  }
+
+  // ---- Loadouts (reusable gear lists) ----
+  let currentLoadoutId = null;
+
+  function loadoutItemsList(loadout){
+    if(!loadout.gearIds || !loadout.gearIds.length) return [];
+    return loadout.gearIds.map(id=>gearItems.find(g=>g.id===id)).filter(Boolean);
+  }
+  function loadoutWeight(loadout){
+    return loadoutItemsList(loadout).reduce((s,g)=>s+(g.weightGrams||0),0);
+  }
+  function loadoutTripsUsing(loadoutId){
+    return trips.filter(tr=>tr.loadoutId===loadoutId);
+  }
+
+  function renderLoadoutCards(){
+    const grid = document.getElementById('loadoutCardsGrid');
+    grid.innerHTML = '';
+    document.getElementById('loadoutsEmpty').style.display = loadouts.length ? 'none' : 'block';
+    if(!loadouts.length) return;
+
+    loadouts.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(lo=>{
+      const items = loadoutItemsList(lo);
+      const weight = loadoutWeight(lo);
+      const usedTrips = loadoutTripsUsing(lo.id);
+      const card = document.createElement('div');
+      card.className = 'trip-card';
+      card.innerHTML =
+        '<div class="trip-card-name">'+escapeHtml(lo.name)+'</div>'+
+        (lo.notes ? '<div class="trip-card-notes">'+escapeHtml(lo.notes)+'</div>' : '')+
+        '<div class="trip-card-meta">'+items.length+' item'+(items.length!==1?'s':'')+(weight?' · '+formatWeight(weight):'')+'</div>'+
+        '<div class="trip-card-meta">Used on '+usedTrips.length+' trip'+(usedTrips.length!==1?'s':'')+'</div>';
+      card.addEventListener('click', ()=> showLoadoutDetail(lo.id));
+      grid.appendChild(card);
+    });
+  }
+
+  function showLoadoutDetail(id){
+    currentGearCategory = null;
+    currentLoadoutId = id;
+    document.getElementById('garageView').style.display = 'none';
+    document.getElementById('categoryView').style.display = 'none';
+    document.getElementById('loadoutDetailView').style.display = 'flex';
+    renderLoadoutDetail();
+  }
+
+  function renderLoadoutDetail(){
+    const lo = loadouts.find(x=>x.id===currentLoadoutId);
+    if(!lo){ showGarage(); return; }
+    const items = loadoutItemsList(lo);
+    const weight = loadoutWeight(lo);
+    const usedTrips = loadoutTripsUsing(lo.id);
+
+    document.getElementById('loadoutDetailTitle').textContent = lo.name;
+    document.getElementById('loadoutDetailSubtitle').textContent = lo.notes || '';
+    document.getElementById('loadoutStatCount').textContent = items.length;
+    document.getElementById('loadoutStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
+    document.getElementById('loadoutStatTrips').textContent = usedTrips.length;
+
+    const itemListEl = document.getElementById('loadoutItemList');
+    itemListEl.innerHTML = '';
+    if(!items.length){
+      itemListEl.innerHTML = '<div class="trip-gear-empty">No items yet — click Edit to add some.</div>';
+    } else {
+      items.forEach(g=>{
+        const row = document.createElement('div');
+        row.className = 'trip-track-row';
+        row.innerHTML =
+          '<span class="trip-track-row-name">'+escapeHtml(g.name)+'</span>'+
+          '<span class="trip-track-row-meta">'+formatWeight(g.weightGrams)+'</span>';
+        itemListEl.appendChild(row);
+      });
+    }
+
+    const tripsListEl = document.getElementById('loadoutTripsList');
+    tripsListEl.innerHTML = '';
+    if(!usedTrips.length){
+      tripsListEl.innerHTML = '<div class="trip-gear-empty">Not used on any trip yet.</div>';
+    } else {
+      usedTrips.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(tr=>{
+        const row = document.createElement('div');
+        row.className = 'trip-track-row';
+        row.style.cursor = 'pointer';
+        row.innerHTML =
+          '<span class="trip-track-row-name">'+escapeHtml(tr.name)+'</span>'+
+          '<span class="trip-track-row-meta">'+escapeHtml(tripPrimaryDate(tr)||'')+'</span>';
+        row.addEventListener('click', ()=>{
+          document.querySelector('.nav-tab[data-page="trips"]').click();
+          showTripDetail(tr.id);
+        });
+        tripsListEl.appendChild(row);
+      });
+    }
+  }
+
+  function renderLoadoutItemPicker(checkedIds){
+    const picker = document.getElementById('loadoutItemPicker');
+    picker.innerHTML = '';
+    const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
+    if(!owned.length){
+      picker.innerHTML = '<div class="trip-gear-empty">No gear in your inventory yet — add some in the Gear Room first.</div>';
+      return;
+    }
+    owned.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(g=>{
+      const row = document.createElement('label');
+      row.className = 'trip-gear-row';
+      row.innerHTML =
+        '<input type="checkbox" data-id="'+g.id+'"'+(checkedIds.has(g.id)?' checked':'')+'>'+
+        '<span class="trip-gear-row-name">'+escapeHtml(g.name)+'<span class="trip-gear-row-cat">'+escapeHtml(g.category||'')+'</span></span>'+
+        '<span class="trip-gear-row-weight">'+formatWeight(g.weightGrams)+'</span>';
+      picker.appendChild(row);
+    });
+  }
+
+  function openLoadoutModal(id){
+    const lo = id ? loadouts.find(x=>x.id===id) : null;
+    document.getElementById('loadoutModalTitle').textContent = lo ? 'Edit loadout' : 'New loadout';
+    document.getElementById('loadoutId').value = lo ? lo.id : '';
+    document.getElementById('loadoutName').value = lo ? lo.name : '';
+    document.getElementById('loadoutNotes').value = lo ? (lo.notes || '') : '';
+    renderLoadoutItemPicker(new Set(lo ? (lo.gearIds || []) : []));
+
+    const delBtn = document.getElementById('loadoutDeleteBtn');
+    delBtn.style.display = lo ? 'inline-block' : 'none';
+    delBtn.textContent = 'Delete';
+    delBtn.dataset.armed = '';
+
+    document.getElementById('loadoutModalOverlay').style.display = 'flex';
+    document.getElementById('loadoutName').focus();
+  }
+
+  function closeLoadoutModal(){
+    document.getElementById('loadoutModalOverlay').style.display = 'none';
+  }
+
+  async function handleLoadoutFormSubmit(e){
+    e.preventDefault();
+    const name = document.getElementById('loadoutName').value.trim();
+    if(!name) return;
+    const id = document.getElementById('loadoutId').value;
+    const gearIds = Array.from(document.querySelectorAll('#loadoutItemPicker input[type="checkbox"]:checked')).map(cb=>cb.dataset.id);
+    const notes = document.getElementById('loadoutNotes').value.trim();
+
+    if(id){
+      const lo = loadouts.find(x=>x.id===id);
+      if(lo){ lo.name = name; lo.notes = notes; lo.gearIds = gearIds; }
+    } else {
+      loadouts.push({id: 'loadout_'+Math.random().toString(36).slice(2,10), name, notes, gearIds, createdAt: Date.now()});
+    }
+    await saveLoadouts();
+    closeLoadoutModal();
+    if(id && currentLoadoutId === id) renderLoadoutDetail();
+    renderLoadoutCards();
+    refreshTripLoadoutSelect();
+  }
+
+  async function handleLoadoutDelete(){
+    const btn = document.getElementById('loadoutDeleteBtn');
+    if(btn.dataset.armed !== '1'){
+      btn.dataset.armed = '1';
+      btn.textContent = 'Click again to confirm';
+      setTimeout(()=>{ btn.dataset.armed=''; btn.textContent='Delete'; }, 3000);
+      return;
+    }
+    const id = document.getElementById('loadoutId').value;
+    loadouts = loadouts.filter(x=>x.id!==id);
+    trips.forEach(tr=>{ if(tr.loadoutId===id) tr.loadoutId = null; });
+    await saveLoadouts();
+    await saveTrips();
+    closeLoadoutModal();
+    showGarage();
+  }
+
+  function refreshTripLoadoutSelect(){
+    const sel = document.getElementById('tripLoadoutSelect');
+    if(!sel) return;
+    sel.innerHTML = '<option value="">Apply a loadout…</option>' +
+      loadouts.slice().sort((a,b)=>a.name.localeCompare(b.name))
+        .map(lo=>'<option value="'+lo.id+'">'+escapeHtml(lo.name)+'</option>').join('');
+  }
+
   function renderTripCards(){
     const grid = document.getElementById('tripCardsGrid');
     grid.innerHTML = '';
@@ -1311,6 +1612,9 @@
     document.getElementById('tripStatDistance').textContent = dist.toFixed(1);
     document.getElementById('tripStatGearCount').textContent = gearList.length;
     document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
+
+    refreshTripLoadoutSelect();
+    document.getElementById('tripLoadoutSelect').value = trip.loadoutId || '';
 
     const trackColors = computeTrackColors();
     const trackList = document.getElementById('tripTrackList');
@@ -1633,6 +1937,7 @@
         '</div>'+
         (g.brand || g.model ? '<div class="gear-card-meta">'+escapeHtml([g.brand,g.model].filter(Boolean).join(' '))+'</div>' : '')+
         '<div class="gear-card-weight">'+formatWeight(g.weightGrams)+'</div>'+
+        (gearUsageSummary(g.id) ? '<div class="gear-card-meta">'+escapeHtml(gearUsageSummary(g.id))+'</div>' : '')+
         '<div class="gear-card-actions">'+
           '<button class="icon-btn" data-action="edit">Edit</button>'+
           '<button class="icon-btn" data-action="duplicate">Duplicate</button>'+
@@ -1687,16 +1992,21 @@
 
   function showGarage(){
     currentGearCategory = null;
+    currentLoadoutId = null;
     document.getElementById('garageView').style.display = 'flex';
     document.getElementById('categoryView').style.display = 'none';
+    document.getElementById('loadoutDetailView').style.display = 'none';
     renderGearStats();
     renderGarage();
+    renderLoadoutCards();
   }
 
   function showCategory(cat){
     currentGearCategory = cat;
+    currentLoadoutId = null;
     document.getElementById('garageView').style.display = 'none';
     document.getElementById('categoryView').style.display = 'flex';
+    document.getElementById('loadoutDetailView').style.display = 'none';
     document.getElementById('gearSearch').value = '';
     document.getElementById('gearStatusFilter').value = '';
     updateCategoryViewHeader();
@@ -1704,9 +2014,13 @@
   }
 
   function refreshGear(){
-    if(currentGearCategory === null){
+    if(currentLoadoutId !== null){
+      renderLoadoutDetail();
+      renderLoadoutCards();
+    } else if(currentGearCategory === null){
       renderGearStats();
       renderGarage();
+      renderLoadoutCards();
     } else {
       updateCategoryViewHeader();
       renderGearGrid();
@@ -1882,6 +2196,35 @@
   });
   document.getElementById('tripForm').addEventListener('submit', handleTripFormSubmit);
   document.getElementById('tripDeleteBtn').addEventListener('click', handleTripDelete);
+  document.getElementById('tripLoadoutSelect').addEventListener('change', async (e)=>{
+    const loadoutId = e.target.value;
+    const trip = trips.find(t=>t.id===currentTripId);
+    if(!trip) return;
+    if(!loadoutId){
+      trip.loadoutId = null;
+    } else {
+      const lo = loadouts.find(x=>x.id===loadoutId);
+      if(lo){
+        trip.gearIds = (lo.gearIds || []).slice();
+        trip.loadoutId = lo.id;
+      }
+    }
+    await saveTrips();
+    renderTripDetail();
+    renderTripCards();
+  });
+
+  // ---- Loadouts wiring ----
+  document.getElementById('addLoadoutBtn').addEventListener('click', ()=> openLoadoutModal(null));
+  document.getElementById('backToGarageFromLoadoutBtn').addEventListener('click', showGarage);
+  document.getElementById('loadoutEditBtn').addEventListener('click', ()=> openLoadoutModal(currentLoadoutId));
+  document.getElementById('loadoutModalClose').addEventListener('click', closeLoadoutModal);
+  document.getElementById('loadoutCancelBtn').addEventListener('click', closeLoadoutModal);
+  document.getElementById('loadoutModalOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'loadoutModalOverlay') closeLoadoutModal();
+  });
+  document.getElementById('loadoutForm').addEventListener('submit', handleLoadoutFormSubmit);
+  document.getElementById('loadoutDeleteBtn').addEventListener('click', handleLoadoutDelete);
 
   // ---- Wiring ----
   document.getElementById('googleInput').addEventListener('change', e=>handleGoogleFile(e.target.files[0]));
@@ -1955,6 +2298,7 @@
     await loadAll();
     await loadGear();
     await loadTrips();
+    await loadLoadouts();
     showGarage();
     refreshEverything();
     if(tracks.length || googlePoints.length){
