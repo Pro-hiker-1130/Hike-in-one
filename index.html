@@ -632,6 +632,17 @@
       <h3 id="gearModalTitle">Add gear</h3>
       <button class="modal-close" id="gearModalClose" type="button">&times;</button>
     </div>
+    <div class="modal-form" style="padding-bottom:0;">
+      <div class="form-field">
+        <label for="gearUrlInput">Quick add: product link or barcode</label>
+        <div style="display:flex;gap:8px;">
+          <input type="url" id="gearUrlInput" placeholder="Paste a product URL…" style="flex:1;">
+          <button type="button" class="ghost-btn" id="gearUrlFetchBtn">Fetch</button>
+          <button type="button" class="ghost-btn" id="gearBarcodeBtn">Scan barcode</button>
+        </div>
+      </div>
+      <div class="upload-status" id="gearQuickAddStatus"></div>
+    </div>
     <form class="modal-form" id="gearForm">
       <input type="hidden" id="gearId">
       <div class="form-row">
@@ -833,7 +844,21 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="barcodeModalOverlay" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>Scan a barcode</h3>
+      <button class="modal-close" id="barcodeModalClose" type="button">&times;</button>
+    </div>
+    <div style="padding:18px 20px;">
+      <video id="barcodeVideo" style="width:100%;border-radius:6px;background:#000;display:block;" playsinline muted></video>
+      <div class="upload-status" id="barcodeScanStatus" style="margin-top:10px;">Point your camera at a barcode…</div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script>
 (function(){
@@ -2073,12 +2098,119 @@
     delBtn.textContent = 'Delete';
     delBtn.dataset.armed = '';
 
+    document.getElementById('gearUrlInput').value = '';
+    document.getElementById('gearQuickAddStatus').textContent = '';
+    document.getElementById('gearQuickAddStatus').className = 'upload-status';
+
     document.getElementById('gearModalOverlay').style.display = 'flex';
     document.getElementById('gearName').focus();
   }
 
   function closeGearModal(){
     document.getElementById('gearModalOverlay').style.display = 'none';
+    closeBarcodeScanner();
+  }
+
+  // ---- Quick add: product link preview ----
+  // Uses microlink.io's free, keyless, browser-friendly link-unfurl API to
+  // pull a title + image from a pasted product URL. Free tier is capped at
+  // 25 requests/day (per IP) — plenty for occasionally adding gear.
+  async function fetchGearFromUrl(url){
+    const statusEl = document.getElementById('gearQuickAddStatus');
+    statusEl.className = 'upload-status';
+    statusEl.textContent = 'Fetching preview…';
+    try{
+      const res = await fetch('https://api.microlink.io/?url='+encodeURIComponent(url)+'&palette=false');
+      const json = await res.json();
+      if(json.status !== 'success' || !json.data) throw new Error('no preview');
+      const data = json.data;
+      if(data.title) document.getElementById('gearName').value = data.title;
+      if(data.image && data.image.url) document.getElementById('gearImageUrl').value = data.image.url;
+      document.getElementById('gearProductUrl').value = url;
+      statusEl.textContent = 'Filled in name and image from the link — check weight, price and category.';
+    }catch(err){
+      statusEl.className = 'upload-error';
+      statusEl.textContent = "Couldn't fetch a preview for that link (the site may block it, or today's free quota is used up). You can still fill in the fields manually.";
+    }
+  }
+
+  // ---- Quick add: barcode scan ----
+  // ZXing decodes frames from the camera stream entirely client-side; once a
+  // barcode is read, the code is looked up against UPCitemdb's free "trial"
+  // endpoint (no key, 100 lookups/day) for a title/brand/image/weight.
+  let barcodeReader = null;
+
+  async function openBarcodeScanner(){
+    const overlay = document.getElementById('barcodeModalOverlay');
+    const statusEl = document.getElementById('barcodeScanStatus');
+    statusEl.className = 'upload-status';
+    statusEl.textContent = 'Point your camera at a barcode…';
+    overlay.style.display = 'flex';
+
+    if(typeof ZXing === 'undefined'){
+      statusEl.className = 'upload-error';
+      statusEl.textContent = 'Barcode scanning failed to load. Check your connection and try again.';
+      return;
+    }
+    try{
+      barcodeReader = new ZXing.BrowserMultiFormatReader();
+      const videoEl = document.getElementById('barcodeVideo');
+      await barcodeReader.decodeFromVideoDevice(undefined, videoEl, (result)=>{
+        if(result){
+          const code = result.getText();
+          closeBarcodeScanner();
+          lookupBarcodeAndFill(code);
+        }
+        // decodeFromVideoDevice's callback also fires a NotFoundException on
+        // every frame with no match — that's expected while scanning, not an error.
+      });
+    }catch(err){
+      statusEl.className = 'upload-error';
+      statusEl.textContent = 'Could not access the camera. Check permissions and try again.';
+    }
+  }
+
+  function closeBarcodeScanner(){
+    if(barcodeReader){
+      barcodeReader.reset();
+      barcodeReader = null;
+    }
+    document.getElementById('barcodeModalOverlay').style.display = 'none';
+  }
+
+  function parseWeightToGrams(weightStr){
+    if(!weightStr) return null;
+    const m = String(weightStr).match(/([\d.]+)\s*(kilograms?|kg|grams?|g|pounds?|lbs?|ounces?|oz)\b/i);
+    if(!m) return null;
+    const val = parseFloat(m[1]);
+    if(!isFinite(val)) return null;
+    const unit = m[2].toLowerCase();
+    if(unit.startsWith('kg') || unit.startsWith('kilo')) return Math.round(val*1000);
+    if(unit.startsWith('lb') || unit.startsWith('pound')) return Math.round(val*453.592);
+    if(unit.startsWith('oz') || unit.startsWith('ounce')) return Math.round(val*28.3495);
+    if(unit.startsWith('g')) return Math.round(val);
+    return null;
+  }
+
+  async function lookupBarcodeAndFill(code){
+    const statusEl = document.getElementById('gearQuickAddStatus');
+    statusEl.className = 'upload-status';
+    statusEl.textContent = 'Looking up barcode '+code+'…';
+    try{
+      const res = await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc='+encodeURIComponent(code));
+      const json = await res.json();
+      const item = json.items && json.items[0];
+      if(!item) throw new Error('not found');
+      if(item.title) document.getElementById('gearName').value = item.title;
+      if(item.brand) document.getElementById('gearBrand').value = item.brand;
+      if(item.images && item.images.length) document.getElementById('gearImageUrl').value = item.images[0];
+      const weightG = parseWeightToGrams(item.weight);
+      if(weightG) document.getElementById('gearWeight').value = weightG;
+      statusEl.textContent = 'Filled in from barcode lookup — check weight, price and category.';
+    }catch(err){
+      statusEl.className = 'upload-error';
+      statusEl.textContent = "Couldn't find that barcode in the product database. You can still fill in the fields manually.";
+    }
   }
 
   async function handleGearFormSubmit(e){
@@ -2164,6 +2296,23 @@
   document.getElementById('gearSearch').addEventListener('input', renderGearGrid);
   document.getElementById('gearStatusFilter').addEventListener('change', renderGearGrid);
   document.getElementById('gearSort').addEventListener('change', renderGearGrid);
+
+  // ---- Quick add (URL preview / barcode scan) wiring ----
+  document.getElementById('gearUrlFetchBtn').addEventListener('click', ()=>{
+    const url = document.getElementById('gearUrlInput').value.trim();
+    if(url) fetchGearFromUrl(url);
+  });
+  document.getElementById('gearUrlInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      document.getElementById('gearUrlFetchBtn').click();
+    }
+  });
+  document.getElementById('gearBarcodeBtn').addEventListener('click', openBarcodeScanner);
+  document.getElementById('barcodeModalClose').addEventListener('click', closeBarcodeScanner);
+  document.getElementById('barcodeModalOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'barcodeModalOverlay') closeBarcodeScanner();
+  });
 
   // ---- Gear picker wiring ----
   document.getElementById('tripGearModalClose').addEventListener('click', closeGearPickerModal);
