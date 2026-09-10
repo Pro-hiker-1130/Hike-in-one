@@ -2121,16 +2121,40 @@
     statusEl.textContent = 'Fetching preview…';
     try{
       const res = await fetch('https://api.microlink.io/?url='+encodeURIComponent(url)+'&palette=false');
-      const json = await res.json();
-      if(json.status !== 'success' || !json.data) throw new Error('no preview');
+      if(res.status === 429){
+        const err = new Error('quota'); err.kind = 'quota'; throw err;
+      }
+      let json;
+      try{
+        json = await res.json();
+      }catch(parseErr){
+        const err = new Error('Preview service returned something unexpected (HTTP '+res.status+').');
+        err.kind = 'bad-response';
+        throw err;
+      }
+      if(json.status !== 'success' || !json.data){
+        const err = new Error(json.message || 'No preview data for that link.');
+        err.kind = 'no-preview';
+        throw err;
+      }
       const data = json.data;
       if(data.title) document.getElementById('gearName').value = data.title;
       if(data.image && data.image.url) document.getElementById('gearImageUrl').value = data.image.url;
       document.getElementById('gearProductUrl').value = url;
       statusEl.textContent = 'Filled in name and image from the link — check weight, price and category.';
     }catch(err){
+      console.error('Link preview failed:', err);
       statusEl.className = 'upload-error';
-      statusEl.textContent = "Couldn't fetch a preview for that link (the site may block it, or today's free quota is used up). You can still fill in the fields manually.";
+      if(err.kind === 'quota'){
+        statusEl.textContent = "Today's free preview quota is used up (it resets daily) — fill in the fields manually for now.";
+      } else if(err instanceof TypeError){
+        // fetch() itself rejected before any response came back — almost
+        // always a network failure or the browser blocking a cross-origin
+        // request (CORS), which JS is never told the specifics of.
+        statusEl.textContent = "Couldn't reach the preview service at all (blocked or offline) — check the browser console for details, or fill in manually.";
+      } else {
+        statusEl.textContent = "Couldn't get a preview for that link (" + err.message + ") — you can still fill in the fields manually.";
+      }
     }
   }
 
@@ -2140,11 +2164,29 @@
   // endpoint (no key, 100 lookups/day) for a title/brand/image/weight.
   let barcodeReader = null;
 
+  // Chrome on Android supports requesting continuous autofocus on a live
+  // camera track; without it, some phones default to a fixed-focus preview
+  // that never sharpens up close, which reads as "the camera won't focus."
+  // iOS Safari and desktop browsers don't expose this — silently a no-op there.
+  async function enableContinuousFocus(videoEl){
+    try{
+      const stream = videoEl.srcObject;
+      const track = stream && stream.getVideoTracks()[0];
+      if(!track || !track.getCapabilities) return;
+      const caps = track.getCapabilities();
+      if(caps.focusMode && caps.focusMode.includes('continuous')){
+        await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
+      }
+    }catch(err){
+      // Best-effort only — never block scanning on this.
+    }
+  }
+
   async function openBarcodeScanner(){
     const overlay = document.getElementById('barcodeModalOverlay');
     const statusEl = document.getElementById('barcodeScanStatus');
     statusEl.className = 'upload-status';
-    statusEl.textContent = 'Point your camera at a barcode…';
+    statusEl.textContent = 'Hold the barcode flat, a few inches from the camera…';
     overlay.style.display = 'flex';
 
     if(typeof ZXing === 'undefined'){
@@ -2155,16 +2197,25 @@
     try{
       barcodeReader = new ZXing.BrowserMultiFormatReader();
       const videoEl = document.getElementById('barcodeVideo');
-      await barcodeReader.decodeFromVideoDevice(undefined, videoEl, (result)=>{
+      // decodeFromConstraints (rather than decodeFromVideoDevice) lets us ask
+      // for a decent resolution alongside the back camera — on multi-lens
+      // phones a plain facingMode request can otherwise land on a low-res
+      // lens with no real autofocus.
+      const constraints = {
+        video: { facingMode: 'environment', width: {ideal: 1280}, height: {ideal: 720} }
+      };
+      await barcodeReader.decodeFromConstraints(constraints, videoEl, (result)=>{
         if(result){
           const code = result.getText();
           closeBarcodeScanner();
           lookupBarcodeAndFill(code);
         }
-        // decodeFromVideoDevice's callback also fires a NotFoundException on
-        // every frame with no match — that's expected while scanning, not an error.
+        // The callback also fires a NotFoundException on every frame with no
+        // match — that's expected while scanning, not an error.
       });
+      await enableContinuousFocus(videoEl);
     }catch(err){
+      console.error('Camera error:', err);
       statusEl.className = 'upload-error';
       statusEl.textContent = 'Could not access the camera. Check permissions and try again.';
     }
