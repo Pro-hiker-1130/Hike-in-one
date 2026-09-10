@@ -183,7 +183,7 @@
     .sidebar{width:100%;min-width:0;max-height:46vh;border-right:none;border-bottom:1px solid var(--line);}
     .gear-toolbar{flex-wrap:wrap;}
     .gear-grid{grid-template-columns:1fr;}
-    .gear-scene{padding:10px 14px 24px;gap:22px;}
+    .gear-scene{margin:12px 12px 16px;padding:16px 12px 0;gap:22px;}
     .scene-item{min-width:64px;padding:6px 4px;}
     .scene-item-icon{width:32px;height:32px;}
     .bench-boot-icon{width:34px;height:34px;}
@@ -260,7 +260,23 @@
   .garage-heading h2{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0;}
   .garage-heading p{font-size:12.5px;color:var(--muted);margin:4px 0 0;}
   /* ---- Gear room scene: shelves, a hook rail, a boot bench ---- */
-  .gear-scene{flex:none;display:flex;flex-direction:column;gap:30px;padding:10px 28px 30px;overflow-x:hidden;}
+  /* A subtle shiplap wall + fine grain noise behind the whole scene, and a
+     soft overhead-light vignette, so the room reads as a lit physical space
+     rather than flat app chrome. All CSS/SVG — no photos, so it stays
+     self-contained and the click targets line up exactly where we draw them. */
+  .gear-scene{
+    flex:none;position:relative;display:flex;flex-direction:column;gap:32px;
+    margin:18px 24px 24px;padding:22px 24px 0;overflow:hidden;border-radius:10px;
+    background:
+      radial-gradient(ellipse 70% 35% at 50% 0%, rgba(255,238,214,0.07), transparent 65%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.16) 0 1px, transparent 1px 96px),
+      linear-gradient(180deg, #16294A 0%, #0F2038 100%);
+  }
+  .gear-scene::after{
+    content:'';position:absolute;inset:0;pointer-events:none;opacity:0.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .scene-band{position:relative;z-index:1;}
   .scene-band-label{
     font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;
     margin:0 0 10px;
@@ -273,32 +289,52 @@
     transition:transform .15s ease;background:none;border:none;font-family:inherit;
   }
   .scene-item:hover{transform:translateY(-3px);}
-  .scene-item.is-empty{opacity:0.42;}
+  .scene-item.is-empty{opacity:0.4;}
   .scene-item-icon{position:relative;width:40px;height:40px;color:var(--brass);flex:none;}
-  .scene-item-icon svg{width:100%;height:100%;filter:drop-shadow(0 3px 2px rgba(0,0,0,0.4));}
+  .scene-item-icon svg{width:100%;height:100%;filter:drop-shadow(0 5px 4px rgba(0,0,0,0.55));}
   .scene-item-name{font-size:11.5px;font-weight:500;color:var(--parchment);text-align:center;line-height:1.2;}
   .scene-item-count{font-size:10px;color:var(--muted);text-align:center;}
+  /* a faint grounded shadow so items feel like they're resting/hanging, not floating */
+  .scene-item-icon::after, .bench-boot-icon::after{
+    content:'';position:absolute;left:50%;bottom:-3px;transform:translateX(-50%);
+    width:64%;height:7px;background:rgba(0,0,0,0.4);border-radius:50%;filter:blur(3px);
+  }
+  .bench-boot-icon{position:relative;}
+  /* a little life — nothing hangs or stands perfectly square */
+  .hook-row .scene-item:nth-child(3n+1) .scene-item-icon{transform:rotate(-3deg);}
+  .hook-row .scene-item:nth-child(3n+2) .scene-item-icon{transform:rotate(2deg);}
+  .bench-icon-row .bench-boot-icon:nth-child(2n){transform:rotate(-4deg);}
+  .bench-icon-row .bench-boot-icon:nth-child(3n){transform:rotate(3deg);}
 
-  /* wood shelf the items rest on */
+  /* wood shelf the items rest on — layered grain + a lit top edge */
   .shelf-plank{
-    height:13px;margin-top:2px;border-radius:2px;position:relative;
-    background:linear-gradient(180deg,#C99B62 0%,#9A6E3D 55%,#734F29 100%);
-    box-shadow:0 5px 7px rgba(0,0,0,0.35);
+    height:14px;margin-top:2px;border-radius:2px;position:relative;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 11px, rgba(0,0,0,0.06) 11px 13px, transparent 13px 22px),
+      linear-gradient(180deg, #E0B37D 0%, #C99B62 12%, #9A6E3D 55%, #6E4C29 100%);
+    box-shadow:0 6px 8px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,235,210,0.5);
   }
   .shelf-plank::before, .shelf-plank::after{
-    content:'';position:absolute;top:100%;width:9px;height:16px;background:#5C3E20;
+    content:'';position:absolute;top:100%;width:9px;height:16px;
+    background:linear-gradient(180deg,#5C3E20,#40290F);
   }
   .shelf-plank::before{left:18px;clip-path:polygon(0 0,100% 0,0 100%);}
   .shelf-plank::after{right:18px;clip-path:polygon(100% 0,100% 100%,0 0);}
 
-  /* pegboard rail the backpacks/jackets hang from */
+  /* pegboard rail the backpacks/jackets hang from — brushed metal */
   .hook-rail{
-    height:7px;border-radius:4px;background:var(--panel-alt);border:1px solid var(--line);
+    height:8px;border-radius:4px;position:relative;
+    background:linear-gradient(180deg, #9BA1AC 0%, #565C66 45%, #2E3238 100%);
+    box-shadow:0 3px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
   }
   .hook-row{padding-top:2px;}
   .hook-row .scene-item{padding-top:0;}
-  .hook-peg{width:9px;height:9px;border-radius:50%;background:var(--brass);margin:-5px auto 0;position:relative;z-index:1;}
-  .hook-strap{width:2px;height:13px;background:rgba(243,237,225,0.3);margin:0 auto;}
+  .hook-peg{
+    width:10px;height:10px;border-radius:50%;margin:-5px auto 0;position:relative;z-index:1;
+    background:radial-gradient(circle at 35% 30%, #F2CE9E, var(--brass) 55%, #8A5227 100%);
+    box-shadow:0 2px 3px rgba(0,0,0,0.55);
+  }
+  .hook-strap{width:2px;height:13px;background:rgba(243,237,225,0.35);margin:0 auto;}
 
   /* bench the boots stand on — sized to its row of boots, not the full width */
   .bench-wrap{
@@ -306,21 +342,33 @@
     transition:transform .15s ease;
   }
   .bench-wrap:hover{transform:translateY(-3px);}
-  .bench-wrap.is-empty{opacity:0.42;}
-  .bench-icon-row{display:flex;gap:16px;padding:0 4px;}
+  .bench-wrap.is-empty{opacity:0.4;}
+  .bench-icon-row{display:flex;gap:16px;padding:0 4px;align-items:flex-end;}
   .bench-boot-icon{width:44px;height:44px;color:var(--brass);flex:none;}
-  .bench-boot-icon svg{width:100%;height:100%;filter:drop-shadow(0 3px 2px rgba(0,0,0,0.4));}
+  .bench-boot-icon svg{width:100%;height:100%;filter:drop-shadow(0 5px 4px rgba(0,0,0,0.55));}
   .bench-plank{
-    height:15px;margin-top:4px;border-radius:3px;position:relative;
-    background:linear-gradient(180deg,#C99B62 0%,#9A6E3D 55%,#734F29 100%);
-    box-shadow:0 6px 9px rgba(0,0,0,0.35);
+    height:15px;margin-top:5px;border-radius:3px;position:relative;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 11px, rgba(0,0,0,0.06) 11px 13px, transparent 13px 22px),
+      linear-gradient(180deg, #E0B37D 0%, #C99B62 12%, #9A6E3D 55%, #6E4C29 100%);
+    box-shadow:0 7px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,235,210,0.5);
   }
   .bench-plank::before, .bench-plank::after{
-    content:'';position:absolute;top:100%;width:6px;height:18px;background:#5C3E20;
+    content:'';position:absolute;top:100%;width:6px;height:18px;
+    background:linear-gradient(180deg,#5C3E20,#40290F);
   }
   .bench-plank::before{left:10px;}
   .bench-plank::after{right:10px;}
   .bench-label{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:22px;white-space:nowrap;}
+
+  /* the floor the whole room stands on */
+  .scene-floor{
+    height:30px;margin-top:6px;border-radius:0 0 8px 8px;position:relative;z-index:1;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0 2px, transparent 2px 70px),
+      linear-gradient(180deg, #8A6239 0%, #6B4A2A 100%);
+    box-shadow:inset 0 3px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,210,0.15);
+  }
 
   .garage-header .ghost-btn{align-self:flex-start;}
   .section-subhead{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 8px;flex:none;}
@@ -2122,6 +2170,10 @@
 
       scene.appendChild(bandEl);
     });
+
+    const floor = document.createElement('div');
+    floor.className = 'scene-floor';
+    scene.appendChild(floor);
   }
 
   function updateCategoryViewHeader(){
