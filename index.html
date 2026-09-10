@@ -183,7 +183,10 @@
     .sidebar{width:100%;min-width:0;max-height:46vh;border-right:none;border-bottom:1px solid var(--line);}
     .gear-toolbar{flex-wrap:wrap;}
     .gear-grid{grid-template-columns:1fr;}
-    .garage-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));}
+    .gear-scene{padding:10px 14px 24px;gap:22px;}
+    .scene-item{min-width:64px;padding:6px 4px;}
+    .scene-item-icon{width:32px;height:32px;}
+    .bench-boot-icon{width:34px;height:34px;}
   }
 
   /* ---- Gear Room ---- */
@@ -256,25 +259,70 @@
   }
   .garage-heading h2{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0;}
   .garage-heading p{font-size:12.5px;color:var(--muted);margin:4px 0 0;}
-  .garage-grid{
-    flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
-    gap:14px;padding:18px 24px 24px;align-content:start;
+  /* ---- Gear room scene: shelves, a hook rail, a boot bench ---- */
+  .gear-scene{flex:none;display:flex;flex-direction:column;gap:30px;padding:10px 28px 30px;overflow-x:hidden;}
+  .scene-band-label{
+    font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;
+    margin:0 0 10px;
   }
-  .garage-tile{
-    background:var(--panel);border:1px solid var(--line);border-radius:9px;
-    padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;
-    cursor:pointer;text-align:center;transition:border-color .15s ease, transform .1s ease;
+
+  .scene-row{display:flex;flex-wrap:wrap;gap:4px 6px;padding:0 6px;}
+  .scene-item{
+    display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:6px 10px;border-radius:8px;cursor:pointer;flex:1;min-width:84px;max-width:140px;
+    transition:transform .15s ease;background:none;border:none;font-family:inherit;
   }
-  .garage-tile:hover{border-color:var(--brass);transform:translateY(-2px);}
-  .garage-tile-icon{
-    width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    background:var(--panel-alt);color:var(--brass);flex:none;
+  .scene-item:hover{transform:translateY(-3px);}
+  .scene-item.is-empty{opacity:0.42;}
+  .scene-item-icon{position:relative;width:40px;height:40px;color:var(--brass);flex:none;}
+  .scene-item-icon svg{width:100%;height:100%;filter:drop-shadow(0 3px 2px rgba(0,0,0,0.4));}
+  .scene-item-name{font-size:11.5px;font-weight:500;color:var(--parchment);text-align:center;line-height:1.2;}
+  .scene-item-count{font-size:10px;color:var(--muted);text-align:center;}
+
+  /* wood shelf the items rest on */
+  .shelf-plank{
+    height:13px;margin-top:2px;border-radius:2px;position:relative;
+    background:linear-gradient(180deg,#C99B62 0%,#9A6E3D 55%,#734F29 100%);
+    box-shadow:0 5px 7px rgba(0,0,0,0.35);
   }
-  .garage-tile.all-items .garage-tile-icon{color:var(--parchment);}
-  .garage-tile-icon svg{width:22px;height:22px;}
-  .garage-tile-name{font-size:13.5px;font-weight:500;color:var(--parchment);}
-  .garage-tile-count{font-size:11.5px;color:var(--muted);}
-  .garage-tile-weight{font-size:11px;color:var(--muted);}
+  .shelf-plank::before, .shelf-plank::after{
+    content:'';position:absolute;top:100%;width:9px;height:16px;background:#5C3E20;
+  }
+  .shelf-plank::before{left:18px;clip-path:polygon(0 0,100% 0,0 100%);}
+  .shelf-plank::after{right:18px;clip-path:polygon(100% 0,100% 100%,0 0);}
+
+  /* pegboard rail the backpacks/jackets hang from */
+  .hook-rail{
+    height:7px;border-radius:4px;background:var(--panel-alt);border:1px solid var(--line);
+  }
+  .hook-row{padding-top:2px;}
+  .hook-row .scene-item{padding-top:0;}
+  .hook-peg{width:9px;height:9px;border-radius:50%;background:var(--brass);margin:-5px auto 0;position:relative;z-index:1;}
+  .hook-strap{width:2px;height:13px;background:rgba(243,237,225,0.3);margin:0 auto;}
+
+  /* bench the boots stand on — sized to its row of boots, not the full width */
+  .bench-wrap{
+    display:inline-flex;flex-direction:column;cursor:pointer;padding:0 6px;
+    transition:transform .15s ease;
+  }
+  .bench-wrap:hover{transform:translateY(-3px);}
+  .bench-wrap.is-empty{opacity:0.42;}
+  .bench-icon-row{display:flex;gap:16px;padding:0 4px;}
+  .bench-boot-icon{width:44px;height:44px;color:var(--brass);flex:none;}
+  .bench-boot-icon svg{width:100%;height:100%;filter:drop-shadow(0 3px 2px rgba(0,0,0,0.4));}
+  .bench-plank{
+    height:15px;margin-top:4px;border-radius:3px;position:relative;
+    background:linear-gradient(180deg,#C99B62 0%,#9A6E3D 55%,#734F29 100%);
+    box-shadow:0 6px 9px rgba(0,0,0,0.35);
+  }
+  .bench-plank::before, .bench-plank::after{
+    content:'';position:absolute;top:100%;width:6px;height:18px;background:#5C3E20;
+  }
+  .bench-plank::before{left:10px;}
+  .bench-plank::after{right:10px;}
+  .bench-label{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:22px;white-space:nowrap;}
+
+  .garage-header .ghost-btn{align-self:flex-start;}
   .section-subhead{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 8px;flex:none;}
   .mini-select{
     background:var(--panel-alt);border:1px solid var(--line);color:var(--parchment);
@@ -454,10 +502,13 @@
   <div class="garage-view" id="garageView">
     <div class="garage-header">
       <div class="garage-heading">
-        <h2>The Garage</h2>
-        <p>Your gear, sorted by kind — click a shelf to see what's on it</p>
+        <h2>The Gear Room</h2>
+        <p>Your gear, where it lives — click a shelf, hook or bench to see what's on it</p>
       </div>
-      <button class="primary-btn" id="addGearBtnGarage">+ Add item</button>
+      <div style="display:flex;gap:8px;">
+        <button class="ghost-btn" id="viewAllGearBtn">View all items</button>
+        <button class="primary-btn" id="addGearBtnGarage">+ Add item</button>
+      </div>
     </div>
 
     <div class="gear-stats-row">
@@ -475,7 +526,7 @@
       </div>
     </div>
 
-    <div class="garage-grid" id="garageGrid"></div>
+    <div class="gear-scene" id="gearScene"></div>
 
     <div class="section-subhead">
       <p class="section-label" style="margin:0;">Loadouts</p>
@@ -1866,6 +1917,14 @@
     'Backpack','Shelter','Sleep system','Clothing','Footwear','Cooking',
     'Water','Navigation','Electronics','Safety','Hygiene','Food','Other'
   ];
+  // How the garage scene groups categories into shelves/hooks/a bench —
+  // every GEAR_CATEGORIES entry appears in exactly one band.
+  const GEAR_SCENE_BANDS = [
+    {type:'hook', label:'On the hooks', categories:['Backpack','Clothing']},
+    {type:'shelf', label:'Upper shelf', categories:['Shelter','Sleep system','Cooking','Water']},
+    {type:'shelf', label:'Lower shelf', categories:['Navigation','Electronics','Safety','Hygiene','Food','Other']},
+    {type:'bench', label:'Boot bench', categories:['Footwear']}
+  ];
   const ICON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
   const GEAR_ICONS = {
     All: '<svg '+ICON_ATTRS+'><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
@@ -1976,32 +2035,92 @@
   }
 
   function renderGarage(){
-    const grid = document.getElementById('garageGrid');
-    grid.innerHTML = '';
+    const scene = document.getElementById('gearScene');
+    scene.innerHTML = '';
 
-    const allOwnedCount = gearItems.filter(g=>OWNED_STATUSES.includes(g.status)).reduce((s,g)=>s+(g.quantity||1),0);
-    const allTile = document.createElement('div');
-    allTile.className = 'garage-tile all-items';
-    allTile.innerHTML =
-      '<div class="garage-tile-icon">'+GEAR_ICONS.All+'</div>'+
-      '<div class="garage-tile-name">All items</div>'+
-      '<div class="garage-tile-count">'+allOwnedCount+' owned</div>';
-    allTile.addEventListener('click', ()=> showCategory('ALL'));
-    grid.appendChild(allTile);
+    GEAR_SCENE_BANDS.forEach(band=>{
+      const bandEl = document.createElement('div');
+      bandEl.className = 'scene-band';
 
-    GEAR_CATEGORIES.forEach(cat=>{
-      const owned = gearItems.filter(g=>g.category===cat && OWNED_STATUSES.includes(g.status));
-      const count = owned.reduce((s,g)=>s+(g.quantity||1),0);
-      const weight = owned.reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
-      const tile = document.createElement('div');
-      tile.className = 'garage-tile';
-      tile.innerHTML =
-        '<div class="garage-tile-icon">'+(GEAR_ICONS[cat]||GEAR_ICONS.Other)+'</div>'+
-        '<div class="garage-tile-name">'+escapeHtml(cat)+'</div>'+
-        '<div class="garage-tile-count">'+count+' owned</div>'+
-        (weight ? '<div class="garage-tile-weight">'+formatWeight(weight)+'</div>' : '');
-      tile.addEventListener('click', ()=> showCategory(cat));
-      grid.appendChild(tile);
+      const label = document.createElement('p');
+      label.className = 'scene-band-label';
+      label.textContent = band.label;
+      bandEl.appendChild(label);
+
+      if(band.type === 'bench'){
+        // Special-cased: a bench only ever holds one category (Footwear), so
+        // instead of one lonely icon on a wide, empty-looking plank, show one
+        // boot per owned pair (capped) sized to the row — a proper row of
+        // boots, with a single shared label/click-target underneath.
+        const cat = band.categories[0];
+        const owned = gearItems.filter(g=>g.category===cat && OWNED_STATUSES.includes(g.status));
+        const count = owned.reduce((s,g)=>s+(g.quantity||1),0);
+        const weight = owned.reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
+        const iconCount = Math.max(1, Math.min(count, 6));
+
+        const wrap = document.createElement('div');
+        wrap.className = 'bench-wrap' + (count ? '' : ' is-empty');
+        wrap.addEventListener('click', ()=> showCategory(cat));
+
+        const iconRow = document.createElement('div');
+        iconRow.className = 'bench-icon-row';
+        for(let i=0;i<iconCount;i++){
+          const icon = document.createElement('div');
+          icon.className = 'bench-boot-icon';
+          icon.innerHTML = GEAR_ICONS[cat] || GEAR_ICONS.Other;
+          iconRow.appendChild(icon);
+        }
+        wrap.appendChild(iconRow);
+
+        const plank = document.createElement('div');
+        plank.className = 'bench-plank';
+        wrap.appendChild(plank);
+
+        const labelEl = document.createElement('div');
+        labelEl.className = 'bench-label';
+        labelEl.innerHTML =
+          '<span class="scene-item-name">'+escapeHtml(cat)+'</span>'+
+          '<span class="scene-item-count">'+count+' owned'+(weight?' · '+formatWeight(weight):'')+'</span>';
+        wrap.appendChild(labelEl);
+
+        bandEl.appendChild(wrap);
+        scene.appendChild(bandEl);
+        return;
+      }
+
+      if(band.type === 'hook'){
+        const rail = document.createElement('div');
+        rail.className = 'hook-rail';
+        bandEl.appendChild(rail);
+      }
+
+      const row = document.createElement('div');
+      row.className = 'scene-row' + (band.type === 'hook' ? ' hook-row' : '');
+
+      band.categories.forEach(cat=>{
+        const owned = gearItems.filter(g=>g.category===cat && OWNED_STATUSES.includes(g.status));
+        const count = owned.reduce((s,g)=>s+(g.quantity||1),0);
+        const weight = owned.reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
+
+        const item = document.createElement('div');
+        item.className = 'scene-item' + (count ? '' : ' is-empty');
+        item.innerHTML =
+          (band.type === 'hook' ? '<div class="hook-peg"></div><div class="hook-strap"></div>' : '') +
+          '<div class="scene-item-icon">'+(GEAR_ICONS[cat]||GEAR_ICONS.Other)+'</div>'+
+          '<div class="scene-item-name">'+escapeHtml(cat)+'</div>'+
+          '<div class="scene-item-count">'+count+' owned'+(weight?' · '+formatWeight(weight):'')+'</div>';
+        item.addEventListener('click', ()=> showCategory(cat));
+        row.appendChild(item);
+      });
+      bandEl.appendChild(row);
+
+      if(band.type === 'shelf'){
+        const plank = document.createElement('div');
+        plank.className = 'shelf-plank';
+        bandEl.appendChild(plank);
+      }
+
+      scene.appendChild(bandEl);
     });
   }
 
@@ -2340,6 +2459,7 @@
 
   // ---- Gear Room wiring ----
   document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openGearModal(null, null));
+  document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
   document.getElementById('addGearBtn').addEventListener('click', ()=> openGearModal(null, currentGearCategory));
   document.getElementById('backToGarageBtn').addEventListener('click', showGarage);
   document.getElementById('gearModalClose').addEventListener('click', closeGearModal);
