@@ -2168,10 +2168,9 @@
   // camera track; without it, some phones default to a fixed-focus preview
   // that never sharpens up close, which reads as "the camera won't focus."
   // iOS Safari and desktop browsers don't expose this — silently a no-op there.
-  async function enableContinuousFocus(videoEl){
+  async function enableContinuousFocus(stream){
     try{
-      const stream = videoEl.srcObject;
-      const track = stream && stream.getVideoTracks()[0];
+      const track = stream.getVideoTracks()[0];
       if(!track || !track.getCapabilities) return;
       const caps = track.getCapabilities();
       if(caps.focusMode && caps.focusMode.includes('continuous')){
@@ -2195,16 +2194,23 @@
       return;
     }
     try{
-      barcodeReader = new ZXing.BrowserMultiFormatReader();
-      const videoEl = document.getElementById('barcodeVideo');
-      // decodeFromConstraints (rather than decodeFromVideoDevice) lets us ask
-      // for a decent resolution alongside the back camera — on multi-lens
-      // phones a plain facingMode request can otherwise land on a low-res
-      // lens with no real autofocus.
+      // Get the stream ourselves (rather than letting ZXing's
+      // decodeFromConstraints do it) so focus can be settled *before* the
+      // decode loop starts. ZXing caches its internal capture canvas at
+      // whatever size the video is on the first decoded frame; applying
+      // focus constraints afterward can make the camera briefly renegotiate
+      // resolution, desyncing that cached canvas from the live feed and
+      // silently corrupting every scan after — the video still looks fine,
+      // but nothing ever decodes.
       const constraints = {
         video: { facingMode: 'environment', width: {ideal: 1280}, height: {ideal: 720} }
       };
-      await barcodeReader.decodeFromConstraints(constraints, videoEl, (result)=>{
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      await enableContinuousFocus(stream);
+
+      barcodeReader = new ZXing.BrowserMultiFormatReader();
+      const videoEl = document.getElementById('barcodeVideo');
+      await barcodeReader.decodeFromStream(stream, videoEl, (result)=>{
         if(result){
           const code = result.getText();
           closeBarcodeScanner();
@@ -2213,7 +2219,6 @@
         // The callback also fires a NotFoundException on every frame with no
         // match — that's expected while scanning, not an error.
       });
-      await enableContinuousFocus(videoEl);
     }catch(err){
       console.error('Camera error:', err);
       statusEl.className = 'upload-error';
