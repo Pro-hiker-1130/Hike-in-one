@@ -377,6 +377,58 @@
     font-size:12.5px;padding:7px 10px;border-radius:5px;
   }
 
+  /* ---- Gear breakdown chart (donut + legend + table) ---- */
+  .breakdown-card{
+    flex:none;margin:0 24px 24px;padding:20px;border-radius:10px;
+    background:var(--panel-alt);border:1px solid var(--line);
+  }
+  .breakdown-body{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
+  .donut-wrap{flex:none;width:150px;height:150px;position:relative;}
+  .donut-wrap svg{width:100%;height:100%;display:block;overflow:visible;}
+  .donut-seg{cursor:pointer;transition:opacity .15s ease,filter .15s ease;outline:none;}
+  .donut-seg:hover,.donut-seg:focus-visible,.donut-seg.is-hovered{filter:brightness(1.18);}
+  .donut-wrap.is-hovered .donut-seg:not(.is-hovered){opacity:0.45;}
+  .donut-center-value{
+    font-family:'Fraunces',serif;font-size:17px;font-weight:600;fill:var(--parchment);
+  }
+  .donut-center-label{font-size:9.5px;fill:var(--muted);letter-spacing:0.02em;}
+  .breakdown-legend{flex:1;min-width:180px;display:flex;flex-direction:column;gap:9px;}
+  .legend-row{
+    display:flex;align-items:center;gap:9px;font-size:12.5px;cursor:pointer;
+    padding:3px 4px;border-radius:4px;transition:background .12s ease,opacity .12s ease;
+  }
+  .legend-row:hover,.legend-row.is-hovered{background:rgba(243,237,225,0.06);}
+  .breakdown-legend.has-hover .legend-row:not(.is-hovered){opacity:0.5;}
+  .legend-swatch{width:11px;height:11px;border-radius:3px;flex:none;}
+  .legend-name{color:var(--parchment);flex:1;}
+  .legend-value{color:var(--muted);font-size:11.5px;white-space:nowrap;}
+  .legend-pct{color:var(--muted);font-size:11.5px;width:34px;text-align:right;flex:none;}
+  .breakdown-empty{padding:20px 4px;text-align:center;color:var(--muted);font-size:13px;}
+  .breakdown-table{width:100%;border-collapse:collapse;margin-top:16px;font-size:12.5px;}
+  .breakdown-table th{
+    text-align:left;color:var(--muted);font-weight:500;font-size:11px;
+    text-transform:uppercase;letter-spacing:0.04em;padding:0 8px 8px;border-bottom:1px solid var(--line);
+  }
+  .breakdown-table td{padding:7px 8px;border-bottom:1px solid var(--line);color:var(--parchment);}
+  .breakdown-table td:not(:first-child),.breakdown-table th:not(:first-child){text-align:right;}
+  .breakdown-table-toggle{
+    background:none;border:none;color:var(--brass);font-size:12px;cursor:pointer;
+    padding:14px 0 0;text-decoration:underline;text-underline-offset:2px;
+  }
+  .chart-tooltip{
+    position:fixed;pointer-events:none;z-index:900;background:var(--ink);
+    border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:12px;
+    color:var(--parchment);box-shadow:0 6px 16px rgba(0,0,0,0.4);max-width:200px;
+  }
+  .chart-tooltip[hidden]{display:none;}
+  .chart-tooltip strong{display:block;font-size:13px;margin-bottom:1px;}
+  .chart-tooltip span{color:var(--muted);}
+  @media (max-width:760px){
+    .breakdown-card{margin:0 12px 18px;padding:16px;}
+    .breakdown-body{gap:18px;}
+    .donut-wrap{width:120px;height:120px;}
+  }
+
   /* ---- Category detail view ---- */
   .category-view{flex:1;display:flex;flex-direction:column;overflow-y:auto;width:100%;}
   .category-view-heading{display:flex;flex-direction:column;gap:1px;}
@@ -577,6 +629,24 @@
     <div class="gear-scene" id="gearScene"></div>
 
     <div class="section-subhead">
+      <p class="section-label" style="margin:0;">Gear breakdown</p>
+      <select id="gearBreakdownMetric" class="mini-select">
+        <option value="count">By item count</option>
+        <option value="weight">By total weight</option>
+        <option value="value">By total value</option>
+      </select>
+    </div>
+    <div class="breakdown-card" id="gearBreakdownCard">
+      <div class="breakdown-body" id="gearBreakdownBody">
+        <div class="donut-wrap" id="gearBreakdownChart"></div>
+        <div class="breakdown-legend" id="gearBreakdownLegend"></div>
+      </div>
+      <div class="breakdown-empty" id="gearBreakdownEmpty" style="display:none;">No gear data yet — add some items to see a breakdown.</div>
+      <table class="breakdown-table" id="gearBreakdownTable" style="display:none;"></table>
+      <button class="breakdown-table-toggle" id="gearBreakdownTableToggle" type="button">View as table</button>
+    </div>
+
+    <div class="section-subhead">
       <p class="section-label" style="margin:0;">Loadouts</p>
       <button class="ghost-btn" id="addLoadoutBtn">+ New loadout</button>
     </div>
@@ -608,6 +678,26 @@
       <div class="stat-card">
         <div class="stat-num" id="loadoutStatTrips">0</div>
         <div class="stat-label">trips used on</div>
+      </div>
+    </div>
+
+    <div class="trip-detail-section">
+      <div class="trip-detail-section-head">
+        <p class="section-label" style="margin:0;">Breakdown</p>
+        <select id="loadoutBreakdownMetric" class="mini-select">
+          <option value="count">By item count</option>
+          <option value="weight">By total weight</option>
+          <option value="value">By total value</option>
+        </select>
+      </div>
+      <div class="breakdown-card" id="loadoutBreakdownCard">
+        <div class="breakdown-body" id="loadoutBreakdownBody">
+          <div class="donut-wrap" id="loadoutBreakdownChart"></div>
+          <div class="breakdown-legend" id="loadoutBreakdownLegend"></div>
+        </div>
+        <div class="breakdown-empty" id="loadoutBreakdownEmpty" style="display:none;">No items yet.</div>
+        <table class="breakdown-table" id="loadoutBreakdownTable" style="display:none;"></table>
+        <button class="breakdown-table-toggle" id="loadoutBreakdownTableToggle" type="button">View as table</button>
       </div>
     </div>
 
@@ -955,6 +1045,8 @@
     </div>
   </div>
 </div>
+
+<div class="chart-tooltip" id="chartTooltip" role="tooltip" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
@@ -1595,6 +1687,8 @@
         tripsListEl.appendChild(row);
       });
     }
+
+    renderBreakdownChart('loadout', items);
   }
 
   function renderLoadoutItemPicker(checkedIds){
@@ -1992,6 +2086,191 @@
   };
   const OWNED_STATUSES = ['active','retired','loaned']; // everything except wishlist counts as "owned"
 
+  // ---- Gear breakdown chart (donut, shared by the Gear Room and Loadout detail) ----
+  const GEAR_CHART_METRICS = [
+    {key:'count', label:'item count', calc:g=>(g.quantity||1)},
+    {key:'weight', label:'total weight', calc:g=>(g.weightGrams||0)*(g.quantity||1)},
+    {key:'value', label:'total value', calc:g=>(g.price||0)*(g.quantity||1)}
+  ];
+  // Categorical hues validated against this app's --panel-alt chart surface
+  // (see dataviz skill: fixed hue order, OKLab CVD-separation + contrast checks).
+  // Colors are assigned by rank within each render, always paired with the
+  // legend shown alongside it, so nothing relies on remembering a color.
+  const CHART_COLORS = ['#3987e5','#d95926','#199e70','#c98500','#d55181','#008300'];
+  const CHART_OTHER_COLOR = '#5B6B85';
+  const CHART_MAX_SLICES = 6; // top 5 distinct + "Other" once a 6th+ category appears
+
+  function formatBreakdownValue(metricKey, value){
+    if(metricKey === 'weight') return formatWeight(value);
+    if(metricKey === 'value') return value ? value.toFixed(0) : '0';
+    return String(value);
+  }
+
+  function computeGearBreakdown(items, metricKey){
+    const metric = GEAR_CHART_METRICS.find(m=>m.key===metricKey) || GEAR_CHART_METRICS[0];
+    const byCat = {};
+    items.forEach(g=>{
+      const v = metric.calc(g);
+      if(!v) return;
+      const cat = g.category || 'Other';
+      byCat[cat] = (byCat[cat]||0) + v;
+    });
+    let rows = Object.keys(byCat).map(category=>({category, value:byCat[category]}));
+    rows.sort((a,b)=>b.value-a.value);
+    if(rows.length > CHART_MAX_SLICES){
+      const keep = CHART_MAX_SLICES - 1;
+      const top = rows.slice(0, keep);
+      const restVal = rows.slice(keep).reduce((s,r)=>s+r.value,0);
+      rows = top.concat([{category:'Other', value:restVal, isOther:true}]);
+    }
+    const total = rows.reduce((s,r)=>s+r.value,0);
+    rows.forEach((r,i)=>{
+      r.color = r.isOther ? CHART_OTHER_COLOR : CHART_COLORS[i];
+      r.pct = total ? r.value/total : 0;
+    });
+    return {rows, total, metric};
+  }
+
+  function buildDonutSvg(rows, total){
+    const R = 45, CX = 60, CY = 60, SW = 16, GAP = 3;
+    const C = 2*Math.PI*R;
+    let offset = 0;
+    let segsHtml = '';
+    rows.forEach(r=>{
+      const frac = total ? r.value/total : 0;
+      const len = Math.max(0, frac*C - GAP);
+      segsHtml +=
+        '<circle class="donut-seg" cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="'+r.color+'" '+
+        'stroke-width="'+SW+'" stroke-linecap="round" '+
+        'stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" '+
+        'stroke-dashoffset="'+(-offset).toFixed(2)+'" transform="rotate(-90 '+CX+' '+CY+')" '+
+        'tabindex="0" data-category="'+escapeHtml(r.category)+'" data-value="'+r.value+'" data-pct="'+r.pct+'"/>';
+      offset += frac*C;
+    });
+    if(!total){
+      segsHtml = '<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="var(--line)" stroke-width="'+SW+'"/>';
+    }
+    return '<svg viewBox="0 0 120 120">'+segsHtml+
+      '<text x="60" y="57" text-anchor="middle" class="donut-center-value"></text>'+
+      '<text x="60" y="72" text-anchor="middle" class="donut-center-label"></text>'+
+      '</svg>';
+  }
+
+  function showChartTooltip(x, y, category, value, pct){
+    const tip = document.getElementById('chartTooltip');
+    tip.innerHTML = '<strong></strong><span></span>';
+    tip.querySelector('strong').textContent = category;
+    tip.querySelector('span').textContent = value + (pct != null ? ' · ' + Math.round(pct*100) + '%' : '');
+    tip.hidden = false;
+    const pad = 14;
+    let left = x + pad, top = y + pad;
+    const rect = tip.getBoundingClientRect();
+    if(left + rect.width > window.innerWidth - 8) left = x - rect.width - pad;
+    if(top + rect.height > window.innerHeight - 8) top = y - rect.height - pad;
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  function hideChartTooltip(){
+    document.getElementById('chartTooltip').hidden = true;
+  }
+
+  function renderBreakdownChart(prefix, items){
+    const metricSelect = document.getElementById(prefix+'BreakdownMetric');
+    const metricKey = metricSelect.value;
+    const {rows, total, metric} = computeGearBreakdown(items, metricKey);
+
+    const body = document.getElementById(prefix+'BreakdownBody');
+    const emptyEl = document.getElementById(prefix+'BreakdownEmpty');
+    const chartEl = document.getElementById(prefix+'BreakdownChart');
+    const legendEl = document.getElementById(prefix+'BreakdownLegend');
+    const tableEl = document.getElementById(prefix+'BreakdownTable');
+    const toggleBtn = document.getElementById(prefix+'BreakdownTableToggle');
+
+    const wasShowingTable = tableEl.style.display === 'block';
+    emptyEl.style.display = rows.length ? 'none' : 'block';
+    toggleBtn.style.display = rows.length ? 'block' : 'none';
+    if(!rows.length){
+      body.style.display = 'none';
+      tableEl.style.display = 'none';
+      toggleBtn.textContent = 'View as table';
+      return;
+    }
+    body.style.display = wasShowingTable ? 'none' : 'flex';
+
+    chartEl.innerHTML = buildDonutSvg(rows, total);
+    const centerValue = chartEl.querySelector('.donut-center-value');
+    const centerLabel = chartEl.querySelector('.donut-center-label');
+    centerValue.textContent = formatBreakdownValue(metricKey, total);
+    centerLabel.textContent = metric.label;
+
+    legendEl.innerHTML = '';
+    rows.forEach(r=>{
+      const row = document.createElement('div');
+      row.className = 'legend-row';
+      row.dataset.category = r.category;
+      row.innerHTML =
+        '<span class="legend-swatch" style="background:'+r.color+'"></span>'+
+        '<span class="legend-name"></span>'+
+        '<span class="legend-value"></span>'+
+        '<span class="legend-pct">'+Math.round(r.pct*100)+'%</span>';
+      row.querySelector('.legend-name').textContent = r.category;
+      row.querySelector('.legend-value').textContent = formatBreakdownValue(metricKey, r.value);
+      legendEl.appendChild(row);
+    });
+
+    tableEl.innerHTML =
+      '<thead><tr><th>Category</th><th>'+escapeHtml(metric.label)+'</th><th>Share</th></tr></thead>'+
+      '<tbody></tbody>';
+    const tbody = tableEl.querySelector('tbody');
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      const catTd = document.createElement('td');
+      catTd.textContent = r.category;
+      const valTd = document.createElement('td');
+      valTd.textContent = formatBreakdownValue(metricKey, r.value);
+      const pctTd = document.createElement('td');
+      pctTd.textContent = Math.round(r.pct*100) + '%';
+      tr.append(catTd, valTd, pctTd);
+      tbody.appendChild(tr);
+    });
+
+    const setHover = (category)=>{
+      const wrap = chartEl.closest('.donut-wrap') || chartEl;
+      wrap.classList.toggle('is-hovered', !!category);
+      chartEl.querySelectorAll('.donut-seg').forEach(seg=>{
+        seg.classList.toggle('is-hovered', seg.dataset.category === category);
+      });
+      legendEl.classList.toggle('has-hover', !!category);
+      legendEl.querySelectorAll('.legend-row').forEach(row=>{
+        row.classList.toggle('is-hovered', row.dataset.category === category);
+      });
+    };
+
+    chartEl.querySelectorAll('.donut-seg').forEach(seg=>{
+      const cat = seg.dataset.category, val = Number(seg.dataset.value), pct = Number(seg.dataset.pct);
+      const show = (e)=>{
+        const p = e.touches ? e.touches[0] : e;
+        showChartTooltip(p.clientX, p.clientY, cat, formatBreakdownValue(metricKey, val), pct);
+        setHover(cat);
+      };
+      seg.addEventListener('mousemove', show);
+      seg.addEventListener('mouseenter', show);
+      seg.addEventListener('mouseleave', ()=>{ hideChartTooltip(); setHover(null); });
+      seg.addEventListener('focus', ()=>{
+        const box = seg.getBoundingClientRect();
+        showChartTooltip(box.left+box.width/2, box.top+box.height/2, cat, formatBreakdownValue(metricKey, val), pct);
+        setHover(cat);
+      });
+      seg.addEventListener('blur', ()=>{ hideChartTooltip(); setHover(null); });
+    });
+    legendEl.querySelectorAll('.legend-row').forEach(row=>{
+      row.addEventListener('mouseenter', ()=> setHover(row.dataset.category));
+      row.addEventListener('mouseleave', ()=> setHover(null));
+    });
+
+    toggleBtn.textContent = wasShowingTable ? 'View as chart' : 'View as table';
+  }
+
   let currentGearCategory = null; // null = garage view, 'ALL' = all items, or a category string
 
   function uid(){ return 'g_' + Math.random().toString(36).slice(2,10); }
@@ -2174,6 +2453,8 @@
     const floor = document.createElement('div');
     floor.className = 'scene-floor';
     scene.appendChild(floor);
+
+    renderBreakdownChart('gear', gearItems.filter(g=>OWNED_STATUSES.includes(g.status)));
   }
 
   function updateCategoryViewHeader(){
@@ -2512,6 +2793,25 @@
   // ---- Gear Room wiring ----
   document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openGearModal(null, null));
   document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
+
+  // ---- Gear breakdown chart wiring (metric filter + table toggle, shared pattern) ----
+  ['gear','loadout'].forEach(prefix=>{
+    document.getElementById(prefix+'BreakdownMetric').addEventListener('change', ()=>{
+      const items = prefix === 'gear'
+        ? gearItems.filter(g=>OWNED_STATUSES.includes(g.status))
+        : loadoutItemsList(loadouts.find(x=>x.id===currentLoadoutId) || {gearIds:[]});
+      renderBreakdownChart(prefix, items);
+    });
+    document.getElementById(prefix+'BreakdownTableToggle').addEventListener('click', ()=>{
+      const chartWrap = document.getElementById(prefix+'BreakdownBody');
+      const tableEl = document.getElementById(prefix+'BreakdownTable');
+      const btn = document.getElementById(prefix+'BreakdownTableToggle');
+      const showingTable = tableEl.style.display !== 'none';
+      tableEl.style.display = showingTable ? 'none' : 'block';
+      chartWrap.style.display = showingTable ? 'flex' : 'none';
+      btn.textContent = showingTable ? 'View as table' : 'View as chart';
+    });
+  });
   document.getElementById('addGearBtn').addEventListener('click', ()=> openGearModal(null, currentGearCategory));
   document.getElementById('backToGarageBtn').addEventListener('click', showGarage);
   document.getElementById('gearModalClose').addEventListener('click', closeGearModal);
