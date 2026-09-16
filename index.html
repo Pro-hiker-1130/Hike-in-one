@@ -1063,6 +1063,28 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="cloudSignInModalOverlay" style="display:none;">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-header">
+      <h3>Sign in</h3>
+      <button class="modal-close" id="cloudSignInModalClose" type="button">&times;</button>
+    </div>
+    <div style="padding:18px 20px;">
+      <p style="margin:0 0 14px;font-size:12.5px;color:var(--muted);">Enter your email and we'll send you a link to sign in — no password needed.</p>
+      <form id="cloudSignInForm">
+        <div class="form-field">
+          <label for="cloudSignInEmail">Email</label>
+          <input type="email" id="cloudSignInEmail" required placeholder="you@example.com">
+        </div>
+        <div class="upload-status" id="cloudSignInStatus"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+          <button type="submit" class="primary-btn" id="cloudSignInSubmitBtn">Send magic link</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="chart-tooltip" id="chartTooltip" role="tooltip" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1453,8 +1475,8 @@
       return;
     }
     if(!cloudUser){
-      el.innerHTML = '<button class="ghost-btn" id="cloudSignInBtn">Sign in with Google</button>';
-      document.getElementById('cloudSignInBtn').addEventListener('click', signInWithGoogle);
+      el.innerHTML = '<button class="ghost-btn" id="cloudSignInBtn">Sign in</button>';
+      document.getElementById('cloudSignInBtn').addEventListener('click', openCloudSignInModal);
       return;
     }
     const statusLabel = {syncing:'Syncing…', synced:'Synced', error:'Sync error', offline:'Offline'}[cloudSyncStatus] || '';
@@ -1467,12 +1489,44 @@
     document.getElementById('cloudSignOutBtn').addEventListener('click', ()=> sb.auth.signOut());
   }
 
-  async function signInWithGoogle(){
+  function openCloudSignInModal(){
+    const status = document.getElementById('cloudSignInStatus');
+    status.textContent = '';
+    status.className = 'upload-status';
+    document.getElementById('cloudSignInEmail').value = '';
+    document.getElementById('cloudSignInSubmitBtn').disabled = false;
+    document.getElementById('cloudSignInSubmitBtn').textContent = 'Send magic link';
+    document.getElementById('cloudSignInModalOverlay').style.display = 'flex';
+    document.getElementById('cloudSignInEmail').focus();
+  }
+  function closeCloudSignInModal(){
+    document.getElementById('cloudSignInModalOverlay').style.display = 'none';
+  }
+
+  async function sendMagicLink(email){
     if(!sb) return;
-    await sb.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin + window.location.pathname }
-    });
+    const status = document.getElementById('cloudSignInStatus');
+    const btn = document.getElementById('cloudSignInSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    status.className = 'upload-status';
+    status.textContent = '';
+    try{
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin + window.location.pathname }
+      });
+      if(error) throw error;
+      status.className = 'upload-status';
+      status.textContent = 'Check your inbox for a sign-in link.';
+      btn.textContent = 'Link sent';
+    }catch(e){
+      console.error('magic link send failed', e);
+      status.className = 'upload-error';
+      status.textContent = 'Couldn\'t send that link — check the email address and try again.';
+      btn.disabled = false;
+      btn.textContent = 'Send magic link';
+    }
   }
 
   async function reconcileOnSignIn(){
@@ -3008,6 +3062,17 @@
   document.getElementById('barcodeModalClose').addEventListener('click', closeBarcodeScanner);
   document.getElementById('barcodeModalOverlay').addEventListener('click', (e)=>{
     if(e.target.id === 'barcodeModalOverlay') closeBarcodeScanner();
+  });
+
+  // ---- Cloud sign-in modal wiring ----
+  document.getElementById('cloudSignInModalClose').addEventListener('click', closeCloudSignInModal);
+  document.getElementById('cloudSignInModalOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'cloudSignInModalOverlay') closeCloudSignInModal();
+  });
+  document.getElementById('cloudSignInForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const email = document.getElementById('cloudSignInEmail').value.trim();
+    if(email) sendMagicLink(email);
   });
 
   // ---- Gear picker wiring ----
