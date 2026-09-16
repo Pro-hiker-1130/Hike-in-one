@@ -42,6 +42,22 @@
   .nav-tab:hover{color:var(--parchment);background:var(--panel-alt);}
   .nav-tab.active{color:var(--ink);background:var(--brass);font-weight:600;}
 
+  .nav-account{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12.5px;flex:none;white-space:nowrap;}
+  .nav-account-status{color:var(--muted);white-space:nowrap;}
+  .nav-account-status[data-status="error"]{color:var(--danger);}
+  .nav-account-status[data-status="synced"]{color:var(--muted);}
+  .nav-account-email{color:var(--parchment);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .nav-account .ghost-btn{white-space:nowrap;flex:none;}
+  @media (max-width:680px){ .nav-account-email{display:none;} }
+  @media (max-width:560px){
+    /* The pre-existing brand+tabs row is already tight at this width; adding
+       the account controls needs the nav to wrap onto a second line rather
+       than squeezing the sign-in/out button until its own text wraps. */
+    .top-nav{flex-wrap:wrap;height:auto;padding:8px 14px;row-gap:6px;}
+    .nav-account{margin-left:0;width:100%;justify-content:flex-end;}
+    .nav-account-status{display:none;}
+  }
+
   .page-container{flex:1;position:relative;overflow:hidden;}
   .page-container>.page{position:absolute;inset:0;display:none;}
   .page-container>.page.active{display:flex;}
@@ -498,6 +514,7 @@
     <button class="nav-tab" data-page="gear">Gear Room</button>
     <button class="nav-tab" data-page="trips">Trips</button>
   </div>
+  <div class="nav-account" id="navAccount"></div>
 </nav>
 
 <div class="page-container">
@@ -1051,9 +1068,27 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 (function(){
   'use strict';
+
+  // ---- Cloud sync (Supabase) ----
+  // Fill these in after creating a free project at supabase.com — see the
+  // setup steps in supabase/schema.sql. Both values are meant to be public:
+  // the anon key only grants what the row-level-security policies in that
+  // file allow (each signed-in user can read/write their own row, nothing
+  // else), so publishing it here is the normal, supported way to use it.
+  const SUPABASE_URL = '';
+  const SUPABASE_ANON_KEY = '';
+  const CLOUD_SYNC_ENABLED = !!(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
+  const sb = CLOUD_SYNC_ENABLED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  const STORAGE_LAST_MODIFIED = 'waypoints-last-modified-v1';
+
+  let cloudUser = null;              // {id, email} once signed in, else null
+  let cloudSyncStatus = 'offline';   // 'offline' | 'syncing' | 'synced' | 'error'
+  let cloudPushTimer = null;
+  let suppressNextPush = false;      // set while applying a pulled snapshot, so it doesn't bounce straight back to the cloud
 
   const COLORS = ['#C89B5C','#7C9885','#C9695A','#8FA096','#B08968','#6B8F8A','#D9B26F','#5B7B7A'];
   const STORAGE_TRACKS = 'waypoints-tracks-v1';
@@ -1336,8 +1371,8 @@
     }
   }
 
-  async function saveTracks(){ await storeSet(STORAGE_TRACKS, JSON.stringify(tracks)); }
-  async function saveGoogle(){ await storeSet(STORAGE_GOOGLE, JSON.stringify(googlePoints)); }
+  async function saveTracks(){ await storeSet(STORAGE_TRACKS, JSON.stringify(tracks)); markLocalModified(); scheduleCloudPush(); }
+  async function saveGoogle(){ await storeSet(STORAGE_GOOGLE, JSON.stringify(googlePoints)); markLocalModified(); scheduleCloudPush(); }
   async function loadAll(){
     const t = await storeGet(STORAGE_TRACKS);
     tracks = t ? JSON.parse(t) : [];
@@ -1349,7 +1384,7 @@
   const STORAGE_GEAR = 'waypoints-gear-v1';
   let gearItems = [];
 
-  async function saveGear(){ await storeSet(STORAGE_GEAR, JSON.stringify(gearItems)); }
+  async function saveGear(){ await storeSet(STORAGE_GEAR, JSON.stringify(gearItems)); markLocalModified(); scheduleCloudPush(); }
   async function loadGear(){
     const g = await storeGet(STORAGE_GEAR);
     gearItems = g ? JSON.parse(g) : [];
@@ -1359,7 +1394,7 @@
   const STORAGE_TRIPS = 'waypoints-trips-v1';
   let trips = []; // {id, name, notes, trackIds:[], gearIds:[], loadoutId, createdAt}
 
-  async function saveTrips(){ await storeSet(STORAGE_TRIPS, JSON.stringify(trips)); }
+  async function saveTrips(){ await storeSet(STORAGE_TRIPS, JSON.stringify(trips)); markLocalModified(); scheduleCloudPush(); }
   async function loadTrips(){
     const t = await storeGet(STORAGE_TRIPS);
     trips = t ? JSON.parse(t) : [];
@@ -1373,10 +1408,143 @@
   const STORAGE_LOADOUTS = 'waypoints-loadouts-v1';
   let loadouts = []; // {id, name, notes, gearIds:[], createdAt}
 
-  async function saveLoadouts(){ await storeSet(STORAGE_LOADOUTS, JSON.stringify(loadouts)); }
+  async function saveLoadouts(){ await storeSet(STORAGE_LOADOUTS, JSON.stringify(loadouts)); markLocalModified(); scheduleCloudPush(); }
   async function loadLoadouts(){
     const l = await storeGet(STORAGE_LOADOUTS);
     loadouts = l ? JSON.parse(l) : [];
+  }
+
+  // ---- Cloud sync: push/pull the whole local dataset as one row per user ----
+  // Matches the app's own persistence model (each of gear/trips/loadouts/tracks
+  // is already saved as a single JSON blob), so sync is "upsert the blob",
+  // not a per-record CRUD/merge system. Good enough for one person's data
+  // across their own devices; not built for real-time multi-user editing.
+  function markLocalModified(){
+    const ts = Date.now();
+    storeSet(STORAGE_LAST_MODIFIED, String(ts));
+    return ts;
+  }
+
+  async function localSnapshot(){
+    return {
+      gear: gearItems, trips, loadouts, tracks, google_points: googlePoints,
+      basemap: (await storeGet('waypoints-basemap')) || null,
+    };
+  }
+
+  async function applyCloudSnapshot(row){
+    gearItems = row.gear || [];
+    trips = row.trips || [];
+    loadouts = row.loadouts || [];
+    tracks = row.tracks || [];
+    googlePoints = row.google_points || [];
+    suppressNextPush = true;
+    await Promise.all([
+      saveGear(), saveTrips(), saveLoadouts(), saveTracks(), saveGoogle(),
+      row.basemap ? storeSet('waypoints-basemap', row.basemap) : Promise.resolve(),
+    ]);
+  }
+
+  function renderNavAccount(){
+    const el = document.getElementById('navAccount');
+    if(!el) return;
+    if(!CLOUD_SYNC_ENABLED){
+      el.innerHTML = '';
+      return;
+    }
+    if(!cloudUser){
+      el.innerHTML = '<button class="ghost-btn" id="cloudSignInBtn">Sign in with Google</button>';
+      document.getElementById('cloudSignInBtn').addEventListener('click', signInWithGoogle);
+      return;
+    }
+    const statusLabel = {syncing:'Syncing…', synced:'Synced', error:'Sync error', offline:'Offline'}[cloudSyncStatus] || '';
+    el.innerHTML =
+      '<span class="nav-account-status" data-status="'+cloudSyncStatus+'"></span>'+
+      '<span class="nav-account-email"></span>'+
+      '<button class="ghost-btn" id="cloudSignOutBtn">Sign out</button>';
+    el.querySelector('.nav-account-status').textContent = statusLabel;
+    el.querySelector('.nav-account-email').textContent = cloudUser.email || '';
+    document.getElementById('cloudSignOutBtn').addEventListener('click', ()=> sb.auth.signOut());
+  }
+
+  async function signInWithGoogle(){
+    if(!sb) return;
+    await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    });
+  }
+
+  async function reconcileOnSignIn(){
+    cloudSyncStatus = 'syncing';
+    renderNavAccount();
+    try{
+      const { data, error } = await sb.from('user_data').select('*').eq('user_id', cloudUser.id).maybeSingle();
+      if(error) throw error;
+      const localTs = Number(await storeGet(STORAGE_LAST_MODIFIED)) || 0;
+      const cloudTs = data ? new Date(data.updated_at).getTime() : 0;
+      if(data && cloudTs >= localTs){
+        await applyCloudSnapshot(data);
+        refreshEverything();
+        showGarage();
+      } else {
+        await pushToCloud();
+      }
+      cloudSyncStatus = 'synced';
+    }catch(e){
+      console.error('cloud reconcile failed', e);
+      cloudSyncStatus = 'error';
+    }
+    renderNavAccount();
+  }
+
+  async function pushToCloud(){
+    if(!sb || !cloudUser) return;
+    cloudSyncStatus = 'syncing';
+    renderNavAccount();
+    try{
+      const snap = await localSnapshot();
+      const { error } = await sb.from('user_data').upsert({
+        user_id: cloudUser.id,
+        gear: snap.gear, trips: snap.trips, loadouts: snap.loadouts,
+        tracks: snap.tracks, google_points: snap.google_points, basemap: snap.basemap,
+        updated_at: new Date().toISOString(),
+      });
+      if(error) throw error;
+      cloudSyncStatus = 'synced';
+    }catch(e){
+      console.error('cloud push failed', e);
+      cloudSyncStatus = 'error';
+    }
+    renderNavAccount();
+  }
+
+  function scheduleCloudPush(){
+    if(!CLOUD_SYNC_ENABLED || !cloudUser) return;
+    if(suppressNextPush){ suppressNextPush = false; return; }
+    clearTimeout(cloudPushTimer);
+    cloudPushTimer = setTimeout(()=> pushToCloud(), 1500);
+  }
+
+  if(CLOUD_SYNC_ENABLED){
+    sb.auth.onAuthStateChange((event, session)=>{
+      const user = session && session.user ? { id: session.user.id, email: session.user.email } : null;
+      const wasSignedIn = !!cloudUser;
+      cloudUser = user;
+      if(user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')){
+        reconcileOnSignIn();
+      } else if(!user && wasSignedIn){
+        cloudSyncStatus = 'offline';
+        renderNavAccount();
+      } else {
+        renderNavAccount();
+      }
+    });
+    // Render the signed-out state immediately rather than waiting on the
+    // listener above — some client versions don't fire it until a session
+    // is actually restored, which would otherwise leave the sign-in button
+    // missing on a fresh, logged-out visit.
+    renderNavAccount();
   }
 
 
