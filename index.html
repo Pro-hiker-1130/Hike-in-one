@@ -1090,7 +1090,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/dist/umd/supabase.js"></script>
 <script>
 (function(){
   'use strict';
@@ -1101,8 +1101,8 @@
   // the anon key only grants what the row-level-security policies in that
   // file allow (each signed-in user can read/write their own row, nothing
   // else), so publishing it here is the normal, supported way to use it.
-  const SUPABASE_URL = '';
-  const SUPABASE_ANON_KEY = '';
+  const SUPABASE_URL = 'https://agdtujbsojhujffvhqcb.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_vKRegkN0rY9BfWlK-1kZxA_4ws0GoIK';
   const CLOUD_SYNC_ENABLED = !!(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
   const sb = CLOUD_SYNC_ENABLED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   const STORAGE_LAST_MODIFIED = 'waypoints-last-modified-v1';
