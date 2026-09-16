@@ -439,6 +439,25 @@
   .chart-tooltip[hidden]{display:none;}
   .chart-tooltip strong{display:block;font-size:13px;margin-bottom:1px;}
   .chart-tooltip span{color:var(--muted);}
+
+  .global-toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:950;
+    background:var(--panel-alt);border:1px solid var(--line);border-radius:7px;
+    padding:11px 18px;font-size:13px;color:var(--parchment);box-shadow:0 8px 20px rgba(0,0,0,0.45);
+    max-width:min(90vw,380px);text-align:center;transition:opacity .25s ease;
+  }
+  .global-toast[hidden]{display:none;}
+  .global-toast.is-error{border-color:rgba(194,59,46,0.5);color:var(--danger);}
+
+  .strava-activity-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:9px 14px;border:1px solid var(--line);border-radius:6px;background:var(--panel);
+  }
+  .strava-activity-row + .strava-activity-row{margin-top:6px;}
+  .strava-activity-info{min-width:0;flex:1;}
+  .strava-activity-name{font-size:13px;color:var(--parchment);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .strava-activity-meta{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;}
+  .strava-activity-row .ghost-btn{flex:none;padding:6px 12px;font-size:11.5px;}
   @media (max-width:760px){
     .breakdown-card{margin:0 12px 18px;padding:16px;}
     .breakdown-body{gap:18px;}
@@ -1002,6 +1021,7 @@
           <span class="dropzone-title">Add GPX tracks</span>
           <span class="dropzone-sub">Garmin or Strava exports — drop files or click</span>
         </label>
+        <button type="button" class="ghost-btn" id="stravaImportBtn" style="margin-top:8px;display:none;">Import from Strava</button>
         <div class="upload-status" id="tripUploadStatus"></div>
       </div>
       <div class="form-field">
@@ -1085,7 +1105,25 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="stravaModalOverlay" style="display:none;">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <h3>Import from Strava</h3>
+      <button class="modal-close" id="stravaModalClose" type="button">&times;</button>
+    </div>
+    <div style="padding:18px 20px;">
+      <div id="stravaConnectPrompt">
+        <p style="margin:0 0 14px;font-size:12.5px;color:var(--muted);">Connect your Strava account to browse and import your recent activities.</p>
+        <button class="primary-btn" id="stravaConnectBtn" type="button">Connect Strava</button>
+      </div>
+      <div id="stravaActivityList" style="display:none;max-height:360px;overflow-y:auto;"></div>
+      <div class="upload-status" id="stravaModalStatus"></div>
+    </div>
+  </div>
+</div>
+
 <div class="chart-tooltip" id="chartTooltip" role="tooltip" hidden></div>
+<div class="global-toast" id="globalToast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
@@ -1106,6 +1144,17 @@
   const CLOUD_SYNC_ENABLED = !!(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
   const sb = CLOUD_SYNC_ENABLED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   const STORAGE_LAST_MODIFIED = 'waypoints-last-modified-v1';
+
+  // ---- Strava import ----
+  // Fill in after registering a free app at strava.com/settings/api. The
+  // client ID is public (it's meant to appear in the authorize URL); the
+  // client SECRET never goes here — it's only ever set as a secret on the
+  // strava-callback / strava-api Supabase Edge Functions (see
+  // supabase/functions/), deployable from the Supabase dashboard's Edge
+  // Functions editor — no CLI required.
+  const STRAVA_CLIENT_ID = '';
+  const STRAVA_ENABLED = !!(STRAVA_CLIENT_ID && CLOUD_SYNC_ENABLED);
+  const STRAVA_TOKENS_KEY = 'waypoints-strava-tokens-v1';
 
   let cloudUser = null;              // {id, email} once signed in, else null
   let cloudSyncStatus = 'offline';   // 'offline' | 'syncing' | 'synced' | 'error'
@@ -1599,6 +1648,157 @@
     // is actually restored, which would otherwise leave the sign-in button
     // missing on a fresh, logged-out visit.
     renderNavAccount();
+  }
+
+  // ---- Strava import ----
+  // Strava has no "download as GPX" endpoint — activities are reconstructed
+  // from the /streams endpoint — and the OAuth token exchange/refresh both
+  // need the app's Strava client SECRET, which can never ship to the
+  // browser; Strava's API also doesn't send CORS headers a browser will
+  // accept. So every Strava call goes through the strava-api Supabase Edge
+  // Function, which holds the secret and re-fetches on our behalf. That
+  // function is stateless: this app keeps its own Strava tokens in
+  // localStorage (per device, like reconnecting Strava in a new browser)
+  // and sends them along with each call, getting back whatever the
+  // function refreshed so it can save the new ones.
+
+  function showGlobalToast(msg, isError){
+    const el = document.getElementById('globalToast');
+    el.textContent = msg;
+    el.classList.toggle('is-error', !!isError);
+    el.hidden = false;
+    clearTimeout(showGlobalToast._t);
+    showGlobalToast._t = setTimeout(()=>{ el.hidden = true; }, 5000);
+  }
+
+  function getStravaTokens(){
+    try{ return JSON.parse(localStorage.getItem(STRAVA_TOKENS_KEY) || 'null'); }catch(e){ return null; }
+  }
+  function setStravaTokens(tokens){
+    try{ localStorage.setItem(STRAVA_TOKENS_KEY, JSON.stringify(tokens)); }catch(e){}
+  }
+  function clearStravaTokens(){
+    try{ localStorage.removeItem(STRAVA_TOKENS_KEY); }catch(e){}
+  }
+
+  function stravaConnectUrl(){
+    const redirectUri = SUPABASE_URL + '/functions/v1/strava-callback';
+    const state = encodeURIComponent(window.location.href);
+    return 'https://www.strava.com/oauth/authorize'+
+      '?client_id='+encodeURIComponent(STRAVA_CLIENT_ID)+
+      '&response_type=code&redirect_uri='+encodeURIComponent(redirectUri)+
+      '&approval_prompt=auto&scope=activity:read_all&state='+state;
+  }
+
+  // Strava's redirect lands the browser back on this same page with tokens
+  // (or an error) in the URL *fragment* — read once on load, then scrub it
+  // from the address bar so a refresh or shared link never replays it.
+  function consumeStravaRedirect(){
+    if(!location.hash) return;
+    const params = new URLSearchParams(location.hash.slice(1));
+    if(params.has('strava_access_token')){
+      setStravaTokens({
+        accessToken: params.get('strava_access_token'),
+        refreshToken: params.get('strava_refresh_token'),
+        expiresAt: Number(params.get('strava_expires_at')),
+      });
+      history.replaceState(null, '', location.pathname + location.search);
+      showGlobalToast('Strava connected — open a trip and click "Import from Strava".');
+    } else if(params.has('strava_error')){
+      history.replaceState(null, '', location.pathname + location.search);
+      showGlobalToast('Could not connect Strava: ' + params.get('strava_error'), true);
+    }
+  }
+
+  async function callStravaApi(payload){
+    const tokens = getStravaTokens();
+    if(!tokens) throw new Error('not-connected');
+    const { data, error } = await sb.functions.invoke('strava-api', { body: Object.assign({}, payload, tokens) });
+    if(error) throw error;
+    if(data && data.error) throw new Error(data.error);
+    if(data && data.tokens) setStravaTokens(data.tokens);
+    return data;
+  }
+
+  function openStravaModal(){
+    document.getElementById('stravaModalOverlay').style.display = 'flex';
+    const status = document.getElementById('stravaModalStatus');
+    status.textContent = ''; status.className = 'upload-status';
+    const connectPrompt = document.getElementById('stravaConnectPrompt');
+    const list = document.getElementById('stravaActivityList');
+    if(!getStravaTokens()){
+      connectPrompt.style.display = 'block';
+      list.style.display = 'none';
+      return;
+    }
+    connectPrompt.style.display = 'none';
+    list.style.display = 'block';
+    loadStravaActivities();
+  }
+  function closeStravaModal(){
+    document.getElementById('stravaModalOverlay').style.display = 'none';
+  }
+
+  async function loadStravaActivities(){
+    const list = document.getElementById('stravaActivityList');
+    const status = document.getElementById('stravaModalStatus');
+    list.innerHTML = '<div class="trip-gear-empty">Loading your recent activities…</div>';
+    try{
+      const data = await callStravaApi({ action: 'activities' });
+      renderStravaActivityList(data.activities || []);
+    }catch(e){
+      clearStravaTokens();
+      document.getElementById('stravaConnectPrompt').style.display = 'block';
+      list.style.display = 'none';
+      status.className = 'upload-error';
+      status.textContent = 'Couldn\'t load your Strava activities — try connecting again.';
+    }
+  }
+
+  function renderStravaActivityList(activities){
+    const list = document.getElementById('stravaActivityList');
+    list.innerHTML = '';
+    if(!activities.length){
+      list.innerHTML = '<div class="trip-gear-empty">No recent activities found.</div>';
+      return;
+    }
+    activities.forEach(a=>{
+      const row = document.createElement('div');
+      row.className = 'strava-activity-row';
+      const km = a.distanceMeters ? (a.distanceMeters/1000).toFixed(1)+' km' : '';
+      const date = a.startDate ? a.startDate.slice(0,10) : '';
+      row.innerHTML =
+        '<div class="strava-activity-info">'+
+          '<div class="strava-activity-name"></div>'+
+          '<div class="strava-activity-meta"></div>'+
+        '</div>'+
+        '<button class="ghost-btn" type="button">Import</button>';
+      row.querySelector('.strava-activity-name').textContent = a.name;
+      row.querySelector('.strava-activity-meta').textContent = [date, km].filter(Boolean).join(' · ');
+      row.querySelector('button').addEventListener('click', ()=> importStravaActivity(a, row));
+      list.appendChild(row);
+    });
+  }
+
+  async function importStravaActivity(activity, row){
+    const status = document.getElementById('stravaModalStatus');
+    const btn = row.querySelector('button');
+    btn.disabled = true; btn.textContent = 'Importing…';
+    status.className = 'upload-status'; status.textContent = '';
+    try{
+      const data = await callStravaApi({
+        action: 'gpx', activityId: activity.id,
+        activityName: activity.name, startDate: activity.startDate,
+      });
+      const file = new File([data.gpx], 'strava-'+activity.id+'.gpx', { type: 'application/gpx+xml' });
+      await handleTripGpxFiles([file]);
+      status.textContent = 'Imported "'+activity.name+'".';
+      btn.textContent = 'Imported';
+    }catch(e){
+      status.className = 'upload-error';
+      status.textContent = 'Could not import that activity: ' + (e.message || e);
+      btn.disabled = false; btn.textContent = 'Import';
+    }
   }
 
 
@@ -3074,6 +3274,18 @@
     const email = document.getElementById('cloudSignInEmail').value.trim();
     if(email) sendMagicLink(email);
   });
+
+  // ---- Strava wiring ----
+  document.getElementById('stravaImportBtn').style.display = STRAVA_ENABLED ? 'inline-block' : 'none';
+  document.getElementById('stravaImportBtn').addEventListener('click', openStravaModal);
+  document.getElementById('stravaModalClose').addEventListener('click', closeStravaModal);
+  document.getElementById('stravaModalOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'stravaModalOverlay') closeStravaModal();
+  });
+  document.getElementById('stravaConnectBtn').addEventListener('click', ()=>{
+    window.location.href = stravaConnectUrl();
+  });
+  if(STRAVA_ENABLED) consumeStravaRedirect();
 
   // ---- Gear picker wiring ----
   document.getElementById('tripGearModalClose').addEventListener('click', closeGearPickerModal);
