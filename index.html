@@ -242,6 +242,10 @@
     flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
     gap:12px;padding:18px 24px;align-content:start;
   }
+  /* Two grids now share #tripsListView's flex column (planned/completed
+     sections) — flex:1 on both would let the first eat all the space
+     meant for the second, same class of bug as .gear-scene earlier. */
+  #tripPlannedGrid, #tripCompletedGrid{flex:none;}
   .gear-card{
     background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:14px;
     display:flex;flex-direction:column;gap:8px;
@@ -258,6 +262,8 @@
   .gear-badge.status-retired{color:var(--muted);background:var(--panel-alt);}
   .gear-badge.status-loaned{color:#D9B26F;background:rgba(217,178,111,0.12);}
   .gear-badge.status-wishlist{color:#9AB4C9;background:rgba(154,180,201,0.12);}
+  .gear-badge.status-planned{color:#D9B26F;background:rgba(217,178,111,0.12);}
+  .gear-badge.status-completed{color:#8FBF9A;background:rgba(143,191,154,0.12);}
   .gear-card-meta{font-size:12px;color:var(--muted);}
   .gear-card-weight{font-family:'Fraunces',serif;font-size:16px;color:var(--brass);}
   .gear-card-actions{display:flex;gap:6px;margin-top:auto;padding-top:6px;}
@@ -828,7 +834,19 @@
       </div>
       <button class="primary-btn" id="addTripBtn">+ New trip</button>
     </div>
-    <div class="gear-grid" id="tripCardsGrid"></div>
+
+    <div class="section-subhead">
+      <p class="section-label" style="margin:0;">Planned trips</p>
+    </div>
+    <div class="gear-grid" id="tripPlannedGrid"></div>
+    <div class="gear-empty" id="tripPlannedEmpty" style="display:none;">Nothing planned yet — click "+ New trip" to start one.</div>
+
+    <div class="section-subhead">
+      <p class="section-label" style="margin:0;">Completed trips</p>
+    </div>
+    <div class="gear-grid" id="tripCompletedGrid"></div>
+    <div class="gear-empty" id="tripCompletedEmpty" style="display:none;">No completed trips yet.</div>
+
     <div class="gear-empty" id="tripsEmpty" style="display:none;">No trips yet — click "+ New trip" to group some tracks.</div>
   </div>
 
@@ -839,6 +857,7 @@
         <h3 class="category-view-title" id="tripDetailTitle">Trip</h3>
         <span class="category-view-count" id="tripDetailSubtitle"></span>
       </div>
+      <span class="gear-badge" id="tripDetailStatusBadge"></span>
       <div style="margin-left:auto;display:flex;gap:8px;">
         <button class="ghost-btn" id="tripViewOnMapBtn">View on map</button>
         <button class="ghost-btn" id="tripEditBtn">Edit</button>
@@ -1063,6 +1082,19 @@
       <div class="form-field">
         <label for="tripNotes">Notes</label>
         <textarea id="tripNotes" maxlength="500" placeholder="Dates, route notes…"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Status</label>
+          <div class="view-toggle" id="tripStatusToggle">
+            <button type="button" data-status="planned">Planned</button>
+            <button type="button" data-status="completed">Completed</button>
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="tripDate">Date</label>
+          <input type="date" id="tripDate">
+        </div>
       </div>
       <div class="form-field">
         <label>Add GPX tracks</label>
@@ -2103,6 +2135,19 @@
     const dates = tripTracks(trip).map(t=>t.date).filter(Boolean).sort();
     return dates.length ? dates[dates.length-1] : null;
   }
+  // A trip's own `date` field (when set) is the trip's intent — the day
+  // it's planned for, or a manually-noted completion day — so it wins
+  // over dates only ever inferred from GPX tracks.
+  function tripDisplayDate(trip){
+    return trip.date || tripPrimaryDate(trip);
+  }
+  // Explicit status wins; trips saved before this feature existed (or
+  // that never got a status set) fall back to a simple, low-surprise
+  // rule: recorded tracks are evidence a trip happened.
+  function tripStatus(trip){
+    if(trip.status === 'planned' || trip.status === 'completed') return trip.status;
+    return tripTracks(trip).length ? 'completed' : 'planned';
+  }
   function gearUsageTrips(gearId){
     return trips.filter(tr => (tr.gearIds||[]).includes(gearId));
   }
@@ -2296,29 +2341,79 @@
         .map(lo=>'<option value="'+lo.id+'">'+escapeHtml(lo.name)+'</option>').join('');
   }
 
-  function renderTripCards(){
-    const grid = document.getElementById('tripCardsGrid');
-    grid.innerHTML = '';
-    document.getElementById('tripsEmpty').style.display = trips.length ? 'none' : 'block';
-    if(!trips.length) return;
+  // Relative-day phrasing for a planned trip's date; a plain date once
+  // it's far enough out (or already completed) that "in N days" stops
+  // being the useful way to read it.
+  function relativeDayLabel(dateStr){
+    const target = new Date(dateStr + 'T00:00:00');
+    if(isNaN(target)) return dateStr;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const days = Math.round((target - today) / 86400000);
+    if(days === 0) return 'Today';
+    if(days === 1) return 'Tomorrow';
+    if(days === -1) return 'Yesterday';
+    if(days > 1 && days <= 60) return 'In ' + days + ' days';
+    if(days < -1 && days >= -60) return days*-1 + ' days ago';
+    return dateStr;
+  }
 
+  function renderTripSection(list, gridId, emptyId, status){
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = '';
+    document.getElementById(emptyId).style.display = list.length ? 'none' : 'block';
     const trackColors = computeTrackColors();
-    trips.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).forEach(trip=>{
+    list.forEach(trip=>{
       const tks = tripTracks(trip);
       const dist = tripDistanceKm(trip);
       const gearList = tripGearItemsList(trip);
       const weight = tripGearWeight(trip);
       const dotColor = tks.length ? trackColors[tks[0].id] : null;
+      const displayDate = tripDisplayDate(trip);
       const card = document.createElement('div');
       card.className = 'trip-card';
       card.innerHTML =
         '<div class="trip-card-name">'+(dotColor?'<span class="track-color-dot" style="background:'+dotColor+'"></span>':'')+escapeHtml(trip.name)+'</div>'+
         (trip.notes ? '<div class="trip-card-notes">'+escapeHtml(trip.notes)+'</div>' : '')+
+        (displayDate ? '<div class="trip-card-meta">'+escapeHtml(status==='planned' ? relativeDayLabel(displayDate) : displayDate)+'</div>' : '')+
         '<div class="trip-card-meta">'+tks.length+' track'+(tks.length!==1?'s':'')+' · '+dist.toFixed(1)+' km</div>'+
         '<div class="trip-card-meta">'+gearList.length+' gear item'+(gearList.length!==1?'s':'')+(weight?' · '+formatWeight(weight):'')+'</div>';
       card.addEventListener('click', ()=> showTripDetail(trip.id));
       grid.appendChild(card);
     });
+  }
+
+  function renderTripCards(){
+    document.getElementById('tripsEmpty').style.display = trips.length ? 'none' : 'block';
+    document.querySelectorAll('#tripsListView .section-subhead, #tripsListView .gear-grid').forEach(el=>{
+      el.style.display = trips.length ? '' : 'none';
+    });
+    document.getElementById('tripPlannedEmpty').style.display = 'none';
+    document.getElementById('tripCompletedEmpty').style.display = 'none';
+    if(!trips.length) return;
+
+    const planned = trips.filter(t => tripStatus(t) === 'planned');
+    const completed = trips.filter(t => tripStatus(t) === 'completed');
+
+    // Soonest first; undated planned trips (nothing to sort by yet) sink
+    // to the end, most-recently-created of those shown first.
+    planned.sort((a,b)=>{
+      const da = tripDisplayDate(a), db = tripDisplayDate(b);
+      if(da && db) return da < db ? -1 : da > db ? 1 : 0;
+      if(da) return -1;
+      if(db) return 1;
+      return (b.createdAt||0)-(a.createdAt||0);
+    });
+    // Most recent first; undated completed trips fall back to creation order.
+    completed.sort((a,b)=>{
+      const da = tripDisplayDate(a), db = tripDisplayDate(b);
+      if(da && db) return da > db ? -1 : da < db ? 1 : 0;
+      if(da) return -1;
+      if(db) return 1;
+      return (b.createdAt||0)-(a.createdAt||0);
+    });
+
+    renderTripSection(planned, 'tripPlannedGrid', 'tripPlannedEmpty', 'planned');
+    renderTripSection(completed, 'tripCompletedGrid', 'tripCompletedEmpty', 'completed');
   }
 
   function showTripsList(){
@@ -2345,6 +2440,10 @@
 
     document.getElementById('tripDetailTitle').textContent = trip.name;
     document.getElementById('tripDetailSubtitle').textContent = trip.notes || '';
+    const status = tripStatus(trip);
+    const badge = document.getElementById('tripDetailStatusBadge');
+    badge.className = 'gear-badge status-' + status;
+    badge.textContent = status === 'planned' ? 'Planned' : 'Completed';
     document.getElementById('tripStatTracks').textContent = tks.length;
     document.getElementById('tripStatDistance').textContent = dist.toFixed(1);
     document.getElementById('tripStatGearCount').textContent = gearList.length;
@@ -2552,6 +2651,7 @@
       });
       picker.appendChild(row);
     });
+    maybeAutoSetTripStatus();
   }
 
   function openTripModal(id){
@@ -2560,9 +2660,12 @@
     document.getElementById('tripId').value = trip ? trip.id : '';
     document.getElementById('tripName').value = trip ? trip.name : '';
     document.getElementById('tripNotes').value = trip ? (trip.notes || '') : '';
+    document.getElementById('tripDate').value = trip ? (trip.date || '') : '';
     document.getElementById('tripUploadStatus').textContent = '';
     document.getElementById('tripUploadStatus').className = 'upload-status';
 
+    tripStatusTouched = !!(trip && (trip.status === 'planned' || trip.status === 'completed'));
+    setTripStatusToggle(trip ? tripStatus(trip) : 'planned');
     renderTripTrackPicker(new Set(trip ? (trip.trackIds || []) : []));
 
     const delBtn = document.getElementById('tripDeleteBtn');
@@ -2576,6 +2679,28 @@
 
   function closeTripModal(){
     document.getElementById('tripModalOverlay').style.display = 'none';
+  }
+
+  function setTripStatusToggle(status){
+    document.querySelectorAll('#tripStatusToggle button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.status === status);
+    });
+  }
+  function getTripStatusToggle(){
+    const active = document.querySelector('#tripStatusToggle button.active');
+    return active ? active.dataset.status : 'planned';
+  }
+  // True once a trip already has an explicit, deliberately-set status —
+  // in that case adding/removing tracks in this modal session should
+  // never silently override it. False for a brand new trip or one that's
+  // only ever had a status inferred from tracks, so the toggle keeps
+  // tracking "do I have GPX evidence yet?" live as the user works,
+  // without them having to click it by hand.
+  let tripStatusTouched = false;
+  function maybeAutoSetTripStatus(){
+    if(tripStatusTouched) return;
+    const hasChecked = document.querySelectorAll('#tripTrackPicker input[type="checkbox"]:checked').length > 0;
+    setTripStatusToggle(hasChecked ? 'completed' : 'planned');
   }
 
   async function handleTripGpxFiles(fileList){
@@ -2609,12 +2734,14 @@
     const id = document.getElementById('tripId').value;
     const trackIds = Array.from(document.querySelectorAll('#tripTrackPicker input[type="checkbox"]:checked')).map(cb=>cb.dataset.id);
     const notes = document.getElementById('tripNotes').value.trim();
+    const date = document.getElementById('tripDate').value || null;
+    const status = getTripStatusToggle();
 
     if(id){
       const trip = trips.find(t=>t.id===id);
-      if(trip){ trip.name = name; trip.notes = notes; trip.trackIds = trackIds; }
+      if(trip){ trip.name = name; trip.notes = notes; trip.trackIds = trackIds; trip.date = date; trip.status = status; }
     } else {
-      trips.push({id: 'trip_'+Math.random().toString(36).slice(2,10), name, notes, trackIds, gearIds: [], photoIds: [], createdAt: Date.now()});
+      trips.push({id: 'trip_'+Math.random().toString(36).slice(2,10), name, notes, trackIds, gearIds: [], photoIds: [], date, status, createdAt: Date.now()});
     }
     await saveTrips();
     closeTripModal();
@@ -3554,6 +3681,15 @@
   });
   document.getElementById('tripForm').addEventListener('submit', handleTripFormSubmit);
   document.getElementById('tripDeleteBtn').addEventListener('click', handleTripDelete);
+  document.querySelectorAll('#tripStatusToggle button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      tripStatusTouched = true;
+      setTripStatusToggle(b.dataset.status);
+    });
+  });
+  document.getElementById('tripTrackPicker').addEventListener('change', (e)=>{
+    if(e.target.matches('input[type="checkbox"]')) maybeAutoSetTripStatus();
+  });
   document.getElementById('tripLoadoutSelect').addEventListener('change', async (e)=>{
     const loadoutId = e.target.value;
     const trip = trips.find(t=>t.id===currentTripId);
