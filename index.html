@@ -183,6 +183,7 @@
   .leaflet-popup-tip{background:var(--panel);}
   .leaflet-popup-content{font-family:'Inter',sans-serif;font-size:12.5px;}
   .leaflet-popup-content a.popup-trip-link{color:var(--brass);font-weight:600;}
+  .leaflet-popup-content a.popup-photo-link{color:var(--muted);display:inline-block;margin-top:2px;}
   .leaflet-container a.leaflet-popup-close-button{color:var(--muted);}
   .leaflet-tooltip{
     background:var(--panel);color:var(--parchment);border:1px solid var(--line);
@@ -458,6 +459,42 @@
   .strava-activity-name{font-size:13px;color:var(--parchment);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .strava-activity-meta{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;}
   .strava-activity-row .ghost-btn{flex:none;padding:6px 12px;font-size:11.5px;}
+
+  /* ---- Trip photos ---- */
+  .photo-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin-top:10px;
+  }
+  .photo-thumb{
+    position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;cursor:pointer;
+    background:var(--panel-alt);border:1px solid var(--line);
+  }
+  .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-thumb-remove{
+    position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;
+    background:rgba(14,27,51,0.75);color:var(--parchment);border:none;cursor:pointer;
+    font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .12s ease;
+  }
+  .photo-thumb:hover .photo-thumb-remove{opacity:1;}
+  .photo-thumb-remove:hover{background:var(--danger);}
+  .photo-lightbox-overlay{
+    position:fixed;inset:0;z-index:970;background:rgba(6,12,24,0.88);
+    display:flex;align-items:center;justify-content:center;padding:32px;
+  }
+  .photo-lightbox-overlay[hidden]{display:none;}
+  .photo-lightbox-overlay img{max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 12px 40px rgba(0,0,0,0.5);}
+  .photo-lightbox-close, .photo-lightbox-nav{
+    position:absolute;background:rgba(14,27,51,0.7);border:1px solid var(--line);color:var(--parchment);
+    cursor:pointer;border-radius:50%;width:40px;height:40px;font-size:18px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .photo-lightbox-close:hover, .photo-lightbox-nav:hover{border-color:var(--brass);}
+  .photo-lightbox-close{top:18px;right:18px;}
+  .photo-lightbox-nav.prev{left:18px;top:50%;transform:translateY(-50%);}
+  .photo-lightbox-nav.next{right:18px;top:50%;transform:translateY(-50%);}
+  @media (max-width:600px){
+    .photo-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));}
+  }
   @media (max-width:760px){
     .breakdown-card{margin:0 12px 18px;padding:16px;}
     .breakdown-body{gap:18px;}
@@ -846,6 +883,19 @@
       </div>
       <div id="tripGearSummaryList"></div>
     </div>
+
+    <div class="trip-detail-section" id="tripPhotoSection">
+      <div class="trip-detail-section-head">
+        <p class="section-label" style="margin:0;">Photos</p>
+      </div>
+      <label class="dropzone" for="tripPhotoInput" id="tripPhotoDropzone">
+        <input type="file" id="tripPhotoInput" accept="image/*" multiple hidden>
+        <span class="dropzone-title">Add photos</span>
+        <span class="dropzone-sub">Drop images or click</span>
+      </label>
+      <div class="upload-status" id="tripPhotoStatus"></div>
+      <div class="photo-grid" id="tripPhotoGrid"></div>
+    </div>
   </div>
 
 </div>
@@ -1124,6 +1174,13 @@
 
 <div class="chart-tooltip" id="chartTooltip" role="tooltip" hidden></div>
 <div class="global-toast" id="globalToast" hidden></div>
+
+<div class="photo-lightbox-overlay" id="photoLightboxOverlay" hidden>
+  <button type="button" class="photo-lightbox-close" id="photoLightboxClose">&times;</button>
+  <button type="button" class="photo-lightbox-nav prev" id="photoLightboxPrev">&larr;</button>
+  <img id="photoLightboxImg" alt="Trip photo">
+  <button type="button" class="photo-lightbox-nav next" id="photoLightboxNext">&rarr;</button>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
@@ -1413,6 +1470,15 @@
       req.onerror = ()=> reject(req.error);
     });
   }
+  async function idbDelete(key){
+    const db = await idbOpen();
+    return new Promise((resolve, reject)=>{
+      const tx = db.transaction('kv', 'readwrite');
+      tx.objectStore('kv').delete(key);
+      tx.oncomplete = ()=> resolve();
+      tx.onerror = ()=> reject(tx.error);
+    });
+  }
 
   async function storeSet(key, value){
     try{
@@ -1440,6 +1506,15 @@
     }catch(e){
       try{ return localStorage.getItem(key); }catch(e2){ return null; }
     }
+  }
+  async function storeRemove(key){
+    try{
+      if(HAS_NATIVE_STORAGE && typeof window.storage.remove === 'function'){ await window.storage.remove(key, false); return; }
+      await idbDelete(key);
+    }catch(e){
+      console.error('storage remove failed for', key, e);
+    }
+    try{ localStorage.removeItem(key); }catch(e2){}
   }
 
   async function saveTracks(){ await storeSet(STORAGE_TRACKS, JSON.stringify(tracks)); markLocalModified(); scheduleCloudPush(); }
@@ -1841,6 +1916,12 @@
     showTripDetail(tripId);
   }
 
+  function goToTripPhotosFromMap(tripId){
+    goToTripFromMap(tripId);
+    const section = document.getElementById('tripPhotoSection');
+    if(section) section.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
   function renderTracks(){
     trackLayerGroup.clearLayers();
     const trackColors = computeTrackColors();
@@ -1848,6 +1929,7 @@
       const color = trackColors[t.id];
       const line = L.polyline(t.points, {color, weight:2.5, opacity:0.85});
       const trip = findTrackTrip(t.id);
+      const photoCount = trip ? (trip.photoIds||[]).length : 0;
       let popupHtml =
         '<strong>'+escapeHtml(t.name)+'</strong><br>'+
         (t.date ? escapeHtml(t.date)+', ' : '') +
@@ -1859,9 +1941,17 @@
           popupHtml += '<br>Gear: '+tripGear.length+' item'+(tripGear.length>1?'s':'')+(tripWeight?' · '+formatWeight(tripWeight):'');
         }
         popupHtml += '<br><a href="#" class="popup-trip-link" data-trip-id="'+trip.id+'">'+escapeHtml(trip.name)+' &rarr;</a>';
+        if(photoCount){
+          popupHtml += '<br><a href="#" class="popup-photo-link" data-trip-id="'+trip.id+'">&#128247; '+photoCount+' photo'+(photoCount>1?'s':'')+' &rarr;</a>';
+        }
       }
       line.bindPopup(popupHtml);
-      line.bindTooltip(trip ? trip.name : t.name, {sticky:true, direction:'top', opacity:0.92});
+      // Hover tooltip stays plain text (Leaflet tooltips ignore pointer
+      // events by default, so a real clickable link here would vanish
+      // before it could be clicked) — it just hints that photos exist;
+      // the actual link lives in the click popup above.
+      const tooltipText = (trip ? trip.name : t.name) + (photoCount ? ' · \u{1F4F7} '+photoCount : '');
+      line.bindTooltip(tooltipText, {sticky:true, direction:'top', opacity:0.92});
       line.on('mouseover', function(){ this.setStyle({weight:5, opacity:1}); this.bringToFront(); });
       line.on('mouseout', function(){ this.setStyle({weight:2.5, opacity:0.85}); });
       trackLayerGroup.addLayer(line);
@@ -1875,6 +1965,13 @@
       link.addEventListener('click', (evt)=>{
         evt.preventDefault();
         goToTripFromMap(link.dataset.tripId);
+      });
+    }
+    const photoLink = el && el.querySelector('.popup-photo-link');
+    if(photoLink){
+      photoLink.addEventListener('click', (evt)=>{
+        evt.preventDefault();
+        goToTripPhotosFromMap(photoLink.dataset.tripId);
       });
     }
   });
@@ -2286,6 +2383,138 @@
         gearListEl.appendChild(row);
       });
     }
+
+    renderTripPhotoGrid(trip);
+  }
+
+  // ---- Trip photos ----
+  // Stored one-per-key (waypoints-photo-<id>) rather than embedded in the
+  // trip object, so adding/removing a photo never re-serializes every
+  // other trip's data, and — since cloud sync only pushes the lightweight
+  // trip/gear/track blobs — photos stay local-only per device rather than
+  // bloating every sync push with image bytes.
+  const photoDataCache = {}; // photoId -> data URL, populated as photos are loaded/added
+
+  function photoStoreKey(id){ return 'waypoints-photo-' + id; }
+
+  async function loadTripPhoto(id){
+    if(photoDataCache[id]) return photoDataCache[id];
+    const raw = await storeGet(photoStoreKey(id));
+    if(!raw) return null;
+    try{
+      const parsed = JSON.parse(raw);
+      photoDataCache[id] = parsed.dataUrl;
+      return parsed.dataUrl;
+    }catch(e){ return null; }
+  }
+
+  function downscaleImage(file, maxDim, quality){
+    return new Promise((resolve, reject)=>{
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = ()=>{
+        let { width, height } = img;
+        if(width > maxDim || height > maxDim){
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('Could not read that image')); };
+      img.src = url;
+    });
+  }
+
+  async function addPhotosToTrip(trip, fileList){
+    const files = Array.from(fileList).filter(f=>f.type.startsWith('image/'));
+    if(!files.length) return;
+    const statusEl = document.getElementById('tripPhotoStatus');
+    statusEl.className = 'upload-status';
+    statusEl.textContent = 'Processing ' + files.length + ' photo' + (files.length>1?'s':'') + '…';
+    let added = 0, failed = 0;
+    for(const file of files){
+      try{
+        const dataUrl = await downscaleImage(file, 1600, 0.82);
+        const id = 'photo_' + Math.random().toString(36).slice(2,10);
+        photoDataCache[id] = dataUrl;
+        await storeSet(photoStoreKey(id), JSON.stringify({ dataUrl, addedAt: Date.now() }));
+        trip.photoIds = trip.photoIds || [];
+        trip.photoIds.push(id);
+        added++;
+      }catch(e){ failed++; }
+    }
+    await saveTrips();
+    statusEl.textContent = added
+      ? ('Added ' + added + ' photo' + (added>1?'s':'') + (failed ? ', ' + failed + ' failed' : '') + '.')
+      : 'Could not read those photos.';
+    statusEl.className = (!added && failed) ? 'upload-error' : 'upload-status';
+    renderTripPhotoGrid(trip);
+    renderTracks(); // hover/click hints on the map reflect the new photo count
+  }
+
+  async function removeTripPhoto(trip, photoId){
+    trip.photoIds = (trip.photoIds || []).filter(id => id !== photoId);
+    delete photoDataCache[photoId];
+    await storeRemove(photoStoreKey(photoId));
+    await saveTrips();
+    renderTripPhotoGrid(trip);
+    renderTracks();
+  }
+
+  async function renderTripPhotoGrid(trip){
+    const grid = document.getElementById('tripPhotoGrid');
+    const ids = trip.photoIds || [];
+    if(!ids.length){ grid.innerHTML = ''; return; }
+    grid.innerHTML = '';
+    const urls = await Promise.all(ids.map(loadTripPhoto));
+    ids.forEach((id, i)=>{
+      const url = urls[i];
+      if(!url) return;
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      thumb.innerHTML = '<img loading="lazy" alt="Trip photo"><button type="button" class="photo-thumb-remove" title="Remove photo">&times;</button>';
+      thumb.querySelector('img').src = url;
+      thumb.addEventListener('click', ()=> openPhotoLightbox(trip, i));
+      thumb.querySelector('.photo-thumb-remove').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        removeTripPhoto(trip, id);
+      });
+      grid.appendChild(thumb);
+    });
+  }
+
+  // ---- Photo lightbox ----
+  let lightboxTrip = null, lightboxIndex = 0;
+
+  async function openPhotoLightbox(trip, index){
+    lightboxTrip = trip;
+    lightboxIndex = index;
+    await renderLightboxImage();
+    document.getElementById('photoLightboxOverlay').hidden = false;
+  }
+  function closePhotoLightbox(){
+    document.getElementById('photoLightboxOverlay').hidden = true;
+    lightboxTrip = null;
+  }
+  async function renderLightboxImage(){
+    if(!lightboxTrip) return;
+    const ids = lightboxTrip.photoIds || [];
+    if(!ids.length){ closePhotoLightbox(); return; }
+    lightboxIndex = (lightboxIndex + ids.length) % ids.length;
+    const url = await loadTripPhoto(ids[lightboxIndex]);
+    document.getElementById('photoLightboxImg').src = url || '';
+    const multi = ids.length > 1;
+    document.getElementById('photoLightboxPrev').style.display = multi ? 'flex' : 'none';
+    document.getElementById('photoLightboxNext').style.display = multi ? 'flex' : 'none';
+  }
+  function lightboxStep(dir){
+    lightboxIndex += dir;
+    renderLightboxImage();
   }
 
   function currentPickerChecked(){
@@ -2385,7 +2614,7 @@
       const trip = trips.find(t=>t.id===id);
       if(trip){ trip.name = name; trip.notes = notes; trip.trackIds = trackIds; }
     } else {
-      trips.push({id: 'trip_'+Math.random().toString(36).slice(2,10), name, notes, trackIds, gearIds: [], createdAt: Date.now()});
+      trips.push({id: 'trip_'+Math.random().toString(36).slice(2,10), name, notes, trackIds, gearIds: [], photoIds: [], createdAt: Date.now()});
     }
     await saveTrips();
     closeTripModal();
@@ -2405,8 +2634,15 @@
       return;
     }
     const id = document.getElementById('tripId').value;
+    const trip = trips.find(t=>t.id===id);
     trips = trips.filter(t=>t.id!==id);
     await saveTrips();
+    if(trip && trip.photoIds && trip.photoIds.length){
+      await Promise.all(trip.photoIds.map(pid=>{
+        delete photoDataCache[pid];
+        return storeRemove(photoStoreKey(pid));
+      }));
+    }
     closeTripModal();
     showTripsList();
     renderTracks();
@@ -3374,6 +3610,37 @@
       handleTripGpxFiles(e.dataTransfer.files);
     });
   })();
+
+  // ---- Trip photos wiring ----
+  function currentPhotoTrip(){ return trips.find(t=>t.id===currentTripId) || null; }
+  document.getElementById('tripPhotoInput').addEventListener('change', e=>{
+    const trip = currentPhotoTrip();
+    if(trip) addPhotosToTrip(trip, e.target.files);
+    e.target.value = '';
+  });
+  (function(){
+    const zone = document.getElementById('tripPhotoDropzone');
+    zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e=>{
+      e.preventDefault(); zone.classList.remove('dragover');
+      const trip = currentPhotoTrip();
+      if(trip) addPhotosToTrip(trip, e.dataTransfer.files);
+    });
+  })();
+
+  document.getElementById('photoLightboxClose').addEventListener('click', closePhotoLightbox);
+  document.getElementById('photoLightboxPrev').addEventListener('click', ()=> lightboxStep(-1));
+  document.getElementById('photoLightboxNext').addEventListener('click', ()=> lightboxStep(1));
+  document.getElementById('photoLightboxOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'photoLightboxOverlay') closePhotoLightbox();
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(document.getElementById('photoLightboxOverlay').hidden) return;
+    if(e.key === 'Escape') closePhotoLightbox();
+    else if(e.key === 'ArrowLeft') lightboxStep(-1);
+    else if(e.key === 'ArrowRight') lightboxStep(1);
+  });
 
   document.querySelectorAll('.view-toggle:not(#basemapToggle) button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
