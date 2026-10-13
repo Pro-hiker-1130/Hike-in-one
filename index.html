@@ -2000,6 +2000,12 @@
   let cloudSyncStatus = 'offline';   // 'offline' | 'syncing' | 'synced' | 'error'
   let cloudPushTimer = null;
   let suppressNextPush = false;      // set while applying a pulled snapshot, so it doesn't bounce straight back to the cloud
+  // Sync must not run until this device's own data has been read from
+  // storage: until then the in-memory lists are empty, and uploading them
+  // would replace the cloud copy (and so every other device) with nothing.
+  // Resolves true once loaded, false if reading local data failed.
+  let resolveLocalDataLoaded;
+  const localDataLoaded = new Promise(r => resolveLocalDataLoaded = r);
 
   const COLORS = ['#C4501C','#3A5A40','#6A4C93','#1F6FA8','#A3366B','#8A6A00','#2F8F83','#5B5F97'];
   const STORAGE_TRACKS = 'waypoints-tracks-v1';
@@ -2854,23 +2860,52 @@
     }
   }
 
-  async function reconcileOnSignIn(){
+  function snapshotHasData(x){
+    return !!x && (['gear','trips','tracks','loadouts'].some(k => syncedList(x[k]).length) ||
+      (Array.isArray(x.google_points) && x.google_points.length > 0));
+  }
+  function localHasData(){
+    return !!(gearItems.length || trips.length || tracks.length || loadouts.length || googlePoints.length);
+  }
+
+  // Sign-in and app start both fire auth events, often back to back; one
+  // reconcile at a time.
+  let reconcileInFlight = null;
+  function reconcileOnSignIn(){
+    if(!reconcileInFlight) reconcileInFlight = reconcileNow().finally(()=> reconcileInFlight = null);
+    return reconcileInFlight;
+  }
+
+  async function reconcileNow(){
     cloudSyncStatus = 'syncing';
     renderNavAccount();
     try{
+      if(!(await localDataLoaded)) throw new Error('local data could not be read, so sync is paused');
       const { data, error } = await sb.from('user_data').select('*').eq('user_id', cloudUser.id).maybeSingle();
       if(error) throw error;
       const localTs = Number(await storeGet(STORAGE_LAST_MODIFIED)) || 0;
       const cloudTs = data ? new Date(data.updated_at).getTime() : 0;
-      if(data && cloudTs >= localTs){
-        await applyCloudSnapshot(data);
+      // Newest copy wins, except that an empty cloud copy never replaces a
+      // device that still has data: that device refills the cloud instead.
+      const useCloud = data && snapshotHasData(data) ? (cloudTs >= localTs || !localHasData()) : false;
+      if(useCloud){
+        // A section that is empty in the cloud but filled here (trips, say)
+        // is kept from this device and uploaded again, not wiped.
+        const kept = [];
+        const merged = Object.assign({}, data);
+        [['gear', gearItems], ['trips', trips], ['loadouts', loadouts], ['tracks', tracks], ['google_points', googlePoints]].forEach(([k, mine])=>{
+          const theirs = k === 'google_points' ? (Array.isArray(data[k]) ? data[k] : []) : syncedList(data[k]);
+          if(!theirs.length && mine.length){ merged[k] = mine; kept.push(k); }
+        });
+        await applyCloudSnapshot(merged);
+        if(kept.length) await pushToCloud();
         try{ refreshEverything(); }catch(err){ noteAppError(err); console.error(err); }
         try{ showGarage(); }catch(err){ noteAppError(err); console.error(err); }
         // The Trips page only redraws when it is opened, so one already on
         // screen (common on a phone, where this pull can take a few
         // seconds) would keep showing the pre-sync list.
         if(currentTripId !== null) renderTripDetail(); else renderTripCards();
-      } else {
+      } else if(localHasData()){
         await pushToCloud();
       }
       cloudSyncStatus = 'synced';
@@ -2883,10 +2918,19 @@
 
   async function pushToCloud(){
     if(!sb || !cloudUser) return;
+    if(!(await localDataLoaded)) return;
     cloudSyncStatus = 'syncing';
     renderNavAccount();
     try{
       const snap = await localSnapshot();
+      // Never upload a completely empty dataset: it can only wipe the copy
+      // other devices rely on. (Emptying everything by hand is the one case
+      // this holds back; the cloud copy then comes back on the next sync.)
+      if(!snapshotHasData(snap)){
+        cloudSyncStatus = 'synced';
+        renderNavAccount();
+        return;
+      }
       const { error } = await sb.from('user_data').upsert({
         user_id: cloudUser.id,
         gear: snap.gear, trips: snap.trips, loadouts: snap.loadouts,
@@ -7037,10 +7081,16 @@
         b.classList.toggle('active', b.dataset.basemap === savedBasemap);
       });
     }
-    await loadAll();
-    await loadGear();
-    await loadTrips();
-    await loadLoadouts();
+    try{
+      await loadAll();
+      await loadGear();
+      await loadTrips();
+      await loadLoadouts();
+    }catch(err){
+      resolveLocalDataLoaded(false);
+      throw err;
+    }
+    resolveLocalDataLoaded(true);
     showGarage();
     refreshEverything();
     if(tracks.length || googlePoints.length){

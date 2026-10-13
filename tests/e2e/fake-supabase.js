@@ -128,6 +128,11 @@ function createFakeSupabase({ userId = null, seed = {}, lookups = {}, userDataDe
         if(userDataDelayMs) await new Promise(r => setTimeout(r, userDataDelayMs));
         return reply(db.user_data);
       }
+      // Upsert: keep the latest uploaded row, like the real table.
+      if(method === 'POST' && body){
+        const row = Array.isArray(body) ? body[0] : body;
+        db.user_data.splice(0, db.user_data.length, Object.assign({}, row));
+      }
       return json(201, undefined);
     }
     if(table === 'catalog_products'){

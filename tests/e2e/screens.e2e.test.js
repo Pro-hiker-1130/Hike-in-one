@@ -233,3 +233,95 @@ test('trips arriving from the cloud show up on a Trips page that is already open
   assert.ok(await page.isVisible('#pageTrips'), 'still on the Trips page');
   assert.deepEqual(errors, []);
 });
+
+// ---- Cloud sync must never lose data ----
+function bigTracks(n, pointsEach){
+  return Array.from({ length: n }, (_, k) => ({
+    id: 'local_t' + k, name: 'Local hike ' + k, date: '2025-06-' + String(1 + k % 28).padStart(2, '0'), distanceKm: 10,
+    points: Array.from({ length: pointsEach }, (_, i) => [46 + k * 0.01 + i * 1e-5, 7 + i * 1e-5]),
+  }));
+}
+async function launchWithLocalData(t, fake, local){
+  // Seeds this "device" through the app's legacy localStorage keys, which
+  // it migrates into IndexedDB on first read.
+  const browser = await playwright.chromium.launch(Object.assign({ args: ['--no-sandbox'] },
+    process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}));
+  t.after(()=> browser.close());
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
+  if(process.env.HIKE_LIBS_DIR){
+    await ctx.route(/cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net/, route=>{
+      const key = Object.keys(LIBS).find(k => route.request().url().includes(k));
+      if(!key) return route.abort();
+      route.fulfill({ status: 200, contentType: LIBS[key][1], body: fs.readFileSync(path.join(process.env.HIKE_LIBS_DIR, LIBS[key][0])) });
+    });
+  }
+  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|supabase\.co/, r => r.abort());
+  await ctx.route(new RegExp(SUPABASE_HOST.replace(/\./g, '\\.')), r => fake.handle(r));
+  await ctx.addInitScript(({ local, session, key })=>{
+    if(localStorage.getItem('e2e-seeded')) return;
+    localStorage.setItem('e2e-seeded', '1');
+    localStorage.setItem(key, JSON.stringify(session));
+    Object.entries(local).forEach(([k, v]) => localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)));
+  }, { local, session: fakeSession(ME), key: SESSION_KEY });
+  const page = await ctx.newPage();
+  await page.goto(baseUrl + '/index.html');
+  await page.waitForSelector('.nav-tab');
+  return page;
+}
+const uploads = fake => fake.log.filter(l => l.method === 'POST' && l.path === '/rest/v1/user_data').map(l => Array.isArray(l.body) ? l.body[0] : l.body);
+
+test('sync: a device with newer local changes uploads its data, never an empty set', { skip: !playwright }, async t=>{
+  const fake = createFakeSupabase({ userId: ME, seed: { userData: {
+    gear: [{ id: 'cg', name: 'Cloud tent', category: 'Shelter', status: 'active', weightGrams: 1000, quantity: 1 }],
+    trips: [], loadouts: [], google_points: [], tracks: [],
+  } } });
+  const page = await launchWithLocalData(t, fake, {
+    'waypoints-tracks-v1': bigTracks(40, 4000),
+    'waypoints-trips-v1': [{ id: 'lt', name: 'Local trip', trackIds: ['local_t0'], gearIds: [], status: 'completed' }],
+    'waypoints-gear-v1': [{ id: 'lg', name: 'Local stove', category: 'Cooking', status: 'active', weightGrams: 80, quantity: 1 }],
+    'waypoints-last-modified-v1': String(Date.UTC(2030, 0, 1)),   // local edits newer than the cloud copy
+  });
+  await page.waitForFunction(()=> /Synced/.test(document.getElementById('navAccount').textContent), null, { timeout: 15000 });
+  await page.waitForTimeout(2500);  // any follow-up push
+  const ups = uploads(fake);
+  assert.ok(ups.length >= 1, 'local changes were uploaded');
+  ups.forEach(u => {
+    assert.equal(u.trips.length, 1, 'every upload carries the local trip');
+    assert.equal(u.tracks.length, 40, 'every upload carries the local tracks');
+  });
+  assert.equal(fake.db.user_data[0].gear[0].name, 'Local stove');
+});
+
+test('sync: an empty cloud copy never wipes a device that still has data, and gets refilled from it', { skip: !playwright }, async t=>{
+  const fake = createFakeSupabase({ userId: ME, seed: { userData: {
+    gear: [], trips: [], loadouts: [], google_points: [], tracks: [],   // newer, but empty
+  } } });
+  const page = await launchWithLocalData(t, fake, {
+    'waypoints-tracks-v1': bigTracks(2, 50),
+    'waypoints-trips-v1': [{ id: 'lt', name: 'Local trip', trackIds: ['local_t0'], gearIds: [], status: 'completed' }],
+    'waypoints-gear-v1': [{ id: 'lg', name: 'Local stove', category: 'Cooking', status: 'active', weightGrams: 80, quantity: 1 }],
+    'waypoints-last-modified-v1': '1',   // local copy older than the cloud's
+  });
+  await page.waitForFunction(()=> /Synced/.test(document.getElementById('navAccount').textContent), null, { timeout: 15000 });
+  await page.waitForTimeout(500);
+  assert.equal(await text(page, '#statTrips'), '1', 'local trip kept');
+  assert.equal(fake.db.user_data[0].trips.length, 1, 'cloud refilled from this device');
+  assert.equal(fake.db.user_data[0].gear.length, 1);
+});
+
+test('sync: a newer cloud copy with no trips keeps this device\'s trips and uploads them', { skip: !playwright }, async t=>{
+  const fake = createFakeSupabase({ userId: ME, seed: { userData: {
+    gear: [], trips: [], loadouts: [], google_points: [], tracks: bigTracks(1, 20),
+  } } });
+  const page = await launchWithLocalData(t, fake, {
+    'waypoints-tracks-v1': bigTracks(1, 20),
+    'waypoints-trips-v1': [{ id: 'lt', name: 'Local trip', trackIds: ['local_t0'], gearIds: [], status: 'completed' }],
+    'waypoints-last-modified-v1': '1',
+  });
+  await page.waitForFunction(()=> /Synced/.test(document.getElementById('navAccount').textContent), null, { timeout: 15000 });
+  await page.waitForTimeout(500);
+  await page.click('.nav-tab[data-page="trips"]');
+  assert.equal(await text(page, '#tripCompletedGrid .trip-card-name'), 'Local trip');
+  assert.equal(fake.db.user_data[0].trips.length, 1, 'trips uploaded again');
+  assert.equal(fake.db.user_data[0].tracks.length, 1);
+});
