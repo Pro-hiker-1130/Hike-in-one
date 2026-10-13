@@ -1,4 +1,4 @@
-const CACHE_NAME = 'waypoints-v5';
+const CACHE_NAME = 'waypoints-v6';
 const APP_SHELL = ['./', './index.html', './catalog-core.js', './manifest.json', './icon-192.png', './icon-512.png', './countries-50m.geo.json'];
 
 // The app can't boot without these (index.html calls L.map() immediately),

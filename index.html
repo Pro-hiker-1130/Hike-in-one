@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hike-in-one</title>
 <meta name="description" content="Your hikes, gear, and trips — all in one place">
-<meta name="theme-color" content="#F3F5EF">
+<meta name="theme-color" content="#EFEEE8">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -13,19 +13,24 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
 <style>
   /* Topo Light: a light, trail-sign look that stays readable outdoors.
+     Palette: coolors.co/palette/dad7cd-a3b18a-588157-3a5a40-344e41.
      The variable names predate it (ink = page ground, panel = surfaces,
      brass = the accent, parchment = text). */
   :root{
-    --ink:#F3F5EF;
+    --ink:#EFEEE8;
     --panel:#FFFFFF;
-    --panel-alt:#EEF2EA;
-    --brass:#2E6A4C;
-    --brass-soft:rgba(46,106,76,0.12);
-    --parchment:#1C2620;
-    --muted:#55635A;
-    --line:rgba(28,38,32,0.13);
+    --panel-alt:#DAD7CD;
+    --brass:#3A5A40;
+    --brass-soft:rgba(88,129,87,0.16);
+    --parchment:#344E41;
+    --muted:#4E5D52;
+    --line:rgba(52,78,65,0.16);
+    --sage:#A3B18A;
+    --sage-soft:#E4E8DC;
+    --fern:#588157;
+    --deep:#1F2E26;
     --danger:#B3261E;
-    --signal:#C4501C;
+    --signal:#588157;
     --on-accent:#FFFFFF;
     --font-body:'Barlow',system-ui,sans-serif;
     --font-display:'Barlow Condensed','Barlow',system-ui,sans-serif;
@@ -749,7 +754,7 @@
   .primary-btn,.nav-tab.active,.view-toggle button.active{color:var(--on-accent);}
   .primary-btn{border-radius:8px;}
   .ghost-btn,.danger-btn,.icon-btn{border-radius:8px;}
-  .ghost-btn{border-color:rgba(28,38,32,0.2);font-weight:500;}
+  .ghost-btn{border-color:rgba(52,78,65,0.2);font-weight:500;}
   .icon-btn{background:var(--panel);}
   .top-nav{background:var(--panel);box-shadow:0 1px 0 var(--line);}
   .top-nav-brand{font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
@@ -766,55 +771,56 @@
   .garage-heading h2{font-size:30px;}
   .category-view-title{font-size:20px;}
   .modal-header h3,.cd-reviews-head h4{font-family:var(--font-display);font-weight:700;font-size:21px;text-transform:uppercase;letter-spacing:0.02em;}
-  .gear-card,.trip-card,.trip-track-block,.trip-track-row,.strava-activity-row{border-radius:12px;box-shadow:0 1px 2px rgba(28,38,32,0.05);}
+  .gear-card,.trip-card,.trip-track-block,.trip-track-row,.strava-activity-row{border-radius:12px;box-shadow:0 1px 2px rgba(52,78,65,0.05);}
   .trip-card-name,.gear-card-name{font-size:16px;font-weight:600;}
   .trip-card-meta,.gear-card-meta{font-size:13px;}
   .trip-card-when{font-size:13px;color:var(--muted);}
-  .trip-card-countdown{align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#FFFFFF;background:var(--signal);border-radius:6px;padding:3px 8px;}
+  .trip-card-countdown{align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--deep);background:var(--sage);border-radius:6px;padding:3px 8px;}
   .gear-card-weight{font-family:var(--font-display);font-size:21px;font-weight:700;color:var(--parchment);}
-  .dropzone{border-color:rgba(28,38,32,0.25);background:var(--panel);}
-  #map{background:#EEF1E6;}
+  .dropzone{border-color:rgba(52,78,65,0.25);background:var(--panel);}
+  #map{background:#E9E8E1;}
   .tile-warning{background:rgba(255,255,255,0.96);}
-  .empty-hint{background:rgba(255,255,255,0.97);box-shadow:0 10px 30px rgba(28,38,32,0.15);border-radius:12px;}
-  .modal-overlay{background:rgba(28,38,32,0.45);}
-  .modal{border-radius:14px;box-shadow:0 20px 50px rgba(28,38,32,0.25);}
+  .empty-hint{background:rgba(255,255,255,0.97);box-shadow:0 10px 30px rgba(52,78,65,0.15);border-radius:12px;}
+  .modal-overlay{background:rgba(52,78,65,0.45);}
+  .modal{border-radius:14px;box-shadow:0 20px 50px rgba(52,78,65,0.25);}
   .form-field label{font-size:12.5px;font-weight:500;}
-  .form-field input,.form-field select,.form-field textarea{background:var(--panel);border-color:rgba(28,38,32,0.22);font-size:15px;padding:9px 11px;border-radius:8px;}
-  .gear-toolbar input[type="search"],.gear-toolbar select,.mini-select{background:var(--panel);border-color:rgba(28,38,32,0.22);border-radius:8px;}
+  .form-field input,.form-field select,.form-field textarea{background:var(--panel);border-color:rgba(52,78,65,0.22);font-size:15px;padding:9px 11px;border-radius:8px;}
+  .gear-toolbar input[type="search"],.gear-toolbar select,.mini-select{background:var(--panel);border-color:rgba(52,78,65,0.22);border-radius:8px;}
   .gear-badge{font-weight:600;}
-  .gear-badge.status-active,.gear-badge.status-completed{color:#24573E;background:#E3EFE8;}
-  .gear-badge.status-loaned,.gear-badge.status-planned{color:#7A4E00;background:#FBEFD5;}
-  .gear-badge.status-wishlist{color:#2F5E86;background:#E3EDF6;}
+  .gear-badge.status-active,.gear-badge.status-completed{color:var(--parchment);background:var(--sage-soft);}
+  .gear-badge.status-planned{color:var(--deep);background:var(--sage);}
+  .gear-badge.status-loaned{color:#7A4E00;background:#FBEFD5;}
+  .gear-badge.status-wishlist{color:var(--brass);background:var(--panel-alt);}
   .wear-meter{background:var(--panel-alt);}
   .wear-fill.wear-soon{background:#C58A00;}
   .wear-fill.wear-worn{background:var(--danger);}
   .wear-label.wear-soon{color:#7A4E00;}
   .wear-label.wear-worn{color:var(--danger);}
   .bulk-row-note.warn{color:#7A4E00;}
-  .ele-cursor{background:rgba(28,38,32,0.35);}
-  .legend-row:hover,.legend-row.is-hovered{background:rgba(28,38,32,0.05);}
-  .chart-tooltip{background:var(--panel);box-shadow:0 6px 16px rgba(28,38,32,0.18);}
-  .global-toast{background:var(--parchment);color:#FFFFFF;border-color:transparent;box-shadow:0 8px 20px rgba(28,38,32,0.3);}
+  .ele-cursor{background:rgba(52,78,65,0.35);}
+  .legend-row:hover,.legend-row.is-hovered{background:rgba(52,78,65,0.05);}
+  .chart-tooltip{background:var(--panel);box-shadow:0 6px 16px rgba(52,78,65,0.18);}
+  .global-toast{background:var(--parchment);color:#FFFFFF;border-color:transparent;box-shadow:0 8px 20px rgba(52,78,65,0.3);}
   .global-toast.is-error{background:var(--danger);color:#FFFFFF;}
-  .stars .off,.star-input label{color:rgba(28,38,32,0.2);}
+  .stars .off,.star-input label{color:rgba(52,78,65,0.2);}
   .stars{color:var(--signal);}
   .star-input label.on{color:var(--signal);}
-  .photo-thumb-remove,.photo-lightbox-close,.photo-lightbox-nav{background:rgba(28,38,32,0.72);color:#FFFFFF;}
-  .leaflet-popup-content-wrapper{border-radius:10px;box-shadow:0 8px 24px rgba(28,38,32,0.2);}
+  .photo-thumb-remove,.photo-lightbox-close,.photo-lightbox-nav{background:rgba(52,78,65,0.72);color:#FFFFFF;}
+  .leaflet-popup-content-wrapper{border-radius:10px;box-shadow:0 8px 24px rgba(52,78,65,0.2);}
   .leaflet-popup-content{font-size:13.5px;}
   /* Gear room: a light painted wall instead of the dark shiplap. */
   .gear-scene{
     background:
-      repeating-linear-gradient(90deg, rgba(28,38,32,0.05) 0 1px, transparent 1px 96px),
-      linear-gradient(180deg, #F7F8F3 0%, #E8ECE2 100%);
+      repeating-linear-gradient(90deg, rgba(52,78,65,0.05) 0 1px, transparent 1px 96px),
+      linear-gradient(180deg, #F6F5F1 0%, #E3E1D8 100%);
     border:1px solid var(--line);
   }
   .gear-scene::after{opacity:0.03;}
-  .scene-item-icon svg,.bench-boot-icon svg{filter:drop-shadow(0 4px 3px rgba(28,38,32,0.22));}
-  .scene-item-icon::after,.bench-boot-icon::after{background:rgba(28,38,32,0.18);}
-  .shelf-plank,.bench-plank{box-shadow:0 5px 7px rgba(28,38,32,0.25), inset 0 1px 0 rgba(255,235,210,0.5);}
-  .hook-rail{box-shadow:0 3px 4px rgba(28,38,32,0.25), inset 0 1px 0 rgba(255,255,255,0.4);}
-  .hook-strap{background:rgba(28,38,32,0.3);}
+  .scene-item-icon svg,.bench-boot-icon svg{filter:drop-shadow(0 4px 3px rgba(52,78,65,0.22));}
+  .scene-item-icon::after,.bench-boot-icon::after{background:rgba(52,78,65,0.18);}
+  .shelf-plank,.bench-plank{box-shadow:0 5px 7px rgba(52,78,65,0.25), inset 0 1px 0 rgba(255,235,210,0.5);}
+  .hook-rail{box-shadow:0 3px 4px rgba(52,78,65,0.25), inset 0 1px 0 rgba(255,255,255,0.4);}
+  .hook-strap{background:rgba(52,78,65,0.3);}
   .scene-floor{box-shadow:inset 0 3px 6px rgba(0,0,0,0.25);}
   .scene-item-name{font-size:13px;font-weight:600;}
   .scene-item-count{font-size:11.5px;}
@@ -832,10 +838,10 @@
     }
     .nav-tab{flex-direction:column;gap:2px;font-size:12px;padding:6px 4px;min-height:48px;justify-content:center;}
     .nav-tab svg{width:22px;height:22px;}
-    .nav-tab.active{background:#E3EFE8;color:var(--brass);}
+    .nav-tab.active{background:var(--sage-soft);color:var(--brass);}
     .page-container{margin-bottom:calc(66px + env(safe-area-inset-bottom));}
     .app .map-area{order:-1;flex:1 1 55%;min-height:0;}
-    .app .sidebar{flex:0 1 45%;max-height:none;border-bottom:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-14px;position:relative;z-index:500;box-shadow:0 -6px 20px rgba(28,38,32,0.1);}
+    .app .sidebar{flex:0 1 45%;max-height:none;border-bottom:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-14px;position:relative;z-index:500;box-shadow:0 -6px 20px rgba(52,78,65,0.1);}
   }
 </style>
 </head>
@@ -1832,7 +1838,7 @@
   let cloudPushTimer = null;
   let suppressNextPush = false;      // set while applying a pulled snapshot, so it doesn't bounce straight back to the cloud
 
-  const COLORS = ['#C4501C','#2E6A4C','#6A4C93','#1F6FA8','#A3366B','#8A6A00','#2F8F83','#5B5F97'];
+  const COLORS = ['#C4501C','#3A5A40','#6A4C93','#1F6FA8','#A3366B','#8A6A00','#2F8F83','#5B5F97'];
   const STORAGE_TRACKS = 'waypoints-tracks-v1';
   const STORAGE_GOOGLE = 'waypoints-google-points-v1';
   const MAX_STORED_POINTS_PER_TRACK = 1500;
@@ -4285,9 +4291,9 @@
 
   // ---- Gear Room logic ----
   const GEAR_CATEGORY_COLORS = {
-    'Backpack':'#2E6A4C','Shelter':'#C4501C','Sleep system':'#1F6FA8','Clothing':'#6A4C93',
+    'Backpack':'#3A5A40','Shelter':'#C4501C','Sleep system':'#1F6FA8','Clothing':'#6A4C93',
     'Footwear':'#8A6A00','Cooking':'#A3366B','Water':'#2F8F83','Navigation':'#5B5F97',
-    'Electronics':'#7A8B3A','Safety':'#B3261E','Hygiene':'#4F8FBF','Food':'#B87333','Other':'#7D8A82'
+    'Electronics':'#7A8B3A','Safety':'#B3261E','Hygiene':'#4F8FBF','Food':'#B87333','Other':'#A3B18A'
   };
   const GEAR_CATEGORIES = [
     'Backpack','Shelter','Sleep system','Clothing','Footwear','Cooking',
