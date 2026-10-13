@@ -314,6 +314,8 @@ test('catalog: search, pre-fill, link, overrides, refresh, contribute, review, p
     await page.click('#cdStars label:nth-child(4)');
     await page.click('#cdReviewSubmitBtn');
     await page.waitForSelector('#cdReviewForm', { state: 'hidden' });
+    // The form closes first; the reviews reload just after.
+    await page.waitForFunction(()=> /1 review/.test(document.getElementById('cdRatingSummary').textContent));
     assert.match(await page.innerText('#cdReviews'), /Darien[\s\S]*Roomy for two\.\nCondensation on cold nights\./);
     assert.match(await page.innerText('#cdRatingSummary'), /4\.0 · 1 review/);
     assert.equal(await page.innerText('#cdWriteReviewBtn'), 'Edit your review');
@@ -324,7 +326,7 @@ test('catalog: search, pre-fill, link, overrides, refresh, contribute, review, p
     await page.click('#cdStars label:nth-child(5)');
     await page.click('#cdReviewSubmitBtn');
     await page.waitForSelector('#cdReviewForm', { state: 'hidden' });
-    assert.match(await page.innerText('#cdRatingSummary'), /5\.0 · 1 review/);
+    await page.waitForFunction(()=> /5\.0 · 1 review/.test(document.getElementById('cdRatingSummary').textContent));
     assert.equal(fake.db.reviews.filter(r => r.user_id === ME).length, 1, 'still one review per user');
   });
 
