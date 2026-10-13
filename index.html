@@ -173,9 +173,11 @@
   }
   .empty-hint{
     position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    background:rgba(21,32,25,0.92);border:1px solid var(--line);border-radius:8px;
+    background:rgba(19,42,78,0.94);border:1px solid var(--line);border-radius:8px;
     padding:18px 24px;text-align:center;pointer-events:none;z-index:500;
+    max-width:calc(100% - 32px);
   }
+  .empty-hint .primary-btn{pointer-events:auto;margin-top:14px;}
   .empty-hint h2{font-family:'Fraunces',serif;font-weight:500;font-size:16px;margin:0 0 4px;}
   .empty-hint p{font-size:12.5px;color:var(--muted);margin:0;}
 
@@ -546,9 +548,50 @@
   .category-view-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:0;white-space:nowrap;}
   .category-view-count{font-size:11px;color:var(--muted);white-space:nowrap;}
 
+  /* ---- Import activities ---- */
+  .trips-header-actions{display:flex;gap:8px;align-self:flex-start;flex-wrap:wrap;justify-content:flex-end;}
+  .import-modal{max-width:600px;}
+  .import-step{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+  .import-dropzone{padding:28px 18px;align-items:center;text-align:center;gap:4px;}
+  .import-privacy{font-size:11.5px;color:var(--muted);margin:0;}
+  .import-help{background:var(--panel-alt);border-radius:6px;padding:10px 14px;font-size:12.5px;line-height:1.5;}
+  .import-help summary{cursor:pointer;color:var(--parchment);font-weight:500;}
+  .import-help ol{margin:8px 0 6px;padding-left:20px;}
+  .import-help p{margin:6px 0 0;color:var(--muted);}
+  .import-help b{color:var(--parchment);font-weight:500;}
+  .import-progress-label{font-size:13.5px;color:var(--parchment);}
+  .import-progress{height:6px;background:var(--panel-alt);border-radius:3px;overflow:hidden;}
+  .import-progress-fill{height:100%;width:0;background:var(--brass);transition:width .15s linear;}
+  .import-progress-sub{font-size:11.5px;color:var(--muted);min-height:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .import-summary{font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .import-summary strong{color:var(--parchment);font-weight:600;}
+  .import-select-bar{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+  .link-btn{background:none;border:none;color:var(--brass);font-size:12px;padding:3px 6px;border-radius:4px;cursor:pointer;}
+  .link-btn:hover{background:var(--brass-soft);}
+  .import-list{max-height:min(46vh,420px);overflow-y:auto;border:1px solid var(--line);border-radius:6px;}
+  .import-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .import-row:last-child{border-bottom:none;}
+  .import-row:hover{background:var(--panel-alt);}
+  .import-row input{width:15px;height:15px;accent-color:var(--brass);flex:none;}
+  .import-row-info{min-width:0;flex:1;}
+  .import-row-name{font-size:13px;color:var(--parchment);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .import-row-meta{font-size:11.5px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .import-row.is-dup{cursor:default;opacity:0.55;}
+  .import-row.is-dup:hover{background:none;}
+  .import-row-tag{font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:2px 8px;white-space:nowrap;flex:none;}
+  .import-group-opt{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--parchment);cursor:pointer;}
+  .import-group-opt input{width:15px;height:15px;accent-color:var(--brass);}
+  .import-done-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;}
+  .import-done-sub{font-size:12.5px;color:var(--muted);line-height:1.5;}
+  @media (max-width:560px){
+    .trips-header-actions{flex-direction:column-reverse;align-items:stretch;}
+    .import-step{padding:14px 14px;}
+    .import-row{padding:8px 10px;}
+  }
+
   /* ---- Modal ---- */
   .modal-overlay{
-    position:fixed;inset:0;background:rgba(15,23,20,0.72);z-index:1000;
+    position:fixed;inset:0;background:rgba(8,15,30,0.72);z-index:1000;
     display:flex;align-items:center;justify-content:center;padding:20px;
   }
   .modal{
@@ -704,7 +747,8 @@
     </div>
     <div class="empty-hint" id="emptyHint">
       <h2>Nothing plotted yet</h2>
-      <p>Add GPX tracks to a trip on the Trips tab to start filling in the map</p>
+      <p>Import your hikes from Strava, Garmin or GPX files to start filling in the map</p>
+      <button class="primary-btn" id="emptyHintImportBtn" type="button">Import activities</button>
     </div>
   </div>
 </div>
@@ -863,9 +907,12 @@
     <div class="garage-header">
       <div class="garage-heading">
         <h2>Trips</h2>
-        <p>Group your GPX tracks into a trip, then pack gear for it</p>
+        <p>Import your hikes from Strava, Garmin or any GPX/FIT file — then pack gear for the next one</p>
       </div>
-      <button class="primary-btn" id="addTripBtn">+ New trip</button>
+      <div class="trips-header-actions">
+        <button class="ghost-btn" id="addTripBtn">+ New trip</button>
+        <button class="primary-btn" id="importActivitiesBtn">Import activities</button>
+      </div>
     </div>
 
     <div class="section-subhead">
@@ -880,7 +927,7 @@
     <div class="gear-grid" id="tripCompletedGrid"></div>
     <div class="gear-empty" id="tripCompletedEmpty" style="display:none;">No completed trips yet.</div>
 
-    <div class="gear-empty" id="tripsEmpty" style="display:none;">No trips yet — click "+ New trip" to group some tracks.</div>
+    <div class="gear-empty" id="tripsEmpty" style="display:none;">No trips yet — click "Import activities" to bring in your hikes from Strava or Garmin, or "+ New trip" to plan one.</div>
   </div>
 
   <div class="category-view" id="tripDetailView" style="display:none;">
@@ -1140,11 +1187,11 @@
         </div>
       </div>
       <div class="form-field">
-        <label>Add GPX tracks</label>
+        <label>Add tracks</label>
         <label class="dropzone" for="tripGpxInput" id="tripGpxDropzone">
-          <input type="file" id="tripGpxInput" accept=".gpx" multiple hidden>
-          <span class="dropzone-title">Add GPX tracks</span>
-          <span class="dropzone-sub">Garmin or Strava exports — drop files or click</span>
+          <input type="file" id="tripGpxInput" accept=".gpx,.tcx,.fit,.gz" multiple hidden>
+          <span class="dropzone-title">Add GPX, FIT or TCX files</span>
+          <span class="dropzone-sub">From Strava, Garmin or your watch — drop files or click</span>
         </label>
         <button type="button" class="ghost-btn" id="stravaImportBtn" style="margin-top:8px;display:none;">Import from Strava</button>
         <div class="upload-status" id="tripUploadStatus"></div>
@@ -1161,6 +1208,87 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="importModalOverlay" style="display:none;">
+  <div class="modal import-modal">
+    <div class="modal-header">
+      <h3>Import activities</h3>
+      <button class="modal-close" aria-label="Close" id="importModalClose" type="button">&times;</button>
+    </div>
+
+    <div class="import-step" id="importStepPick">
+      <label class="dropzone import-dropzone" for="importInput" id="importDropzone">
+        <input type="file" id="importInput" accept=".zip,.gpx,.tcx,.fit,.gz" multiple hidden>
+        <span class="dropzone-title">Drop your Strava or Garmin export here</span>
+        <span class="dropzone-sub">The whole .zip archive, or individual GPX, FIT and TCX files — or click to choose</span>
+      </label>
+      <p class="import-privacy">Files are read right here in your browser — nothing is uploaded to Strava, Garmin or anyone else.</p>
+      <details class="import-help">
+        <summary>Getting your whole Strava history</summary>
+        <ol>
+          <li>On strava.com, open <b>Settings → My Account</b>.</li>
+          <li>Under <b>Download or Delete Your Account</b>, click <b>Get Started</b>, then <b>Request Your Archive</b>.</li>
+          <li>Strava emails you a download link (usually within a few hours).</li>
+          <li>Drop the downloaded .zip here as-is — no need to unzip it.</li>
+        </ol>
+        <p>Just one hike? On its Strava page, open the <b>⋯</b> menu and choose <b>Export GPX</b> or <b>Export Original</b>.</p>
+      </details>
+      <details class="import-help">
+        <summary>Getting your whole Garmin history</summary>
+        <ol>
+          <li>Sign in to your Garmin account and open <b>Account → Data Management</b>.</li>
+          <li>Choose <b>Export Your Data</b> and request the export.</li>
+          <li>Garmin emails you a download link once it's ready (this can take a few days).</li>
+          <li>Drop the downloaded .zip here as-is.</li>
+        </ol>
+        <p>Just one hike? In Garmin Connect, open the activity, click the <b>gear icon</b> and choose <b>Export Original</b> or <b>Export to GPX</b>.</p>
+      </details>
+      <details class="import-help">
+        <summary>Straight from your watch or phone</summary>
+        <p>Plug a Garmin watch into your computer with its USB cable — it shows up like a USB stick. Your recordings are the .fit files in <b>GARMIN/Activity</b>; select them and drop them here.</p>
+        <p>Recording with a phone app (Komoot, AllTrails, Gaia GPS, OsmAnd…)? Use its GPX export and drop the file here.</p>
+      </details>
+    </div>
+
+    <div class="import-step" id="importStepProgress" style="display:none;">
+      <div class="import-progress-label" id="importProgressLabel">Reading…</div>
+      <div class="import-progress"><div class="import-progress-fill" id="importProgressFill"></div></div>
+      <div class="import-progress-sub" id="importProgressSub"></div>
+      <div class="modal-actions">
+        <span></span>
+        <button type="button" class="ghost-btn" id="importCancelBtn">Cancel</button>
+      </div>
+    </div>
+
+    <div class="import-step" id="importStepReview" style="display:none;">
+      <div class="import-summary" id="importSummary"></div>
+      <div class="import-select-bar">
+        <span>Select:</span>
+        <button type="button" class="link-btn" data-select="hikes">Hikes &amp; walks</button>
+        <button type="button" class="link-btn" data-select="all">All</button>
+        <button type="button" class="link-btn" data-select="none">None</button>
+      </div>
+      <div class="import-list" id="importList"></div>
+      <label class="import-group-opt">
+        <input type="checkbox" id="importGroupDays" checked>
+        Group activities on consecutive days into one trip
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="ghost-btn" id="importBackBtn">Start over</button>
+        <button type="button" class="primary-btn" id="importConfirmBtn">Import</button>
+      </div>
+    </div>
+
+    <div class="import-step" id="importStepDone" style="display:none;">
+      <div class="import-done-title" id="importDoneTitle"></div>
+      <div class="import-done-sub" id="importDoneSub"></div>
+      <div class="modal-actions">
+        <button type="button" class="ghost-btn" id="importMoreBtn">Import more</button>
+        <button type="button" class="primary-btn" id="importViewTripsBtn">View trips</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1374,30 +1502,185 @@
     return out;
   }
 
-  function parseGPX(text, filename){
-    const xml = new DOMParser().parseFromString(text, 'application/xml');
-    if(xml.querySelector('parsererror')) throw new Error('Could not read this GPX file');
+  // ---- Activity file readers ----
+  // Every format is read into the same shape — {name, sport, date, raw}
+  // where raw is [{ll:[lat,lon], ele, t}] — and trackFromRaw() turns that
+  // into a stored track, so distance/elevation/duration work identically
+  // whether the file came from Strava, Garmin or anywhere else.
+  function parseXml(text, label){
+    // Some exported files (notably Strava's .tcx) have whitespace or a BOM
+    // before the XML declaration, which strict XML parsing rejects.
+    const xml = new DOMParser().parseFromString(text.replace(/^[\s﻿]+/, ''), 'application/xml');
+    if(xml.querySelector('parsererror')) throw new Error('Could not read this '+label+' file');
+    return xml;
+  }
+  function numText(el){ const v = el ? parseFloat(el.textContent) : NaN; return isFinite(v) ? v : null; }
+  function timeText(el){ const v = el ? Date.parse(el.textContent.trim()) : NaN; return isFinite(v) ? v : null; }
+
+  function readGPX(text){
+    const xml = parseXml(text, 'GPX');
     let ptEls = Array.from(xml.querySelectorAll('trkpt'));
     if(!ptEls.length) ptEls = Array.from(xml.querySelectorAll('rtept'));
     if(!ptEls.length) ptEls = Array.from(xml.querySelectorAll('wpt'));
-    if(!ptEls.length) throw new Error('No track points found');
-
     const raw = ptEls.map(p=>{
       const lat=parseFloat(p.getAttribute('lat')), lon=parseFloat(p.getAttribute('lon'));
       if(!(isFinite(lat)&&isFinite(lon))) return null;
-      const eleEl = p.querySelector('ele'), timeEl = p.querySelector('time');
-      const ele = eleEl ? parseFloat(eleEl.textContent) : NaN;
-      const t = timeEl ? Date.parse(timeEl.textContent) : NaN;
-      return { ll:[lat,lon], ele: isFinite(ele) ? ele : null, t: isFinite(t) ? t : null };
+      return { ll:[lat,lon], ele: numText(p.querySelector('ele')), t: timeText(p.querySelector('time')) };
     }).filter(Boolean);
-    if(!raw.length) throw new Error('No valid coordinates found');
-    const points = raw.map(r=>r.ll);
-
     const nameEl = xml.querySelector('trk > name') || xml.querySelector('metadata > name');
-    const name = (nameEl && nameEl.textContent.trim()) || filename.replace(/\.gpx$/i,'');
+    const typeEl = xml.querySelector('trk > type');
+    const metaTime = xml.querySelector('metadata > time');
+    return {
+      name: nameEl ? nameEl.textContent.trim() : null,
+      sport: typeEl ? typeEl.textContent.trim() : null,
+      date: metaTime ? metaTime.textContent.trim().slice(0,10) : null,
+      raw
+    };
+  }
 
-    const timeEl = xml.querySelector('trkpt time') || xml.querySelector('metadata time');
-    const date = timeEl ? timeEl.textContent.slice(0,10) : null;
+  function readTCX(text){
+    const xml = parseXml(text, 'TCX');
+    const act = xml.querySelector('Activity');
+    const raw = Array.from(xml.querySelectorAll('Trackpoint')).map(tp=>{
+      const lat = numText(tp.querySelector('LatitudeDegrees')), lon = numText(tp.querySelector('LongitudeDegrees'));
+      if(lat == null || lon == null) return null;
+      return { ll:[lat,lon], ele: numText(tp.querySelector('AltitudeMeters')), t: timeText(tp.querySelector('Time')) };
+    }).filter(Boolean);
+    return { name: null, sport: act ? act.getAttribute('Sport') : null, date: null, raw };
+  }
+
+  // FIT is Garmin's binary format (what watches record, and most of a
+  // Strava export). This reads just what a track needs: record messages
+  // (position, altitude, timestamp) plus the session's sport.
+  const FIT_EPOCH_MS = 631065600000; // FIT time 0 = 1989-12-31T00:00:00Z
+  const FIT_SPORTS = {1:'Run',2:'Ride',5:'Swim',10:'Training',11:'Walk',12:'Nordic ski',13:'Alpine ski',
+    14:'Snowboard',16:'Mountaineering',17:'Hike',19:'Paddle',21:'E-bike',31:'Climb',35:'Snowshoe',41:'Kayak'};
+  function readFIT(buffer){
+    const dv = new DataView(buffer);
+    if(buffer.byteLength < 14) throw new Error('Not a FIT file');
+    const headerSize = dv.getUint8(0);
+    const dataEnd = Math.min(buffer.byteLength, headerSize + dv.getUint32(4, true));
+    if(dv.getUint32(8, true) !== 0x5449462E) throw new Error('Not a FIT file'); // ".FIT"
+    const SEMI = 180 / 2147483648;
+    const defs = {};
+    const raw = [];
+    let pos = headerSize, lastTs = 0, sport = null, fileType = null;
+
+    const read = (p, size, base, little)=>{
+      switch(base & 0x1F){
+        case 0: case 2: case 10: case 13: return size===1 ? dv.getUint8(p) : null;
+        case 1: return size===1 ? dv.getInt8(p) : null;
+        case 3: return size===2 ? dv.getInt16(p, little) : null;
+        case 4: case 11: return size===2 ? dv.getUint16(p, little) : null;
+        case 5: return size===4 ? dv.getInt32(p, little) : null;
+        case 6: case 12: return size===4 ? dv.getUint32(p, little) : null;
+        default: return null;
+      }
+    };
+
+    while(pos < dataEnd){
+      const hdr = dv.getUint8(pos++);
+      let local, ts = null;
+      if(hdr & 0x80){                         // compressed-timestamp data message
+        local = (hdr >> 5) & 0x03;
+        const off = hdr & 0x1F;
+        ts = lastTs - (lastTs % 32) + off + (off < lastTs % 32 ? 32 : 0);
+        lastTs = ts;
+      } else if(hdr & 0x40){                  // definition message
+        local = hdr & 0x0F;
+        const little = dv.getUint8(pos + 1) === 0;
+        const global = dv.getUint16(pos + 2, little);
+        const n = dv.getUint8(pos + 4);
+        pos += 5;
+        const fields = [];
+        for(let i=0;i<n;i++){ fields.push([dv.getUint8(pos), dv.getUint8(pos+1), dv.getUint8(pos+2)]); pos += 3; }
+        let devSize = 0;
+        if(hdr & 0x20){ const nd = dv.getUint8(pos++); for(let i=0;i<nd;i++){ devSize += dv.getUint8(pos+1); pos += 3; } }
+        defs[local] = { global, little, fields, devSize };
+        continue;
+      } else {
+        local = hdr & 0x0F;
+      }
+      const d = defs[local];
+      if(!d) throw new Error('Damaged FIT file');
+      const v = {};
+      let p = pos;
+      for(const [num, size, base] of d.fields){
+        if(p + size > dataEnd) break;
+        if(num === 253 || d.global === 20 || d.global === 18 || d.global === 0) v[num] = read(p, size, base, d.little);
+        p += size;
+      }
+      pos = p + d.devSize;
+      if(v[253] != null && v[253] !== 0xFFFFFFFF){ lastTs = v[253]; ts = v[253]; }
+
+      if(d.global === 0 && v[0] != null && fileType == null){
+        fileType = v[0];
+        if(fileType !== 4) throw new Error('Not an activity (FIT file type '+fileType+')');
+      } else if(d.global === 18 && sport == null && v[5] != null && v[5] !== 0xFF){
+        sport = FIT_SPORTS[v[5]] || 'Activity';
+      } else if(d.global === 20){
+        const lat = v[0], lon = v[1];
+        if(lat == null || lon == null || lat === 0x7FFFFFFF || lon === 0x7FFFFFFF) continue;
+        let ele = null;
+        if(v[78] != null && v[78] !== 0xFFFFFFFF) ele = v[78] / 5 - 500;
+        else if(v[2] != null && v[2] !== 0xFFFF) ele = v[2] / 5 - 500;
+        raw.push({ ll:[lat * SEMI, lon * SEMI], ele, t: ts != null ? FIT_EPOCH_MS + ts * 1000 : null });
+      }
+    }
+    return { name: null, sport, date: null, raw };
+  }
+
+  async function inflateBytes(input, format){
+    if(typeof DecompressionStream === 'undefined') throw new Error('This browser can\'t unpack compressed files — try a current Chrome, Safari or Firefox');
+    const blob = input instanceof Blob ? input : new Blob([input]);
+    const stream = blob.stream().pipeThrough(new DecompressionStream(format));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+
+  const ACTIVITY_EXT = /\.(gpx|tcx|fit)(\.gz)?$/i;
+  function isActivityFileName(name){ return ACTIVITY_EXT.test(name); }
+
+  // Named after the file, unless that's just an ID (e.g. Strava's
+  // "1234567890.fit.gz" or Garmin's "12345_ACTIVITY.fit") — then "Hike · date".
+  function fallbackTrackName(filename, sport, date){
+    const base = filename.split('/').pop().replace(/\.(gpx|tcx|fit)(\.gz)?$/i, '');
+    const idLike = /^[\d_-]*(activity)?$/i.test(base) || /_\d{6,}(_activity)?$/i.test(base) || base.includes('@');
+    if(base && !idLike) return base;
+    return (sport || 'Activity') + (date ? ' · ' + date : '');
+  }
+
+  async function parseActivityBytes(bytes, filename, meta = {}){
+    if(!(bytes instanceof Uint8Array)) bytes = new Uint8Array(bytes);
+    let name = filename;
+    if(/\.gz$/i.test(name)){ bytes = await inflateBytes(bytes, 'gzip'); name = name.slice(0, -3); }
+    let r;
+    if(/\.fit$/i.test(name)) r = readFIT(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+    else {
+      const text = new TextDecoder().decode(bytes);
+      r = /\.tcx$/i.test(name) ? readTCX(text) : readGPX(text);
+    }
+    if(!r.raw.length) throw new Error('No GPS points');
+    return trackFromRaw(r.raw, {
+      name: meta.name || r.name,
+      sport: meta.sport || r.sport,
+      date: r.date,
+      sourceKey: meta.sourceKey || null,
+      filename
+    });
+  }
+
+  // Kept for the Strava live-import path, which hands over GPX text.
+  function parseGPX(text, filename){
+    const r = readGPX(text);
+    if(!r.raw.length) throw new Error('No track points found');
+    return trackFromRaw(r.raw, { name: r.name, sport: r.sport, date: r.date, filename });
+  }
+
+  function trackFromRaw(raw, meta){
+    const points = raw.map(r=>r.ll);
+    const firstTime = raw.find(r=>r.t != null);
+    const startTime = firstTime ? firstTime.t : null;
+    const date = startTime != null ? new Date(startTime).toISOString().slice(0,10) : (meta.date || null);
 
     // Cumulative distance per point, so the elevation profile's x-axis is
     // distance along the trail rather than point index.
@@ -1421,7 +1704,9 @@
 
     return {
       id: 't_' + Math.random().toString(36).slice(2,10),
-      name, date, distanceKm,
+      name: (meta.name && meta.name.trim()) || fallbackTrackName(meta.filename || '', meta.sport, date),
+      date, distanceKm,
+      startTime, sport: meta.sport || null, sourceKey: meta.sourceKey || null,
       points: downsample(points, MAX_STORED_POINTS_PER_TRACK),
       // null (not undefined) means "this file has no elevation", which
       // the UI tells apart from tracks imported before elevation existed.
@@ -1432,6 +1717,88 @@
       profile,
       durationSec: durationSec > 0 ? durationSec : null,
     };
+  }
+
+  // ---- Zip archives (Strava / Garmin bulk exports) ----
+  // Read straight from the File with slice(), one entry at a time, via
+  // the browser's own deflate — so a multi-gigabyte export full of photos
+  // never has to fit in memory, and no library is needed. Handles ZIP64,
+  // which large Strava exports use.
+  async function zipEntries(blob){
+    const tailLen = Math.min(blob.size, 65557 + 20);
+    const tail = new DataView(await blob.slice(blob.size - tailLen).arrayBuffer());
+    let eocd = -1;
+    for(let i = tail.byteLength - 22; i >= 0; i--){ if(tail.getUint32(i, true) === 0x06054b50){ eocd = i; break; } }
+    if(eocd < 0) throw new Error('Not a zip file');
+    let count = tail.getUint16(eocd + 10, true);
+    let cdSize = tail.getUint32(eocd + 12, true);
+    let cdOffset = tail.getUint32(eocd + 16, true);
+    if(count === 0xFFFF || cdSize === 0xFFFFFFFF || cdOffset === 0xFFFFFFFF){
+      const loc = eocd - 20;
+      if(loc < 0 || tail.getUint32(loc, true) !== 0x07064b50) throw new Error('Unsupported zip file');
+      const z64 = Number(tail.getBigUint64(loc + 8, true));
+      const z = new DataView(await blob.slice(z64, z64 + 56).arrayBuffer());
+      if(z.getUint32(0, true) !== 0x06064b50) throw new Error('Unsupported zip file');
+      count = Number(z.getBigUint64(32, true));
+      cdSize = Number(z.getBigUint64(40, true));
+      cdOffset = Number(z.getBigUint64(48, true));
+    }
+    const cd = new DataView(await blob.slice(cdOffset, cdOffset + cdSize).arrayBuffer());
+    const dec = new TextDecoder();
+    const entries = [];
+    let p = 0;
+    for(let i = 0; i < count && p + 46 <= cd.byteLength; i++){
+      if(cd.getUint32(p, true) !== 0x02014b50) break;
+      const method = cd.getUint16(p + 10, true);
+      let csize = cd.getUint32(p + 20, true), usize = cd.getUint32(p + 24, true);
+      const nlen = cd.getUint16(p + 28, true), xlen = cd.getUint16(p + 30, true), clen = cd.getUint16(p + 32, true);
+      let lho = cd.getUint32(p + 42, true);
+      const name = dec.decode(new Uint8Array(cd.buffer, p + 46, nlen));
+      let xp = p + 46 + nlen;
+      const xend = xp + xlen;
+      while(xp + 4 <= xend){
+        const id = cd.getUint16(xp, true), sz = cd.getUint16(xp + 2, true);
+        if(id === 0x0001){
+          let q = xp + 4;
+          if(usize === 0xFFFFFFFF){ usize = Number(cd.getBigUint64(q, true)); q += 8; }
+          if(csize === 0xFFFFFFFF){ csize = Number(cd.getBigUint64(q, true)); q += 8; }
+          if(lho === 0xFFFFFFFF){ lho = Number(cd.getBigUint64(q, true)); }
+        }
+        xp += 4 + sz;
+      }
+      if(!name.endsWith('/')) entries.push({ name, method, csize, usize, lho });
+      p += 46 + nlen + xlen + clen;
+    }
+    return entries;
+  }
+  async function zipRead(blob, entry){
+    const lh = new DataView(await blob.slice(entry.lho, entry.lho + 30).arrayBuffer());
+    if(lh.getUint32(0, true) !== 0x04034b50) throw new Error('Damaged zip entry');
+    const start = entry.lho + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+    const data = blob.slice(start, start + entry.csize);
+    if(entry.method === 0) return new Uint8Array(await data.arrayBuffer());
+    if(entry.method === 8) return inflateBytes(data, 'deflate-raw');
+    throw new Error('Unsupported zip compression');
+  }
+
+  // RFC 4180-style: quoted fields can hold commas, doubled quotes and
+  // newlines — Strava activity descriptions routinely do.
+  function parseCSV(text){
+    const rows = []; let row = [], field = '', q = false;
+    for(let i = 0; i < text.length; i++){
+      const c = text[i];
+      if(q){
+        if(c === '"'){ if(text[i+1] === '"'){ field += '"'; i++; } else q = false; }
+        else field += c;
+      } else if(c === '"') q = true;
+      else if(c === ','){ row.push(field); field = ''; }
+      else if(c === '\n' || c === '\r'){
+        if(c === '\r' && text[i+1] === '\n') i++;
+        row.push(field); field = ''; rows.push(row); row = [];
+      } else field += c;
+    }
+    if(field !== '' || row.length){ row.push(field); rows.push(row); }
+    return rows;
   }
 
   // GPS elevation is noisy — summing every tiny up/down tick wildly
@@ -2162,6 +2529,7 @@
       let popupHtml =
         '<strong>'+escapeHtml(t.name)+'</strong><br>'+
         (t.date ? escapeHtml(t.date)+', ' : '') +
+        (sportLabel(t.sport) ? escapeHtml(sportLabel(t.sport))+', ' : '') +
         t.distanceKm.toFixed(1)+' km';
       const climbLine = trackClimbSummary(t);
       if(climbLine) popupHtml += '<br>'+climbLine;
@@ -2714,7 +3082,7 @@
         row.className = 'trip-track-row';
         row.innerHTML =
           '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+'</span>'+
-          '<span class="trip-track-row-meta">'+(t.date?escapeHtml(t.date)+' · ':'')+t.distanceKm.toFixed(1)+' km</span>';
+          '<span class="trip-track-row-meta">'+(t.date?escapeHtml(t.date)+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>';
         block.appendChild(row);
         const climb = trackClimbSummary(t);
         if(climb){
@@ -2980,17 +3348,19 @@
     const statusEl = document.getElementById('tripUploadStatus');
     statusEl.className = 'upload-status';
     statusEl.textContent = 'Processing '+files.length+' file'+(files.length>1?'s':'')+'…';
-    const {added, failed, newIds} = await parseAndAddGpxFiles(files);
-    if(added){
+    const {added, reused, failed, newIds} = await parseAndAddGpxFiles(files);
+    if(added || reused){
       renderStats();
       const checked = currentPickerChecked();
       newIds.forEach(id=>checked.add(id));
       renderTripTrackPicker(checked);
     }
-    if(added && !failed.length){
-      statusEl.textContent = 'Added '+added+' track'+(added>1?'s':'')+'.';
-    } else if(added && failed.length){
-      statusEl.textContent = 'Added '+added+', skipped: '+failed.join(', ');
+    const reusedNote = reused ? (added ? ' ' : '') + reused+' already imported — linked the existing track'+(reused>1?'s':'')+'.' : '';
+    const addedNote = added ? 'Added '+added+' track'+(added>1?'s':'')+'.' : '';
+    if((added || reused) && !failed.length){
+      statusEl.textContent = addedNote + reusedNote;
+    } else if(added || reused){
+      statusEl.textContent = addedNote + reusedNote + ' Skipped: '+failed.join(', ');
       statusEl.className = 'upload-error';
     } else {
       statusEl.textContent = 'Could not read: '+failed.join(', ');
@@ -3059,11 +3429,15 @@
   // tracks); this core parses/stores them and is shared by that flow.
   async function parseAndAddGpxFiles(fileList){
     const files = Array.from(fileList);
-    let added = 0, failed = [], newIds = [];
+    let added = 0, reused = 0, failed = [], newIds = [];
     for(const file of files){
+      if(/\.zip$/i.test(file.name)){ failed.push(file.name+' (use Import activities on the Trips page for .zip exports)'); continue; }
       try{
-        const text = await file.text();
-        const track = parseGPX(text, file.name);
+        const track = await parseActivityBytes(await file.arrayBuffer(), file.name);
+        // Same activity added before (e.g. via a bulk import) — link the
+        // existing track instead of plotting it twice.
+        const existing = findDuplicateTrack(track, tracks);
+        if(existing){ newIds.push(existing.id); reused++; continue; }
         tracks.push(track);
         newIds.push(track.id);
         added++;
@@ -3076,12 +3450,359 @@
       // Country lookup runs after the initial save so the UI isn't blocked
       // on fetching/parsing the world map; each new track is saved again
       // once its countries are known.
-      Promise.all(newIds.map(id=>{
-        const t = tracks.find(x=>x.id===id);
-        return t ? detectTrackCountries(t) : Promise.resolve();
-      })).then(()=>{ saveTracks(); renderStats(); });
+      detectCountriesInBackground(newIds);
     }
-    return {added, failed, newIds};
+    return {added, reused, failed, newIds};
+  }
+
+  function detectCountriesInBackground(ids){
+    Promise.all(ids.map(id=>{
+      const t = tracks.find(x=>x.id===id);
+      return t && !t.countries ? detectTrackCountries(t) : Promise.resolve();
+    })).then(()=>{ saveTracks(); renderStats(); });
+  }
+
+  // Strava, Garmin and GPX "type" fields name sports differently
+  // ("Hike", "hiking", "TrailRun", "trail_running") — show them alike.
+  const SPORT_ALIASES = {hiking:'Hike', walking:'Walk', running:'Run', cycling:'Ride', biking:'Ride',
+    'trail running':'Trail run', 'mountain biking':'Mountain bike ride'};
+  function sportLabel(sport){
+    if(!sport || /^\d+$/.test(sport)) return '';
+    const t = String(sport).replace(/_/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').trim().toLowerCase();
+    return SPORT_ALIASES[t] || t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  const HIKE_SPORT = /hik|walk|trek|mountaineer|snowshoe|backpack/i;
+
+  // The same activity can arrive twice — re-importing an export, or a
+  // watch that syncs to both Garmin and Strava. Matching on start time +
+  // distance catches it whichever service the file came from.
+  function findDuplicateTrack(c, pool){
+    return pool.find(t=>{
+      if(c.sourceKey && t.sourceKey) return c.sourceKey === t.sourceKey;
+      const known = c.distanceKm != null && t.distanceKm != null;
+      const close = known && Math.abs(c.distanceKm - t.distanceKm) <= Math.max(0.3, 0.03 * Math.max(c.distanceKm, t.distanceKm));
+      if(c.startTime != null && t.startTime != null) return Math.abs(c.startTime - t.startTime) <= 5*60000 && (close || !known);
+      if(c.date && t.date) return c.date === t.date && close;
+      return !c.date && !t.date && c.name === t.name && known && Math.abs(c.distanceKm - t.distanceKm) < 0.01;
+    }) || null;
+  }
+
+  // ---- Import activities (Strava / Garmin archives, loose files) ----
+  // Two passes: scanning builds a review list (Strava's activities.csv
+  // already holds names, dates and distances, so those files needn't be
+  // opened yet; anything else is parsed for its summary), then importing
+  // parses only what was ticked. Tracks aren't kept between the passes,
+  // so a 2,000-activity archive doesn't sit in memory twice.
+  let importRun = null;      // {cancelled} for the scan or import in progress
+  let importItems = [];
+  let importSkipped = 0;     // files that aren't activities or have no GPS
+  let importFailed = [];
+
+  function showImportStep(step){
+    ['Pick','Progress','Review','Done'].forEach(n=>{
+      document.getElementById('importStep'+n).style.display = n.toLowerCase() === step ? 'flex' : 'none';
+    });
+  }
+  function setImportProgress(done, total, label, sub){
+    document.getElementById('importProgressLabel').textContent = label;
+    document.getElementById('importProgressFill').style.width = total ? Math.min(100, done/total*100)+'%' : '0';
+    document.getElementById('importProgressSub').textContent = sub || '';
+  }
+  // Long loops yield now and then so the progress bar actually repaints.
+  const breathe = ()=> new Promise(r=>setTimeout(r, 0));
+
+  function openImportModal(){
+    importItems = [];
+    showImportStep('pick');
+    document.getElementById('importModalOverlay').style.display = 'flex';
+    onModalOpened('importModalOverlay');
+  }
+  function closeImportModal(){
+    if(importRun) importRun.cancelled = true;
+    document.getElementById('importModalOverlay').style.display = 'none';
+    onModalClosed('importModalOverlay');
+  }
+
+  const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+  // Strava writes "Jan 5, 2023, 7:12:34 AM" (UTC) in activities.csv.
+  function parseStravaDate(str){
+    const m = (str||'').match(/^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?/i);
+    if(m && MONTHS[m[1].toLowerCase()] != null){
+      let h = +m[4];
+      const ap = m[7] && m[7].toUpperCase();
+      if(ap === 'PM' && h < 12) h += 12;
+      if(ap === 'AM' && h === 12) h = 0;
+      return Date.UTC(+m[3], MONTHS[m[1].toLowerCase()], +m[2], h, +m[5], +(m[6]||0));
+    }
+    const t = Date.parse(str);
+    return isFinite(t) ? t : null;
+  }
+
+  // Strava's archive has an activities.csv describing every activity,
+  // pointing at its file (e.g. "activities/1234567.fit.gz"). Returns
+  // review items for those, and the zip entries they cover.
+  async function stravaItemsFromCsv(blob, csvEntry, entryByBase){
+    const rows = parseCSV(new TextDecoder().decode(await zipRead(blob, csvEntry)));
+    const head = (rows.shift() || []).map(h=>h.trim().toLowerCase());
+    const col = name => head.indexOf(name);
+    const distCols = head.map((h,i)=> h === 'distance' ? i : -1).filter(i=>i >= 0);
+    let fileCol = col('filename');
+    // Exports in another language translate the headers; the file column
+    // is still easy to spot by its contents.
+    if(fileCol < 0) fileCol = (rows[0]||[]).findIndex(v=>/^activities\//i.test(v));
+    if(fileCol < 0) return null;
+    const idCol = col('activity id') >= 0 ? col('activity id') : 0;
+    const dateCol = col('activity date') >= 0 ? col('activity date') : 1;
+    const nameCol = col('activity name') >= 0 ? col('activity name') : 2;
+    const typeCol = col('activity type') >= 0 ? col('activity type') : 3;
+    const gainCol = col('elevation gain');
+    const items = [], covered = new Set();
+    let noFile = 0;
+    for(const r of rows){
+      if(r.length < 2) continue;
+      const file = (r[fileCol]||'').trim();
+      const entry = file && entryByBase.get(file.split('/').pop());
+      if(!entry){ noFile++; continue; }   // manual entry with no GPS file
+      covered.add(entry);
+      const startTime = parseStravaDate(r[dateCol]);
+      // Newer exports have two Distance columns: the athlete's unit, then
+      // metres. Older ones have one, in km.
+      const rawDist = distCols.length ? parseFloat((r[distCols[distCols.length-1]]||'').replace(/,/g,'')) : NaN;
+      const distanceKm = !isFinite(rawDist) ? null : distCols.length > 1 ? rawDist/1000 : rawDist;
+      const gain = gainCol >= 0 ? parseFloat(r[gainCol]) : NaN;
+      const id = (r[idCol]||'').trim();
+      items.push({
+        name: (r[nameCol]||'').trim() || fallbackTrackName(entry.name, r[typeCol], null),
+        sport: (r[typeCol]||'').trim() || null,
+        startTime,
+        date: startTime != null ? new Date(startTime).toISOString().slice(0,10) : null,
+        distanceKm,
+        gainM: isFinite(gain) ? Math.round(gain) : null,
+        sourceKey: id ? 'strava:'+id : null,
+        fileName: entry.name,
+        load: ()=> zipRead(blob, entry),
+      });
+    }
+    return {items, covered, noFile};
+  }
+
+  async function scanZip(blob, label, jobs, run){
+    setImportProgress(0, 0, 'Opening '+label+'…');
+    const entries = (await zipEntries(blob)).filter(e=>{
+      const base = e.name.split('/').pop();
+      // routes/ are planned routes, not recorded activities.
+      return !/(^|\/)(__MACOSX|routes)\//i.test(e.name) && !base.startsWith('.');
+    });
+    const csvEntry = entries.find(e=>/(^|\/)activities\.csv$/i.test(e.name));
+    let covered = new Set();
+    if(csvEntry){
+      const entryByBase = new Map(entries.filter(e=>isActivityFileName(e.name)).map(e=>[e.name.split('/').pop(), e]));
+      const res = await stravaItemsFromCsv(blob, csvEntry, entryByBase);
+      if(res){ importItems.push(...res.items); covered = res.covered; importSkipped += res.noFile; }
+    }
+    for(const e of entries){
+      if(run.cancelled) return;
+      if(covered.has(e)) continue;
+      if(/\.zip$/i.test(e.name)){
+        // Garmin's export nests its activity files in further zips.
+        const inner = new Blob([await zipRead(blob, e)]);
+        await scanZip(inner, e.name.split('/').pop(), jobs, run);
+      } else if(isActivityFileName(e.name)){
+        jobs.push({ fileName: e.name, load: ()=> zipRead(blob, e) });
+      }
+    }
+  }
+
+  async function scanImportFiles(fileList){
+    const files = Array.from(fileList);
+    if(!files.length) return;
+    const run = importRun = {cancelled:false, phase:'scan'};
+    importItems = []; importSkipped = 0; importFailed = [];
+    showImportStep('progress');
+    try{
+      const jobs = [];
+      for(const f of files){
+        if(run.cancelled) break;
+        if(/\.zip$/i.test(f.name)){
+          try{ await scanZip(f, f.name, jobs, run); }
+          catch(err){ importFailed.push(f.name+' ('+err.message+')'); }
+        } else if(isActivityFileName(f.name)){
+          jobs.push({ fileName: f.name, load: ()=> f.arrayBuffer() });
+        } else importSkipped++;
+      }
+      for(let i = 0; i < jobs.length && !run.cancelled; i++){
+        const job = jobs[i];
+        setImportProgress(i, jobs.length, 'Reading activities… '+(i+1)+' of '+jobs.length, job.fileName.split('/').pop());
+        try{
+          const t = await parseActivityBytes(await job.load(), job.fileName);
+          importItems.push({
+            name: t.name, sport: t.sport, startTime: t.startTime, date: t.date,
+            distanceKm: t.distanceKm, gainM: t.elevationGainM, sourceKey: null,
+            fileName: job.fileName, load: job.load,
+          });
+        }catch(err){
+          // Watches also store settings, sleep, etc. as .fit — skip quietly.
+          if(/No GPS|Not an activity/.test(err.message)) importSkipped++;
+          else importFailed.push(job.fileName.split('/').pop());
+        }
+        if(i % 8 === 7) await breathe();
+      }
+    }catch(err){
+      importFailed.push(err.message);
+    }
+    if(run.cancelled){ if(importRun === run) importRun = null; return; }
+    importRun = null;
+
+    // Mark anything already in the app (or earlier in this same batch).
+    importItems.sort((a,b)=> (b.startTime ?? (b.date ? Date.parse(b.date) : -Infinity)) - (a.startTime ?? (a.date ? Date.parse(a.date) : -Infinity)));
+    // Strava's copy (with its real name) wins over the same hike's
+    // anonymous Garmin file, whichever happened to be listed first.
+    const accepted = [];
+    importItems.slice().sort((a,b)=> (b.sourceKey ? 1 : 0) - (a.sourceKey ? 1 : 0)).forEach(it=>{
+      if(findDuplicateTrack(it, tracks)) it.dup = 'Already imported';
+      else if(findDuplicateTrack(it, accepted)) it.dup = 'Duplicate';
+      else { it.dup = null; accepted.push(it); }
+    });
+    const preset = importItems.some(it=>!it.dup && it.sport && HIKE_SPORT.test(it.sport)) ? 'hikes' : 'all';
+    applyImportPreset(preset, false);
+    renderImportReview();
+    showImportStep('review');
+  }
+
+  function applyImportPreset(preset, rerender = true){
+    importItems.forEach(it=>{
+      it.selected = !it.dup && (preset === 'all' || (preset === 'hikes' && (!it.sport || HIKE_SPORT.test(it.sport))));
+    });
+    if(rerender) renderImportReview();
+  }
+
+  function renderImportReview(){
+    const fresh = importItems.filter(it=>!it.dup);
+    const dupCount = importItems.length - fresh.length;
+    const parts = [];
+    if(importItems.length) parts.push('<strong>'+importItems.length+' activit'+(importItems.length!==1?'ies':'y')+'</strong> found');
+    else parts.push('<strong>No activities with GPS found</strong> in these files');
+    if(dupCount) parts.push(dupCount+' already imported');
+    if(importSkipped) parts.push(importSkipped+' skipped (no GPS, or not an activity)');
+    let html = parts.join(' · ');
+    if(importFailed.length) html += '<br>Couldn\'t read: '+escapeHtml(importFailed.slice(0,5).join(', '))+(importFailed.length>5?' and '+(importFailed.length-5)+' more':'');
+    document.getElementById('importSummary').innerHTML = html;
+
+    const list = document.getElementById('importList');
+    list.innerHTML = '';
+    list.style.display = importItems.length ? '' : 'none';
+    document.querySelector('#importStepReview .import-select-bar').style.display = fresh.length ? '' : 'none';
+    document.querySelector('#importStepReview .import-group-opt').style.display = fresh.length ? '' : 'none';
+    const frag = document.createDocumentFragment();
+    importItems.forEach(it=>{
+      const row = document.createElement('label');
+      row.className = 'import-row' + (it.dup ? ' is-dup' : '');
+      const meta = [it.date, sportLabel(it.sport), it.distanceKm != null ? it.distanceKm.toFixed(1)+' km' : '', it.gainM ? '↑ '+it.gainM+' m' : '']
+        .filter(Boolean).join(' · ');
+      row.innerHTML =
+        '<input type="checkbox"'+(it.selected?' checked':'')+(it.dup?' disabled':'')+'>'+
+        '<div class="import-row-info"><div class="import-row-name"></div><div class="import-row-meta"></div></div>'+
+        (it.dup ? '<span class="import-row-tag"></span>' : '');
+      row.querySelector('.import-row-name').textContent = it.name;
+      row.querySelector('.import-row-meta').textContent = meta;
+      if(it.dup) row.querySelector('.import-row-tag').textContent = it.dup;
+      row.querySelector('input').addEventListener('change', e=>{ it.selected = e.target.checked; updateImportConfirm(); });
+      frag.appendChild(row);
+    });
+    list.appendChild(frag);
+    updateImportConfirm();
+  }
+
+  // Sorted oldest first; with byDays, an activity joins the previous
+  // trip when it's on the same or the next calendar day.
+  function groupForTrips(list, byDays){
+    const when = t => t.startTime ?? (t.date ? Date.parse(t.date) : Infinity);
+    const sorted = list.slice().sort((a,b)=> when(a) - when(b));
+    const groups = [];
+    let cur = null;
+    for(const t of sorted){
+      if(byDays && cur && t.date && cur.lastDate && (Date.parse(t.date) - Date.parse(cur.lastDate)) <= 86400000){
+        cur.items.push(t); cur.lastDate = t.date;
+      } else {
+        cur = { items:[t], lastDate: t.date };
+        groups.push(cur);
+      }
+    }
+    return groups.map(g=>g.items);
+  }
+  function tripNameForGroup(items){
+    const first = items[0];
+    if(items.length === 1) return first.name;
+    const last = items[items.length-1];
+    const days = first.date && last.date ? Math.round((Date.parse(last.date) - Date.parse(first.date)) / 86400000) + 1 : 1;
+    return first.name + (days > 1 ? ' · '+days+' days' : ' · '+items.length+' activities');
+  }
+
+  function updateImportConfirm(){
+    const chosen = importItems.filter(it=>it.selected && !it.dup);
+    const btn = document.getElementById('importConfirmBtn');
+    btn.disabled = !chosen.length;
+    if(!chosen.length){ btn.textContent = 'Import'; return; }
+    const tripCount = groupForTrips(chosen, document.getElementById('importGroupDays').checked).length;
+    btn.textContent = 'Import '+chosen.length+' activit'+(chosen.length!==1?'ies':'y')+
+      (tripCount !== chosen.length ? ' as '+tripCount+' trip'+(tripCount!==1?'s':'') : '');
+  }
+
+  async function runImport(){
+    const chosen = importItems.filter(it=>it.selected && !it.dup);
+    if(!chosen.length) return;
+    const run = importRun = {cancelled:false, phase:'import'};
+    showImportStep('progress');
+    const newTracks = [];
+    let failed = 0, dups = 0;
+    for(let i = 0; i < chosen.length && !run.cancelled; i++){
+      const it = chosen[i];
+      setImportProgress(i, chosen.length, 'Importing… '+(i+1)+' of '+chosen.length, it.name);
+      try{
+        const t = await parseActivityBytes(await it.load(), it.fileName, { name: it.name, sport: it.sport, sourceKey: it.sourceKey });
+        // Strava's CSV dates/distances were only a preview — re-check
+        // against the real track before keeping it.
+        if(findDuplicateTrack(t, tracks) || findDuplicateTrack(t, newTracks)){ dups++; continue; }
+        newTracks.push(t);
+      }catch(err){ failed++; }
+      if(i % 8 === 7) await breathe();
+    }
+    if(run.cancelled){ if(importRun === run) importRun = null; return; }
+    importRun = null;
+
+    const groups = groupForTrips(newTracks, document.getElementById('importGroupDays').checked);
+    const now = Date.now();
+    const newTrips = groups.map((g,i)=>({
+      id: 'trip_'+Math.random().toString(36).slice(2,10),
+      name: tripNameForGroup(g),
+      notes: '',
+      trackIds: g.map(t=>t.id),
+      gearIds: [], photoIds: [],
+      date: g[0].date || null,
+      status: 'completed',
+      createdAt: now + i,
+    }));
+    if(newTracks.length){
+      tracks.push(...newTracks);
+      trips.push(...newTrips);
+      await saveTracks();
+      await saveTrips();
+      renderTracks();
+      updateLayers();
+      renderStats();
+      renderTripCards();
+      detectCountriesInBackground(newTracks.map(t=>t.id));
+    }
+
+    document.getElementById('importDoneTitle').textContent = newTracks.length
+      ? 'Imported '+newTracks.length+' activit'+(newTracks.length!==1?'ies':'y')
+      : 'Nothing new to import';
+    const sub = [];
+    if(newTrips.length) sub.push(newTrips.length+' new trip'+(newTrips.length!==1?'s':'')+' — open one to add gear and photos.');
+    if(dups) sub.push(dups+' turned out to be already imported.');
+    if(failed) sub.push(failed+' couldn\'t be read.');
+    document.getElementById('importDoneSub').textContent = sub.join(' ');
+    showImportStep('done');
   }
 
   async function handleGoogleFile(file){
@@ -3906,10 +4627,17 @@
     cloudSignInModalOverlay: closeCloudSignInModal,
     stravaModalOverlay: closeStravaModal,
     photoLightboxOverlay: closePhotoLightbox,
+    importModalOverlay: closeImportModal,
   };
   let openModalOrder = [];      // most-recently-opened last
   let expectingCleanupPop = false;  // a history.back() we triggered ourselves, to drop a closed modal's entry
   let closingViaPopstate = false;   // true while a close fn runs because Back told it to, not a UI click
+  let afterCleanupPop = null;       // navigation waiting for that history.back() to land
+  // Navigating right after closing a modal would push a new entry before
+  // the modal's own entry is popped, and that pop would then undo it.
+  function afterModalCleanup(fn){
+    if(expectingCleanupPop) afterCleanupPop = fn; else fn();
+  }
 
   function onModalOpened(id){
     if(openModalOrder.includes(id)) return; // already open - re-opening to edit something else shouldn't stack another entry
@@ -3930,7 +4658,12 @@
   }
 
   window.addEventListener('popstate', (e)=>{
-    if(expectingCleanupPop){ expectingCleanupPop = false; return; }
+    if(expectingCleanupPop){
+      expectingCleanupPop = false;
+      const fn = afterCleanupPop; afterCleanupPop = null;
+      if(fn) fn();
+      return;
+    }
     if(openModalOrder.length){
       const topId = openModalOrder[openModalOrder.length-1];
       closingViaPopstate = true;
@@ -4127,6 +4860,54 @@
       handleTripGpxFiles(e.dataTransfer.files);
     });
   })();
+
+  // ---- Import activities wiring ----
+  document.getElementById('importActivitiesBtn').addEventListener('click', openImportModal);
+  document.getElementById('emptyHintImportBtn').addEventListener('click', ()=>{
+    document.querySelector('.nav-tab[data-page="trips"]').click();
+    openImportModal();
+  });
+  document.getElementById('importModalClose').addEventListener('click', closeImportModal);
+  document.getElementById('importModalOverlay').addEventListener('click', e=>{
+    // Don't lose a long scan to a stray click outside the dialog.
+    if(e.target.id === 'importModalOverlay' && !importRun) closeImportModal();
+  });
+  document.getElementById('importInput').addEventListener('change', e=>{
+    const files = Array.from(e.target.files);
+    e.target.value = '';
+    scanImportFiles(files);
+  });
+  (function(){
+    const zone = document.getElementById('importDropzone');
+    zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e=>{
+      e.preventDefault(); zone.classList.remove('dragover');
+      scanImportFiles(e.dataTransfer.files);
+    });
+  })();
+  document.getElementById('importCancelBtn').addEventListener('click', ()=>{
+    const wasImporting = importRun && importRun.phase === 'import';
+    if(importRun) importRun.cancelled = true;
+    importRun = null;
+    // Cancelling an import goes back to the review list (nothing was
+    // saved yet); cancelling a scan starts over.
+    if(wasImporting) showImportStep('review');
+    else { importItems = []; showImportStep('pick'); }
+  });
+  document.querySelectorAll('#importStepReview [data-select]').forEach(b=>{
+    b.addEventListener('click', ()=> applyImportPreset(b.dataset.select));
+  });
+  document.getElementById('importGroupDays').addEventListener('change', updateImportConfirm);
+  document.getElementById('importBackBtn').addEventListener('click', ()=>{ importItems = []; showImportStep('pick'); });
+  document.getElementById('importConfirmBtn').addEventListener('click', runImport);
+  document.getElementById('importMoreBtn').addEventListener('click', ()=>{ importItems = []; showImportStep('pick'); });
+  document.getElementById('importViewTripsBtn').addEventListener('click', ()=>{
+    closeImportModal();
+    afterModalCleanup(()=>{
+      document.querySelector('.nav-tab[data-page="trips"]').click();
+    });
+  });
 
   // ---- Trip photos wiring ----
   function currentPhotoTrip(){ return trips.find(t=>t.id===currentTripId) || null; }
