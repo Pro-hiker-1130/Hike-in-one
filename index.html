@@ -939,6 +939,9 @@
   .settings-card .upload-status:empty{display:none;}
   .settings-note{margin:0;font-size:14px;color:var(--muted);line-height:1.45;}
   .settings-account-email{margin:0;font-weight:600;}
+  .settings-error{color:var(--danger);}
+  .trips-problem{margin:12px 24px 0;padding:10px 14px;border-radius:10px;background:#FBE9E7;color:var(--danger);font-size:14px;flex:none;}
+  @media (max-width:760px){ .trips-problem{margin:12px 12px 0;} }
   .settings-card .clear-btn{width:auto;font-size:14px;padding:10px 16px;border-radius:8px;}
   .clear-btn:disabled{opacity:0.45;cursor:default;background:transparent;}
 
@@ -1250,6 +1253,8 @@
       </div>
     </div>
 
+    <div class="trips-problem" id="tripsProblem" role="alert" hidden></div>
+
     <button type="button" class="next-trip" id="nextTripCard" hidden>
       <span class="next-trip-count"><span class="next-trip-num" id="nextTripNum"></span><span class="next-trip-unit" id="nextTripUnit"></span></span>
       <span class="next-trip-body">
@@ -1375,6 +1380,8 @@
     <section class="settings-card">
       <h3>Stored data</h3>
       <p class="settings-note" id="settingsDataSummary"></p>
+      <p class="settings-note" id="settingsDeviceSummary"></p>
+      <p class="settings-note settings-error" id="settingsLastError" hidden></p>
       <button class="clear-btn" id="clearBtn">Remove all tracks and location history</button>
       <p class="settings-note">Your trips, gear and loadouts stay.</p>
     </section>
@@ -2743,12 +2750,18 @@
     };
   }
 
+  // Synced columns should be JSON arrays; accept a JSON string too and drop
+  // empty entries, so one odd value can't break every page that lists them.
+  function syncedList(v){
+    if(typeof v === 'string'){ try{ v = JSON.parse(v); }catch(e){ v = null; } }
+    return Array.isArray(v) ? v.filter(x => x && typeof x === 'object') : [];
+  }
   async function applyCloudSnapshot(row){
-    gearItems = row.gear || [];
-    trips = row.trips || [];
-    loadouts = row.loadouts || [];
-    tracks = row.tracks || [];
-    googlePoints = row.google_points || [];
+    gearItems = syncedList(row.gear);
+    trips = syncedList(row.trips);
+    loadouts = syncedList(row.loadouts);
+    tracks = syncedList(row.tracks);
+    googlePoints = Array.isArray(row.google_points) ? row.google_points : syncedList(row.google_points);
     suppressNextPush = true;
     await Promise.all([
       saveGear(), saveTrips(), saveLoadouts(), saveTracks(), saveGoogle(),
@@ -2757,6 +2770,7 @@
   }
 
   function renderSettingsAccount(){
+    try{ renderDeviceSummary(); }catch(e){ /* data not loaded yet */ }
     const card = document.getElementById('settingsAccountCard');
     card.hidden = !CLOUD_SYNC_ENABLED;
     if(!CLOUD_SYNC_ENABLED) return;
@@ -2850,8 +2864,8 @@
       const cloudTs = data ? new Date(data.updated_at).getTime() : 0;
       if(data && cloudTs >= localTs){
         await applyCloudSnapshot(data);
-        refreshEverything();
-        showGarage();
+        try{ refreshEverything(); }catch(err){ noteAppError(err); console.error(err); }
+        try{ showGarage(); }catch(err){ noteAppError(err); console.error(err); }
         // The Trips page only redraws when it is opened, so one already on
         // screen (common on a phone, where this pull can take a few
         // seconds) would keep showing the pre-sync list.
@@ -3226,6 +3240,29 @@
       tracks.length+' track'+(tracks.length!==1?'s':'')+' and '+
       googlePoints.length.toLocaleString('en-US')+' location-history point'+(googlePoints.length!==1?'s':'')+' on this device.';
     document.getElementById('clearBtn').disabled = !(tracks.length || googlePoints.length);
+    renderDeviceSummary();
+  }
+
+  // What this device holds and the last error it hit — enough to tell,
+  // from a phone, whether data is missing or failing to display.
+  let lastAppError = null;
+  function noteAppError(err){
+    lastAppError = { message: (err && (err.message || err.reason && err.reason.message)) || String(err), at: new Date() };
+    const el = document.getElementById('settingsLastError');
+    if(!el) return;
+    el.hidden = false;
+    el.textContent = 'Last error (' + lastAppError.at.toLocaleTimeString() + '): ' + lastAppError.message;
+  }
+  window.addEventListener('error', e => noteAppError(e.error || e.message));
+  window.addEventListener('unhandledrejection', e => noteAppError(e.reason));
+  function renderDeviceSummary(){
+    const el = document.getElementById('settingsDeviceSummary');
+    if(!el) return;
+    const sync = !CLOUD_SYNC_ENABLED ? '' : !cloudUser ? ' Not signed in.' :
+      ' Signed in, sync: ' + ({syncing:'syncing', synced:'up to date', error:'error', offline:'offline'}[cloudSyncStatus] || cloudSyncStatus) + '.';
+    el.textContent = 'This device has ' + trips.length + ' trip' + (trips.length !== 1 ? 's' : '') + ', ' +
+      tracks.length + ' track' + (tracks.length !== 1 ? 's' : '') + ' and ' +
+      gearItems.length + ' gear item' + (gearItems.length !== 1 ? 's' : '') + '.' + sync;
   }
 
   function escapeHtml(s){
@@ -3715,7 +3752,7 @@
       grid.className = 'gear-grid timeline-grid';
       section.appendChild(h);
       section.appendChild(grid);
-      g.trips.forEach(trip=>{
+      g.trips.forEach(trip=>{ try{
         const tks = tripTracks(trip);
         const color = tks.length ? trackColors[tks[0].id] : 'var(--fern)';
         const dist = tripDistanceKm(trip);
@@ -3743,7 +3780,12 @@
         card.addEventListener('click', ()=> showTripDetail(trip.id));
         card.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); showTripDetail(trip.id); } });
         grid.appendChild(card);
-      });
+      }catch(err){
+        // One trip whose data trips up the drawing still gets a plain card,
+        // and the rest of the list carries on.
+        noteTripsProblem(err, trip);
+        grid.appendChild(plainTripCard(trip));
+      } });
       wrap.appendChild(section);
     });
   }
@@ -3772,7 +3814,36 @@
     return upcoming;
   }
 
+  // ---- When the trips list can't be drawn: say so instead of a blank page ----
+  let tripsProblems = [];
+  function noteTripsProblem(err, trip){
+    console.error('trips list:', err, trip);
+    tripsProblems.push((trip && trip.name ? '"'+trip.name+'": ' : '') + (err && err.message || String(err)));
+    noteAppError(err);
+  }
+  function plainTripCard(trip){
+    const card = document.createElement('div');
+    card.className = 'trip-card';
+    card.innerHTML = '<div class="trip-card-name"></div><div class="trip-card-meta">Some details of this trip couldn\'t be shown.</div>';
+    card.querySelector('.trip-card-name').textContent = (trip && trip.name) || 'Untitled trip';
+    if(trip && trip.id) card.addEventListener('click', ()=> showTripDetail(trip.id));
+    return card;
+  }
+  function showTripsProblems(){
+    const box = document.getElementById('tripsProblem');
+    box.hidden = !tripsProblems.length;
+    if(!tripsProblems.length) return;
+    box.textContent = 'Something went wrong showing your trips. Please send this to the developer: ' + tripsProblems.slice(0, 3).join(' · ');
+  }
+
   function renderTripCards(){
+    tripsProblems = [];
+    try{ renderTripCardsUnguarded(); }
+    catch(err){ noteTripsProblem(err, null); }
+    showTripsProblems();
+  }
+
+  function renderTripCardsUnguarded(){
     document.getElementById('tripsEmpty').style.display = trips.length ? 'none' : 'block';
     document.querySelectorAll('#tripsListView .section-subhead, #tripsListView .gear-grid, #tripCompletedGrid').forEach(el=>{
       el.style.display = trips.length ? '' : 'none';
@@ -6552,7 +6623,7 @@
       document.getElementById('pageGear').classList.toggle('active', page==='gear');
       document.getElementById('pageTrips').classList.toggle('active', page==='trips');
       document.getElementById('pageSettings').classList.toggle('active', page==='settings');
-      if(page === 'settings') pushRouteState();
+      if(page === 'settings'){ try{ renderDeviceSummary(); }catch(e){} pushRouteState(); }
       if(page === 'map'){
         setTimeout(()=>{
           map.invalidateSize();
