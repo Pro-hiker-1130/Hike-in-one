@@ -7,7 +7,7 @@ const C = require('../../catalog-core.js');
 
 const PNG_1PX = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
-function createFakeSupabase({ userId = null, seed = {} } = {}){
+function createFakeSupabase({ userId = null, seed = {}, lookups = {} } = {}){
   const db = {
     catalog_products: [], catalog_photos: [], reviews: [], profiles: [], revisions: [], user_data: [],
   };
@@ -17,8 +17,9 @@ function createFakeSupabase({ userId = null, seed = {} } = {}){
   const uuid = () => '00000000-0000-4000-8000-' + String(seq++).padStart(12, '0');
 
   function addProduct(p, by){
-    const row = Object.assign({ model: null, category: 'Other', weight_g: null, description: null, specs: {}, product_url: null },
+    const row = Object.assign({ model: null, category: 'Other', weight_g: null, description: null, specs: {}, product_url: null, source_url: null, origin: 'user' },
       p, { id: p.id || uuid(), created_by: by, updated_by: by, created_at: now(), updated_at: now() });
+    if(by && by !== 'seed-user' && !['user', 'link'].includes(row.origin)) row.origin = 'user';   // mirrors the DB guard
     row.normalized_key = C.productKey(row.brand, row.name, row.model);
     if(db.catalog_products.some(x => x.normalized_key === row.normalized_key)) return { error: dupError() };
     db.catalog_products.push(row);
@@ -77,6 +78,15 @@ function createFakeSupabase({ userId = null, seed = {} } = {}){
       return json(200, { Key: 'catalog-photos/' + path, Id: uuid() });
     }
     if(p === '/storage/v1/object/catalog-photos' && method === 'DELETE') return json(200, []);
+
+    // ---- Edge Function: product-lookup (lookups: url -> product | {error, status}) ----
+    if(p === '/functions/v1/product-lookup'){
+      if(!authed) return json(401, { msg: 'Invalid JWT' });
+      const hit = lookups[body && body.url];
+      if(!hit) return json(422, { error: 'Couldn\'t find product details on that page.' });
+      if(hit.error) return json(hit.status || 422, { error: hit.error });
+      return json(200, { product: Object.assign({ model: '', weight_text: '', product_url: body.url, source_url: body.url, found: [] }, hit) });
+    }
 
     // ---- Auth (only what a restored session may touch) ----
     if(p.startsWith('/auth/v1/user')) return userId ? json(200, { id: userId, email: 'me@example.com', aud: 'authenticated', role: 'authenticated' }) : json(401, {});

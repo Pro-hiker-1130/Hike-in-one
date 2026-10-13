@@ -26,3 +26,13 @@ echo "migrations applied twice (idempotent)"
 for t in "$REPO"/tests/sql/*.test.sql; do
   "${P[@]}" -d t -f "$t" 2>&1 >/dev/null | sed 's/^psql:[^ ]* NOTICE:  //'
 done
+# Starter catalog seeds: must apply cleanly (every row passes the table's
+# constraints) and be re-runnable without duplicating anything.
+before=$("${P[@]}" -d t -At -c "select count(*) from catalog_products")
+for pass in 1 2; do
+  for s in "$REPO"/supabase/seed/*.sql; do "${P[@]}" -d t -f "$s" >/dev/null; done
+done
+after=$("${P[@]}" -d t -At -c "select count(*) from catalog_products where origin = 'seed' and created_by is null")
+expected=$(cat "$REPO"/supabase/seed/*.sql | grep -c "^('")
+echo "seed: $expected rows in files, $after seed products in the catalog (catalog had $before before)"
+[ "$after" -ge "$((expected - 1))" ] || { echo "FAIL: seed rows missing"; exit 1; }

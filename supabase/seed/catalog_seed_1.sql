@@ -1,0 +1,30 @@
+-- Hike-in-one starter catalog, part 1 of 2: packs, shelters, sleep systems.
+-- Run in the Supabase SQL Editor after migrations 002 and 003. Safe to
+-- re-run: products already in the catalog are skipped.
+-- Weights are listed (not measured) specs found on public retailer and
+-- review pages in Oct 2026, for the size/variant in the model column;
+-- the page used is kept in source_url and shown in the app.
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Osprey', 'Exos 58', 'Men''s S/M', 'Backpack', 1288, '{"volume_l":58}', 'Ultralight top-loading pack with a removable lid. Listed weight for men''s S/M (L/XL is 61 L).', 'https://www.altitude-sports.com/p/osprey-exos-58l-ultralight-backpack-mens-osp-exos58', 'seed'),
+('Osprey', 'Atmos AG 65', 'Men''s S/M', 'Backpack', 2098, '{"volume_l":65}', 'Trampoline-style Anti-Gravity suspended back panel. Listed weight for men''s S/M; not the lighter Atmos AG LT.', 'https://www.rei.com/product/201302', 'seed'),
+('Osprey', 'Talon 22', 'M/L', 'Backpack', 925, '{"volume_l":22}', 'Hiking daypack. Listed weight for size M/L (S/M is 20 L).', 'https://goodsports.com/products/osprey-talon-22', 'seed'),
+('Gregory', 'Baltoro 65', 'Men''s M', 'Backpack', 2231, '{"volume_l":65}', 'Heavy-load backpacking pack. Listed weight for men''s medium.', 'https://www.rei.com/product/880999', 'seed'),
+('Hyperlite Mountain Gear', 'Southwest 55', 'Medium, white', 'Backpack', 896, '{"volume_l":55}', 'Dyneema roll-top pack, formerly called the 3400 Southwest. Listed weight for medium in white DCH50 (black is about 979 g).', 'https://www.garagegrowngear.com/products/3400-southwest-by-hyperlite-mountain-gear', 'seed'),
+('Gossamer Gear', 'Mariposa 60', 'Medium', 'Backpack', 927, '{"volume_l":60}', 'Framed ultralight pack. Listed average weight for medium with all components, including the hipbelt.', 'https://backpackinglight.com/gossamer-gear-mariposa-60-backpack-review', 'seed'),
+('ULA', 'Circuit', 'Robic, medium', 'Backpack', 1038, '{"volume_l":68}', 'Ultralight framed pack, 68 L including external pockets. Listed weight with medium torso and hipbelt.', 'https://backpackinglight.com.au/products/ula-equipment-circuit-68l-backpack', 'seed'),
+('Big Agnes', 'Copper Spur HV UL2', null, 'Shelter', 1219, '{"capacity_persons":2,"packed_size":"50 x 15 cm"}', 'Freestanding double-wall tent. Listed minimum trail weight; packed weight with everything is about 1.42 kg.', 'https://ascentoutdoors.com/products/big-agnes-copper-spur-hv-ul2', 'seed'),
+('Zpacks', 'Duplex Zip', null, 'Shelter', 555, '{"capacity_persons":2}', 'Dyneema trekking-pole tent. Discontinued in July 2025 (replaced by the Duplex Pro). Listed weight excludes stakes.', 'https://zpacks.com/products/duplex-zip-tent-obs', 'seed'),
+('MSR', 'Hubba Hubba 2', null, 'Shelter', 1300, '{"capacity_persons":2}', 'Freestanding double-wall tent (not the older, heavier Hubba Hubba NX). Listed minimum weight; packaged weight about 1.47 kg.', 'https://www.evo.com/products/215096-msr-hubba-hubba-2-person-tent', 'seed'),
+('Durston', 'X-Mid 2', '2025', 'Shelter', 880, '{"capacity_persons":2}', 'Trekking-pole tent; the 2025 version uses 15D silpoly. Listed tent weight; about 975 g with sack and 6 stakes.', 'https://www.outdoorline.eu/products/durston-x-mid-2', 'seed'),
+('Hilleberg', 'Akto', null, 'Shelter', 1300, '{"capacity_persons":1,"packed_size":"43 x 13 cm"}', 'Four-season one-person tunnel tent. Listed minimum weight (fly, inner, poles); packed weight about 1.7 kg.', 'https://www.nordicoutdoor.co.uk/hilleberg-akto-6410/', 'seed'),
+('Nemo', 'Dagger OSMO 2P', null, 'Shelter', 1503, '{"capacity_persons":2}', 'Freestanding two-door tent. Listed minimum trail weight; packaged weight about 1.79 kg.', 'https://www.rei.com/product/242364/nemo-dagger-osmo-2p-tent', 'seed'),
+('Therm-a-Rest', 'NeoAir XLite NXT', 'Regular', 'Sleep system', 370, '{"r_value":4.5}', 'Insulated air pad, 183 x 51 x 7.6 cm (regular).', 'https://www.rei.com/product/172126/th', 'seed'),
+('Therm-a-Rest', 'NeoAir XTherm NXT', 'Regular', 'Sleep system', 440, '{"r_value":7.3}', 'Four-season insulated air pad, 183 x 51 x 7.6 cm (regular).', 'https://www.thermarest.com/ie/sleeping-pads/fast-and-light/neoair-xtherm-nxt-sleeping-pad/neoair-xtherm-nxt-eu.html', 'seed'),
+('Therm-a-Rest', 'Z Lite Sol', 'Regular', 'Sleep system', 410, '{"r_value":2.0}', 'Folding closed-cell foam pad, 183 x 51 x 2 cm. Adds R 2.0 under another pad.', 'https://www.altitude-sports.com/products/therm-a-rest-z-lite-sol-regular-llll-tar-13267', 'seed'),
+('Nemo', 'Tensor All-Season', 'Regular', 'Sleep system', 440, '{"r_value":5.4}', 'Insulated air pad, 183 x 51 x 9 cm. Listed minimum weight; about 522 g packed.', 'https://www.sportsbasement.com/products/tensor-all-season-reg', 'seed'),
+('Sea to Summit', 'Ether Light XT Insulated', 'Regular', 'Sleep system', 490, '{"r_value":3.2}', 'Thick insulated air mat, 183 x 55 x 10 cm (regular).', 'https://macpac.com.au/sea-to-summit-ether-light-xt-insulated-sleeping-mat-%E2%80%94-regular-/119436.html', 'seed'),
+('Enlightened Equipment', 'Revelation 20', 'Regular/Regular, 850 fill', 'Sleep system', 640, '{"temp_limit_c":-7}', 'Down quilt rated 20°F (-7°C), with about 455 g of 850-fill down.', 'https://www.outdoorline.eu/products/enlightened-equipment-revelation-quilt-20', 'seed'),
+('Western Mountaineering', 'UltraLite', '6 ft', 'Sleep system', 820, '{"temp_limit_c":-7}', 'Down mummy bag rated 20°F (-7°C) by the maker (not EN-advertised); 850+ fill goose down.', 'https://www.nordicoutdoor.co.uk/en-de/products/western-mountaineering-ultralite', 'seed'),
+('Nemo', 'Disco 15', 'Men''s Regular', 'Sleep system', 1230, '{"temp_comfort_c":-3,"temp_limit_c":-9}', 'Spoon-shaped 650-fill down bag; ISO comfort -3°C, limit -9°C.', 'https://www.tiso.com/products/nemo-disco-15-reg-20-mens-yellow', 'seed'),
+('Sea to Summit', 'Aeros Ultralight Pillow', 'Regular', 'Sleep system', 57, '{}', 'Inflatable camp pillow.', 'https://ascentoutdoors.com/products/sea-to-summit-aeros-ultralight-pillow', 'seed')
+on conflict (normalized_key) do nothing;

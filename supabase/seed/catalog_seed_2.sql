@@ -1,0 +1,30 @@
+-- Hike-in-one starter catalog, part 2 of 2: cooking, water, electronics,
+-- footwear, clothing, safety and small items. Same notes as part 1;
+-- safe to re-run. Shoe weights are per PAIR (what you carry).
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('MSR', 'PocketRocket 2', null, 'Cooking', 73, '{}', 'Canister stove; boils 1 L in about 3.5 minutes.', 'https://www.altitude-sports.com/p/msr-pocket-rocket-2-stove-msr-09884', 'seed'),
+('Jetboil', 'Flash', null, 'Cooking', 371, '{"capacity_ml":1000}', 'Integrated canister cooking system with 1 L cup. Listed system weight excludes the fuel stabilizer.', 'https://www.altitude-sports.com/p/jetboil-flash-cooking-system-1l-jtb-fldc3', 'seed'),
+('Soto', 'WindMaster', 'with 4Flex', 'Cooking', 87, '{}', 'Wind-resistant canister stove; listed weight includes the 4Flex pot support.', 'https://www.garagegrowngear.com/collections/soto-outdoors/products/windmaster-stove-with-4flex-by-soto-outdoors', 'seed'),
+('TOAKS', 'Titanium 750 ml Pot', null, 'Cooking', 103, '{"capacity_ml":750}', 'Titanium pot with lid (about 86 g without lid) and folding handles.', 'https://www.rei.com/product/139459/toaks-titanium-750-ml-pot', 'seed'),
+('BRS', '3000T', null, 'Cooking', 25, '{}', 'Tiny titanium canister stove.', 'https://www.trailspace.com/gear/brs/3000t/', 'seed'),
+('Sawyer', 'Squeeze', null, 'Water', 85, '{"filter_type":"0.1 micron hollow fiber"}', 'Squeeze filter; listed weight is the filter alone.', 'https://www.garagegrowngear.com/collections/sawyer/products/squeeze-water-filtration-system-by-sawyer', 'seed'),
+('Katadyn', 'BeFree', '1.0 L', 'Water', 63, '{"capacity_ml":1000,"filter_type":"0.1 micron hollow fiber"}', 'Soft-flask filter bottle (not the heavier Tactical version).', 'https://alpsport.com.au/products/befree-water-filtration-system-1-0l', 'seed'),
+('Platypus', 'QuickDraw Microfilter', null, 'Water', 63, '{"filter_type":"0.2 micron hollow fiber"}', 'Inline/squeeze filter; listed weight is the filter alone (the 1 L system is about 94 g).', 'https://inwild.com/platypus-quickdraw-microfilter-1', 'seed'),
+('Petzl', 'Actik Core', null, 'Electronics', 88, '{"battery_mah":1250}', 'Headlamp, 600 lumens; rechargeable CORE battery or 3 AAA.', 'https://petzl.com/GB/en/Sport/Headlamps/ACTIK-CORE', 'seed'),
+('Black Diamond', 'Spot 400', null, 'Electronics', 86, '{}', 'Headlamp, 400 lumens, IPX8. Listed weight with 3 AAA batteries (REI lists 77 g).', 'https://www.bergzeit.us/p/black-diamond-spot-400-headlamp/5049580/', 'seed'),
+('Nitecore', 'NU25 UL', null, 'Electronics', 45, '{"battery_mah":650}', 'Ultralight rechargeable headlamp, 400 lumens, USB-C.', 'https://enlightenedequipment.com/nitecore-nu25-ul/', 'seed'),
+('Nitecore', 'NB10000 Gen 2', null, 'Electronics', 150, '{"battery_mah":10000}', 'Carbon-fiber 10,000 mAh power bank.', 'https://www.outdoorline.eu/products/nitecore-nb10000-gen2', 'seed'),
+('Garmin', 'inReach Mini 2', null, 'Navigation', 100, '{}', 'Satellite communicator with SOS; up to 14 days at 10-minute tracking.', 'https://ifp.iridium.com/products/everywhere-inreach-mini-2-garmin', 'seed'),
+('Altra', 'Lone Peak 8', 'Men''s', 'Footwear', 606, '{"drop_mm":0}', 'Zero-drop trail runner. Weight per pair (303 g per shoe, men''s US 9).', 'https://www.roadtrailrun.com/2024/05/altra-lone-peak-8-multi-tester-review-5.html', 'seed'),
+('Hoka', 'Speedgoat 6', 'Men''s', 'Footwear', 556, '{"drop_mm":5}', 'Cushioned trail runner. Weight per pair (278 g per shoe, men''s US 10).', 'https://www.roadtrailrun.com/2024/05/hoka-speedgoat-6-review-7-comparisons.html', 'seed'),
+('Salomon', 'X Ultra 4 GTX', 'Men''s', 'Footwear', 780, '{"waterproof":true,"drop_mm":11}', 'Waterproof low hiking shoe. Weight per pair (390 g per shoe).', 'https://www.wildfiresports.com.au/salomon-x-ultra-4-gtx-mens-shoes', 'seed'),
+('Patagonia', 'Torrentshell 3L Jacket', 'Men''s M', 'Clothing', 400, '{"waterproof":true}', 'Three-layer waterproof rain jacket.', 'https://www.rei.com/product/215514/patagonia-torrentshell-3l-jacket-mens', 'seed'),
+('Arc''teryx', 'Beta LT Jacket', 'Men''s', 'Clothing', 395, '{"waterproof":true}', 'Three-layer GORE-TEX shell.', 'https://www.rei.com/product/185629', 'seed'),
+('Outdoor Research', 'Helium Rain Jacket', 'Men''s M', 'Clothing', 179, '{"waterproof":true}', 'Ultralight 2.5-layer rain jacket.', 'https://www.competitivecyclist.com/outdoor-research-helium-rain-jacket-mens', 'seed'),
+('Frogg Toggs', 'Ultra-Lite2 Rain Suit', 'Men''s', 'Clothing', 363, '{"waterproof":true}', 'Budget rain suit; listed weight is jacket and pants together.', 'https://simmonssportinggoods.com/frogg-toggs/frogg-toggs-mens-rain-suit-73719', 'seed'),
+('Patagonia', 'Nano Puff Jacket', 'Men''s', 'Clothing', 369, '{}', 'Synthetic insulated jacket.', 'https://www.rei.com/product/102404/patagonia-nano-puff-insulated-jacket-mens', 'seed'),
+('Adventure Medical Kits', 'Ultralight/Watertight .7', null, 'Safety', 164, '{}', 'Compact first aid kit for 1-2 people (US version).', 'https://www.rei.com/product/695383', 'seed'),
+('SOL', 'Emergency Bivvy', null, 'Safety', 108, '{}', 'Reflective emergency bivy, 213 x 91 cm.', 'https://rei.com/product/813511/sol-emergency-bivy', 'seed'),
+('Black Diamond', 'Distance Carbon Z', '120 cm, pair', 'Other', 298, '{}', 'Folding carbon trekking poles; listed weight per pair at 120 cm.', 'https://mont.com.au/products/black-diamond-distance-carbon-z-trekking-poles', 'seed'),
+('TheTentLab', 'The Deuce #2', null, 'Hygiene', 17, '{}', 'Ultralight aluminium trowel, now sold as the DirtSaw Deuce #2.', 'https://www.rei.com/product/131611/thetentlab-the-deuce-2-backcountry-trowel', 'seed')
+on conflict (normalized_key) do nothing;

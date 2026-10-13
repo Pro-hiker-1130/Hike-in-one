@@ -387,3 +387,100 @@ test('without the catalog (script blocked / offline): gear room still works', { 
   assert.ok((await savedGear(page)).some(g => g.name === 'Spork'));
   assert.deepEqual(errors, []);
 });
+
+test('catalog: "Look it up" from a link and bulk "Add products from links"', { skip: !playwright && 'playwright not installed' }, async t=>{
+  const fake = createFakeSupabase({ userId: ME, seed: seedCatalog(), lookups: {
+    'https://brand.example.com/xlite': { name: 'NeoAir XLite NXT', brand: 'Therm-a-Rest', model: 'Regular', category: 'Sleep system',
+      weight_g: 354, weight_text: 'Weight 354 g', found: ['name', 'brand', 'model', 'weight', 'category'], source_url: 'https://brand.example.com/xlite' },
+    'https://shop.example.com/blocked': { error: 'That website doesn\'t allow automatic lookups — fill the details in by hand.' },
+    'https://brand.example.com/squeeze': { name: 'Squeeze Water Filter System', brand: 'Sawyer', category: 'Water', weight_g: 85,
+      weight_text: 'Weight: 3 oz', found: ['name', 'brand', 'weight', 'category'] },
+    'https://shop.example.com/exos': { name: 'Exos 58', brand: 'Osprey', category: 'Backpack', weight_g: 1240, found: ['name', 'brand', 'weight', 'category'] },
+    'https://brand.example.com/poles': { name: 'Distance Carbon Z', brand: '', category: 'Other', weight_g: null, found: ['name'] },
+  } });
+  const { page, errors } = await launch(t, { signedIn: true, fake });
+  await page.waitForSelector('#cloudSignOutBtn');
+
+  await t.test('product form: Look it up fills the fields and records the source', async ()=>{
+    await openAddGear(page);
+    await page.fill('#catalogSearchInput', 'xlite');
+    await page.waitForSelector('.catalog-result-msg:has-text("No matches")');
+    await page.click('.catalog-result:has-text("Add")');
+    await page.waitForSelector('#catalogProductModalOverlay', { state: 'visible' });
+    assert.ok(await page.isVisible('#cpLookupField'));
+    await page.fill('#cpLookupUrl', 'https://shop.example.com/blocked');
+    await page.click('#cpLookupBtn');
+    await page.waitForFunction(()=> /doesn't allow automatic lookups/.test(document.getElementById('cpLookupStatus').textContent));
+    await page.fill('#cpLookupUrl', 'https://brand.example.com/xlite');
+    await page.press('#cpLookupUrl', 'Enter');
+    await page.waitForFunction(()=> /Filled in from brand\.example\.com/.test(document.getElementById('cpLookupStatus').textContent));
+    assert.equal(await val(page, 'cpBrand'), 'Therm-a-Rest');
+    assert.equal(await val(page, 'cpName'), 'NeoAir XLite NXT');
+    assert.equal(await val(page, 'cpModel'), 'Regular');
+    assert.equal(await val(page, 'cpCategory'), 'Sleep system');
+    assert.equal(await val(page, 'cpWeight'), '354 g');
+    assert.ok(await page.isVisible('#cpSpec_r_value'), 'category spec fields follow the looked-up category');
+    await page.click('#cpSubmitBtn');
+    await page.waitForSelector('#catalogProductModalOverlay', { state: 'hidden' });
+    const created = fake.db.catalog_products.find(p => p.brand === 'Therm-a-Rest');
+    assert.equal(created.origin, 'link');
+    assert.equal(created.source_url, 'https://brand.example.com/xlite');
+    await page.waitForSelector('#catalogLink', { state: 'visible' });
+    assert.equal(await val(page, 'gearWeight'), '354');
+    await page.click('#catalogLinkView');
+    await page.waitForSelector('#cdBody', { state: 'visible' });
+    assert.match(await page.innerText('#cdFacts'), /Specs from\s+brand\.example\.com/);
+    await page.click('#catalogDetailModalClose');
+    await page.click('#gearCancelBtn');
+    await page.waitForSelector('#gearModalOverlay', { state: 'hidden' });
+  });
+
+  await t.test('bulk: look up several links, review, fix, add', async ()=>{
+    await page.click('.nav-tab[data-page="gear"]');
+    await page.click('#catalogBulkBtn');
+    await page.waitForSelector('#catalogBulkModalOverlay', { state: 'visible' });
+    await page.click('#bulkLookupBtn');
+    assert.match(await page.innerText('#bulkPasteError'), /at least one link/);
+    await page.fill('#bulkUrls', ['https://brand.example.com/squeeze', 'https://shop.example.com/exos', 'not a link',
+      'https://shop.example.com/blocked', 'https://brand.example.com/poles', 'https://brand.example.com/squeeze'].join('\n'));
+    await page.click('#bulkLookupBtn');
+    await page.waitForSelector('#bulkStepReview', { state: 'visible' });
+    assert.match(await page.innerText('#bulkSummary'), /2 products ready to review · 1 already in the catalog · 1 couldn't be read/);
+    const notes = await page.$$eval('.bulk-row-note', ns => ns.map(n => n.textContent));
+    assert.equal(notes.length, 4, 'duplicates and non-links removed from the list');
+    assert.match(notes[0], /brand\.example\.com · weight from "Weight: 3 oz"/);
+    assert.match(notes[1], /Already in the catalog as "Osprey Exos 58"/);
+    assert.match(notes[2], /doesn't allow automatic lookups/);
+    assert.match(notes[3], /no weight found/);
+    assert.equal(await page.innerText('#bulkAddBtn'), 'Add 2 to catalog');
+    // The poles row has no brand: adding it must ask for one, without losing the other row.
+    await page.click('#bulkAddBtn');
+    await page.waitForFunction(()=> /need fixing/.test(document.getElementById('bulkReviewError').textContent));
+    assert.match(await page.innerText('#bulkReviewError'), /Added 1\. 1 need fixing/);
+    assert.ok(fake.db.catalog_products.some(p => p.brand === 'Sawyer' && p.origin === 'link'));
+    const poles = page.locator('.bulk-row').nth(3);
+    assert.match(await poles.locator('.bulk-row-note').innerText(), /Brand is required/);
+    await poles.locator('[data-f="brand"]').fill('Black Diamond');
+    await poles.locator('[data-f="weight_g"]').fill('290');
+    await page.click('#bulkAddBtn');
+    await page.waitForSelector('#bulkStepDone', { state: 'visible' });
+    assert.equal(await page.innerText('#bulkDoneTitle'), 'Added 1 product to the catalog');
+    const bd = fake.db.catalog_products.find(p => p.brand === 'Black Diamond');
+    assert.equal(bd.weight_g, 290);
+    assert.equal(bd.source_url, 'https://brand.example.com/poles');
+    assert.equal(fake.db.catalog_products.filter(p => p.brand === 'Sawyer').length, 1, 'not added twice');
+    await page.click('#bulkDoneBtn');
+    await page.waitForSelector('#catalogBulkModalOverlay', { state: 'hidden' });
+  });
+
+  assert.deepEqual(errors, []);
+});
+
+test('catalog: bulk add asks signed-out users to sign in', { skip: !playwright && 'playwright not installed' }, async t=>{
+  const fake = createFakeSupabase({ userId: null, seed: seedCatalog() });
+  const { page } = await launch(t, { signedIn: false, fake });
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#catalogBulkBtn');
+  await page.waitForSelector('#cloudSignInModalOverlay', { state: 'visible' });
+  assert.ok(!(await page.isVisible('#catalogBulkModalOverlay')));
+});

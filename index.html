@@ -317,6 +317,8 @@
     padding:22px 24px 4px;flex:none;
   }
   .garage-heading h2{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0;}
+  .garage-header{flex-wrap:wrap;}
+  .garage-heading{flex:1 1 240px;min-width:0;}
   .garage-heading p{font-size:12.5px;color:var(--muted);margin:4px 0 0;}
   /* ---- Gear room scene: shelves, a hook rail, a boot bench ---- */
   /* A subtle shiplap wall + fine grain noise behind the whole scene, and a
@@ -607,6 +609,7 @@
   .cd-facts dt{color:var(--muted);}
   .cd-facts dd{margin:0;color:var(--parchment);overflow-wrap:anywhere;}
   .cd-facts a{color:var(--brass);}
+  .cd-origin{color:var(--muted);font-size:11.5px;}
   .cd-description{font-size:13px;line-height:1.55;margin:0;white-space:pre-wrap;}
   .cd-description:empty{display:none;}
   .cd-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -630,6 +633,28 @@
   .cd-review-author{color:var(--parchment);font-weight:500;}
   .cd-review-text{font-size:13px;line-height:1.55;margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;}
   .cd-empty{font-size:12.5px;color:var(--muted);}
+
+  .cp-lookup-row{display:flex;gap:8px;}
+  .cp-lookup-row input{flex:1;}
+  .catalog-bulk-modal{max-width:720px;}
+  .bulk-list{max-height:min(52vh,480px);overflow-y:auto;border:1px solid var(--line);border-radius:6px;}
+  .bulk-row{display:grid;grid-template-columns:20px 1fr 1.5fr .8fr 1fr 74px;gap:6px 8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);}
+  .bulk-row:last-child{border-bottom:none;}
+  .bulk-row input[type="text"], .bulk-row input[type="number"], .bulk-row select{
+    width:100%;min-width:0;background:var(--panel-alt);border:1px solid var(--line);color:var(--parchment);
+    font-size:12.5px;padding:6px 7px;border-radius:4px;font-family:inherit;
+  }
+  .bulk-row input[type="checkbox"]{width:15px;height:15px;accent-color:var(--brass);}
+  .bulk-row-note{grid-column:2 / -1;font-size:11.5px;color:var(--muted);overflow-wrap:anywhere;}
+  .bulk-row-note.warn{color:#D9B26F;}
+  .bulk-row-note.err{color:var(--danger);}
+  .bulk-row.is-off > *:not(.bulk-row-note):not(input[type="checkbox"]){opacity:0.5;}
+  .bulk-head{font-size:11px;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--line);}
+  @media (max-width:560px){
+    .bulk-row{grid-template-columns:20px 1fr 1fr;}
+    .bulk-row > :nth-child(4), .bulk-row > :nth-child(6){grid-column:2;}
+    .bulk-head{display:none;}
+  }
 
   /* ---- Import activities ---- */
   .trips-header-actions{display:flex;gap:8px;align-self:flex-start;flex-wrap:wrap;justify-content:flex-end;}
@@ -850,6 +875,7 @@
         <p>Your gear, where it lives — click a shelf, hook or bench to see what's on it</p>
       </div>
       <div style="display:flex;gap:8px;">
+        <button class="ghost-btn" id="catalogBulkBtn" hidden title="Add several products to the shared catalog from their web pages">Add to catalog</button>
         <button class="ghost-btn" id="viewAllGearBtn">View all items</button>
         <button class="primary-btn" id="addGearBtnGarage">+ Add item</button>
       </div>
@@ -1258,6 +1284,14 @@
     </div>
     <form class="modal-form" id="catalogProductForm" novalidate>
       <p class="catalog-note" id="cpNote"></p>
+      <div class="form-field" id="cpLookupField">
+        <label for="cpLookupUrl">Fill in from the product's web page (brand or shop link)</label>
+        <div class="cp-lookup-row">
+          <input type="url" id="cpLookupUrl" placeholder="https://…" autocomplete="off">
+          <button type="button" class="ghost-btn" id="cpLookupBtn">Look it up</button>
+        </div>
+        <div class="upload-status" id="cpLookupStatus"></div>
+      </div>
       <div class="form-row">
         <div class="form-field">
           <label for="cpBrand">Brand *</label>
@@ -1308,6 +1342,50 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="catalogBulkModalOverlay" style="display:none;">
+  <div class="modal catalog-bulk-modal">
+    <div class="modal-header">
+      <h3>Add products from links</h3>
+      <button class="modal-close" aria-label="Close" id="catalogBulkModalClose" type="button">&times;</button>
+    </div>
+    <div class="import-step" id="bulkStepPaste">
+      <div class="form-field">
+        <label for="bulkUrls">Product pages — one link per line, up to 25 (brand sites work best)</label>
+        <textarea id="bulkUrls" rows="8" placeholder="https://www.example-brand.com/product/tent-2p&#10;https://www.example-shop.com/sleeping-pad"></textarea>
+      </div>
+      <p class="catalog-note">Each page is read for the product facts it publishes (name, brand, weight). You review everything before it's added to the shared catalog. Photos and descriptions aren't copied.</p>
+      <div class="upload-error" id="bulkPasteError"></div>
+      <div class="modal-actions">
+        <span></span>
+        <button type="button" class="primary-btn" id="bulkLookupBtn">Look them up</button>
+      </div>
+    </div>
+    <div class="import-step" id="bulkStepProgress" style="display:none;">
+      <div class="import-progress-label" id="bulkProgressLabel">Looking up…</div>
+      <div class="import-progress"><div class="import-progress-fill" id="bulkProgressFill"></div></div>
+      <div class="import-progress-sub" id="bulkProgressSub"></div>
+      <div class="modal-actions"><span></span><button type="button" class="ghost-btn" id="bulkCancelBtn">Cancel</button></div>
+    </div>
+    <div class="import-step" id="bulkStepReview" style="display:none;">
+      <div class="import-summary" id="bulkSummary"></div>
+      <div class="bulk-list" id="bulkList"></div>
+      <div class="upload-error" id="bulkReviewError"></div>
+      <div class="modal-actions">
+        <button type="button" class="ghost-btn" id="bulkBackBtn">Start over</button>
+        <button type="button" class="primary-btn" id="bulkAddBtn">Add to catalog</button>
+      </div>
+    </div>
+    <div class="import-step" id="bulkStepDone" style="display:none;">
+      <div class="import-done-title" id="bulkDoneTitle"></div>
+      <div class="import-done-sub" id="bulkDoneSub"></div>
+      <div class="modal-actions">
+        <button type="button" class="ghost-btn" id="bulkMoreBtn">Add more</button>
+        <button type="button" class="primary-btn" id="bulkDoneBtn">Done</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -4976,6 +5054,11 @@
     document.getElementById('cpUrl').value = p.product_url || '';
     document.getElementById('cpDescription').value = p.description || '';
     renderSpecFields(sel.value, p.specs || {});
+    // Link lookup only when adding — edits keep the product's recorded source.
+    document.getElementById('cpLookupField').hidden = opts.mode === 'edit';
+    document.getElementById('cpLookupUrl').value = opts.mode === 'edit' ? '' : (p.product_url || '');
+    document.getElementById('cpLookupStatus').textContent = '';
+    document.getElementById('cpLookupStatus').className = 'upload-status';
     document.querySelectorAll('#catalogProductForm .field-error').forEach(e=> e.textContent = '');
     document.getElementById('cpError').textContent = '';
     document.getElementById('cpSimilar').hidden = true;
@@ -5066,7 +5149,9 @@
       }
       const saved = state.mode === 'edit'
         ? await catalogApi.update(state.product.id, v.value)
-        : await catalogApi.create(v.value);
+        : await catalogApi.create(state.lookup
+            ? Object.assign({}, v.value, { origin: 'link', source_url: state.lookup.source_url.slice(0, 500) })
+            : v.value);
       closeCatalogProductModal();
       if(state.onSaved) afterModalCleanup(()=> state.onSaved(saved));
     }catch(err){
@@ -5178,6 +5263,11 @@
     }
     document.getElementById('cdFacts').innerHTML = facts.map(([k, v]) => '<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
     document.getElementById('cdDescription').textContent = p.description || '';
+    if(p.source_url && /^https?:\/\//i.test(p.source_url)){
+      facts.push(['Specs from', '<a target="_blank" rel="noopener noreferrer nofollow" href="'+escapeHtml(p.source_url)+'">'+escapeHtml(hostOf(p.source_url))+'</a>' +
+        (p.origin === 'seed' ? ' <span class="cd-origin">(starter catalog — sizes and versions vary, check before relying on it)</span>' : '')]);
+      document.getElementById('cdFacts').innerHTML = facts.map(([k, v]) => '<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
+    }
     document.getElementById('cdMeta').textContent = 'Added ' + String(p.created_at).slice(0, 10) +
       (revisions ? ' · edited ' + revisions + ' time' + (revisions !== 1 ? 's' : '') + ', last ' + String(p.updated_at).slice(0, 10) : '');
     document.getElementById('cdEditBtn').textContent = cloudUser ? 'Edit details' : 'Sign in to edit';
@@ -5307,6 +5397,237 @@
     }catch(ex){
       document.getElementById('cdReviewError').textContent = catalogErrorMessage(ex);
     }
+  }
+
+  // ---- Free product lookup from a link (supabase/functions/product-lookup) ----
+  async function lookupProductLink(url){
+    const { data, error } = await sb.functions.invoke('product-lookup', { body: { url } });
+    if(error){
+      let msg = null;
+      try{ const body = error.context && await error.context.json(); msg = body && body.error; }catch(_e){}
+      const status = error.context && error.context.status;
+      if(!msg && status === 404) msg = 'Link lookup isn\'t set up yet (the product-lookup function isn\'t deployed).';
+      if(!msg && status === 401) msg = 'Please sign in again to use link lookup.';
+      const err = new Error(msg || 'Couldn\'t look up that link — check your connection.');
+      err.userFacing = true;
+      throw err;
+    }
+    if(!data || !data.product) throw Object.assign(new Error('Couldn\'t find product details on that page.'), { userFacing: true });
+    return data.product;
+  }
+  function hostOf(url){ try{ return new URL(url).hostname.replace(/^www\./, ''); }catch(_e){ return ''; } }
+
+  async function runProductFormLookup(){
+    const input = document.getElementById('cpLookupUrl');
+    const status = document.getElementById('cpLookupStatus');
+    const url = input.value.trim();
+    if(!/^https?:\/\//i.test(url)){ status.className = 'upload-error'; status.textContent = 'Paste a full link starting with https://'; return; }
+    const btn = document.getElementById('cpLookupBtn');
+    btn.disabled = true;
+    status.className = 'upload-status';
+    status.textContent = 'Reading ' + hostOf(url) + '…';
+    try{
+      const p = await lookupProductLink(url);
+      if(!cpState) return;
+      if(p.brand) document.getElementById('cpBrand').value = p.brand;
+      if(p.name) document.getElementById('cpName').value = p.name;
+      if(p.model) document.getElementById('cpModel').value = p.model;
+      if(p.category && p.category !== 'Other'){
+        document.getElementById('cpCategory').value = p.category;
+        renderSpecFields(p.category, {});
+      }
+      if(p.weight_g) document.getElementById('cpWeight').value = p.weight_g + ' g';
+      document.getElementById('cpUrl').value = p.product_url || url;
+      cpState.lookup = { source_url: p.source_url || url };
+      cpState.confirmedDifferent = false;
+      const missing = ['brand', 'weight'].filter(f => !p.found.includes(f));
+      status.textContent = 'Filled in from ' + hostOf(p.source_url || url) +
+        (p.weight_g ? ' (weight from "' + (p.weight_text || gramsLabel(p.weight_g)) + '")' : '') +
+        ' — please check before saving.' + (missing.length ? ' Not found: ' + missing.join(', ') + '.' : '');
+    }catch(err){
+      status.className = 'upload-error';
+      status.textContent = err.userFacing ? err.message : catalogErrorMessage(err);
+    }finally{
+      btn.disabled = false;
+    }
+  }
+
+  // ---- Bulk: add products to the catalog from a list of links ----
+  let bulkRun = null;   // {cancelled}
+  let bulkRows = [];    // {url, product?, error?, dup?, similar?, selected, result?}
+  const BULK_MAX = 25;
+
+  function showBulkStep(step){
+    ['Paste','Progress','Review','Done'].forEach(n=>{
+      document.getElementById('bulkStep' + n).style.display = n.toLowerCase() === step ? 'flex' : 'none';
+    });
+  }
+  function openCatalogBulkModal(){
+    if(!cloudUser){ openCloudSignInModal(); return; }
+    bulkRows = [];
+    document.getElementById('bulkPasteError').textContent = '';
+    showBulkStep('paste');
+    document.getElementById('catalogBulkModalOverlay').style.display = 'flex';
+    document.getElementById('bulkUrls').focus();
+    onModalOpened('catalogBulkModalOverlay');
+  }
+  function closeCatalogBulkModal(){
+    if(bulkRun) bulkRun.cancelled = true;
+    bulkRun = null;
+    document.getElementById('catalogBulkModalOverlay').style.display = 'none';
+    onModalClosed('catalogBulkModalOverlay');
+  }
+
+  function parseBulkUrls(text){
+    const seen = new Set(), urls = [];
+    for(const line of text.split(/[\s,]+/)){
+      const u = line.trim();
+      if(!/^https?:\/\/\S+\.\S+/i.test(u) || seen.has(u)) continue;
+      seen.add(u);
+      urls.push(u);
+    }
+    return urls;
+  }
+
+  async function runBulkLookup(){
+    const urls = parseBulkUrls(document.getElementById('bulkUrls').value);
+    const err = document.getElementById('bulkPasteError');
+    if(!urls.length){ err.textContent = 'Paste at least one link starting with https://'; return; }
+    if(urls.length > BULK_MAX){ err.textContent = 'That\'s ' + urls.length + ' links — please do at most ' + BULK_MAX + ' at a time.'; return; }
+    err.textContent = '';
+    const run = bulkRun = { cancelled: false };
+    bulkRows = urls.map(url => ({ url, selected: false }));
+    showBulkStep('progress');
+    for(let i = 0; i < bulkRows.length && !run.cancelled; i++){
+      const row = bulkRows[i];
+      document.getElementById('bulkProgressLabel').textContent = 'Looking up ' + (i + 1) + ' of ' + bulkRows.length + '…';
+      document.getElementById('bulkProgressFill').style.width = (i / bulkRows.length * 100) + '%';
+      document.getElementById('bulkProgressSub').textContent = hostOf(row.url);
+      try{
+        row.product = await lookupProductLink(row.url);
+        try{
+          const sim = await catalogApi.similar({ brand: row.product.brand, name: row.product.name, model: row.product.model || null });
+          row.dup = sim.find(s => s.exact) || null;
+          row.similar = row.dup ? null : (sim[0] || null);
+        }catch(_e){}
+        row.selected = !row.dup;
+      }catch(e){
+        row.error = e.userFacing ? e.message : catalogErrorMessage(e);
+      }
+    }
+    if(run.cancelled) return;
+    bulkRun = null;
+    renderBulkReview();
+    showBulkStep('review');
+  }
+
+  function renderBulkReview(){
+    const ok = bulkRows.filter(r => r.product && !r.dup).length;
+    const dups = bulkRows.filter(r => r.dup).length, failed = bulkRows.filter(r => r.error).length;
+    document.getElementById('bulkSummary').innerHTML = '<strong>' + ok + ' product' + (ok !== 1 ? 's' : '') + '</strong> ready to review' +
+      (dups ? ' · ' + dups + ' already in the catalog' : '') + (failed ? ' · ' + failed + ' couldn\'t be read' : '') +
+      '. Fix anything that looks off — it\'s shared with everyone.';
+    const list = document.getElementById('bulkList');
+    list.innerHTML = '<div class="bulk-head">Brand · Name · Model · Category · Weight (g)</div>';
+    bulkRows.forEach((row, i)=>{
+      const el = document.createElement('div');
+      el.className = 'bulk-row' + (row.selected ? '' : ' is-off');
+      el.dataset.index = i;
+      if(row.product){
+        const p = row.product;
+        el.innerHTML =
+          '<input type="checkbox" aria-label="Add this product">' +
+          '<input type="text" data-f="brand" maxlength="80" placeholder="Brand *" aria-label="Brand">' +
+          '<input type="text" data-f="name" maxlength="120" placeholder="Name *" aria-label="Name">' +
+          '<input type="text" data-f="model" maxlength="80" placeholder="Model" aria-label="Model">' +
+          '<select data-f="category" aria-label="Category"></select>' +
+          '<input type="number" data-f="weight_g" min="1" max="50000" step="1" placeholder="g" aria-label="Weight in grams">' +
+          '<div class="bulk-row-note"></div>';
+        const sel = el.querySelector('select');
+        CC.CATEGORIES.forEach(c=>{ const o = document.createElement('option'); o.textContent = c; sel.appendChild(o); });
+        el.querySelector('[data-f="brand"]').value = p.brand || '';
+        el.querySelector('[data-f="name"]').value = p.name || '';
+        el.querySelector('[data-f="model"]').value = p.model || '';
+        sel.value = CC.CATEGORIES.includes(p.category) ? p.category : 'Other';
+        el.querySelector('[data-f="weight_g"]').value = p.weight_g || '';
+        const cb = el.querySelector('input[type="checkbox"]');
+        cb.checked = row.selected;
+        cb.disabled = !!row.dup || !!(row.result && row.result.ok);
+        // Keep the user's corrections if the list is redrawn.
+        el.querySelectorAll('[data-f]').forEach(inp=>{
+          inp.addEventListener('input', ()=>{
+            p[inp.dataset.f] = inp.dataset.f === 'weight_g' ? (inp.value === '' ? null : Number(inp.value)) : inp.value;
+          });
+        });
+        cb.addEventListener('change', ()=>{ row.selected = cb.checked; el.classList.toggle('is-off', !cb.checked); updateBulkAddBtn(); });
+        const note = el.querySelector('.bulk-row-note');
+        if(row.result){ note.textContent = row.result.text; note.className = 'bulk-row-note ' + (row.result.ok ? '' : 'err'); }
+        else if(row.dup){ note.textContent = 'Already in the catalog as "' + catalogTitle(row.dup) + '" — skipped.'; note.className = 'bulk-row-note warn'; }
+        else {
+          const bits = [hostOf(p.source_url || row.url)];
+          if(p.weight_g && p.weight_text) bits.push('weight from "' + p.weight_text + '"');
+          if(!p.weight_g) bits.push('no weight found');
+          if(row.similar) bits.push('similar to "' + catalogTitle(row.similar) + '" — make sure it\'s a different product');
+          note.textContent = bits.join(' · ');
+          note.className = 'bulk-row-note' + (row.similar || !p.weight_g ? ' warn' : '');
+        }
+      } else {
+        el.innerHTML = '<input type="checkbox" disabled aria-label="Could not be read"><div class="bulk-row-note err" style="grid-column:2 / -1"></div>';
+        el.querySelector('.bulk-row-note').textContent = row.url + ' — ' + row.error;
+      }
+      list.appendChild(el);
+    });
+    updateBulkAddBtn();
+  }
+  function updateBulkAddBtn(){
+    const n = bulkRows.filter(r => r.selected && r.product && !r.dup && !(r.result && r.result.ok)).length;
+    const btn = document.getElementById('bulkAddBtn');
+    btn.disabled = !n;
+    btn.textContent = n ? 'Add ' + n + ' to catalog' : 'Add to catalog';
+  }
+
+  async function addBulkToCatalog(){
+    const err = document.getElementById('bulkReviewError');
+    err.textContent = '';
+    const rows = bulkRows.map((row, i)=> ({ row, el: document.querySelector('#bulkList .bulk-row[data-index="' + i + '"]') }))
+      .filter(x => x.row.selected && x.row.product && !x.row.dup && !(x.row.result && x.row.result.ok));
+    // Validate everything first so one bad row doesn't leave a half-done batch.
+    const prepared = [];
+    for(const { row, el } of rows){
+      const f = k => el.querySelector('[data-f="' + k + '"]').value;
+      const v = CC.validateProduct({ brand: f('brand'), name: f('name'), model: f('model'), category: f('category'),
+        weight_g: f('weight_g') === '' ? null : Number(f('weight_g')), product_url: row.product.product_url || row.url });
+      if(!v.ok){
+        row.result = { ok: false, text: Object.values(v.errors).join(' · ') };
+        continue;
+      }
+      prepared.push({ row, value: Object.assign(v.value, { origin: 'link', source_url: (row.product.source_url || row.url).slice(0, 500) }) });
+    }
+    const btn = document.getElementById('bulkAddBtn');
+    btn.disabled = true;
+    let added = 0, skipped = 0, failed = 0;
+    for(const { row, value } of prepared){
+      btn.textContent = 'Adding ' + (added + skipped + failed + 1) + ' of ' + prepared.length + '…';
+      try{
+        const saved = await catalogApi.create(value);
+        row.result = { ok: true, text: 'Added as "' + catalogTitle(saved) + '".' };
+        row.selected = false;
+        added++;
+      }catch(e){
+        if(e && e.code === '23505'){ row.result = { ok: false, text: 'Already in the catalog — skipped.' }; row.selected = false; skipped++; }
+        else { row.result = { ok: false, text: catalogErrorMessage(e) }; failed++; }
+      }
+    }
+    const invalid = rows.length - prepared.length;
+    if(invalid || failed){
+      renderBulkReview();
+      err.textContent = (added ? 'Added ' + added + '. ' : '') + (invalid ? invalid + ' need fixing (see notes). ' : '') + (failed ? failed + ' failed.' : '');
+      return;
+    }
+    document.getElementById('bulkDoneTitle').textContent = added ? 'Added ' + added + ' product' + (added !== 1 ? 's' : '') + ' to the catalog' : 'Nothing new added';
+    document.getElementById('bulkDoneSub').textContent = (skipped ? skipped + ' turned out to be in the catalog already. ' : '') +
+      'They\'re now searchable for everyone when adding gear.';
+    showBulkStep('done');
   }
 
   // ---- Quick add: product link preview ----
@@ -5595,6 +5916,7 @@
     importModalOverlay: closeImportModal,
     catalogProductModalOverlay: closeCatalogProductModal,
     catalogDetailModalOverlay: closeCatalogDetail,
+    catalogBulkModalOverlay: closeCatalogBulkModal,
   };
   let openModalOrder = [];      // most-recently-opened last
   let expectingCleanupPop = false;  // a history.back() we triggered ourselves, to drop a closed modal's entry
@@ -5910,6 +6232,23 @@
   document.querySelectorAll('#cdStars input').forEach(input=>{
     input.addEventListener('change', ()=> setReviewStars(Number(input.value)));
   });
+
+  // ---- Catalog link lookup + bulk add wiring ----
+  document.getElementById('catalogBulkBtn').hidden = !CATALOG_ENABLED;
+  document.getElementById('catalogBulkBtn').addEventListener('click', openCatalogBulkModal);
+  document.getElementById('cpLookupBtn').addEventListener('click', runProductFormLookup);
+  document.getElementById('cpLookupUrl').addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); runProductFormLookup(); } });
+  document.getElementById('catalogBulkModalClose').addEventListener('click', closeCatalogBulkModal);
+  document.getElementById('bulkLookupBtn').addEventListener('click', runBulkLookup);
+  document.getElementById('bulkCancelBtn').addEventListener('click', ()=>{
+    if(bulkRun) bulkRun.cancelled = true;
+    bulkRun = null;
+    showBulkStep('paste');
+  });
+  document.getElementById('bulkBackBtn').addEventListener('click', ()=> showBulkStep('paste'));
+  document.getElementById('bulkAddBtn').addEventListener('click', addBulkToCatalog);
+  document.getElementById('bulkMoreBtn').addEventListener('click', ()=>{ document.getElementById('bulkUrls').value = ''; showBulkStep('paste'); });
+  document.getElementById('bulkDoneBtn').addEventListener('click', closeCatalogBulkModal);
 
   // ---- Import activities wiring ----
   document.getElementById('importActivitiesBtn').addEventListener('click', openImportModal);
