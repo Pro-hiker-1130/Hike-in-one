@@ -24,6 +24,7 @@
     --danger:#C23B2E;
   }
   *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
   html,body{margin:0;height:100%;background:var(--ink);color:var(--parchment);font-family:'Inter',sans-serif;}
   button{font-family:inherit;}
   body{display:flex;flex-direction:column;height:100vh;width:100vw;overflow:hidden;}
@@ -519,7 +520,7 @@
   .photo-thumb:hover .photo-thumb-remove{opacity:1;}
   .photo-thumb-remove:hover{background:var(--danger);}
   .photo-lightbox-overlay{
-    position:fixed;inset:0;z-index:970;background:rgba(6,12,24,0.88);
+    position:fixed;inset:0;z-index:1100;background:rgba(6,12,24,0.88);
     display:flex;align-items:center;justify-content:center;padding:32px;
   }
   .photo-lightbox-overlay[hidden]{display:none;}
@@ -547,6 +548,88 @@
   .category-view-heading{display:flex;flex-direction:column;gap:1px;}
   .category-view-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:0;white-space:nowrap;}
   .category-view-count{font-size:11px;color:var(--muted);white-space:nowrap;}
+
+  /* ---- Gear catalog ---- */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .catalog-field{padding-bottom:12px;border-bottom:1px solid var(--line);}
+  .catalog-field[hidden]{display:none;}
+  .catalog-results{margin-top:6px;border:1px solid var(--line);border-radius:6px;max-height:300px;overflow-y:auto;}
+  .catalog-results[hidden]{display:none;}
+  .catalog-result{
+    display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;background:none;border:none;
+    border-bottom:1px solid var(--line);color:var(--parchment);text-align:left;cursor:pointer;font:inherit;
+  }
+  .catalog-result-row{display:flex;align-items:center;border-bottom:1px solid var(--line);padding-right:6px;}
+  .catalog-result-row .catalog-result{border-bottom:none;}
+  .catalog-result-row .link-btn{flex:none;}
+  .catalog-result:last-child{border-bottom:none;}
+  .catalog-result:hover, .catalog-result:focus-visible{background:var(--panel-alt);outline:none;}
+  .catalog-result-info{display:block;min-width:0;flex:1;}
+  .catalog-result-title{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .catalog-result-meta{display:block;font-size:11.5px;color:var(--muted);margin-top:1px;}
+  .catalog-result-add{color:var(--brass);font-size:12.5px;}
+  .catalog-result-msg{padding:10px 12px;font-size:12.5px;color:var(--muted);}
+  .catalog-thumb{
+    width:40px;height:40px;border-radius:5px;flex:none;background:var(--panel-alt) center/cover no-repeat;
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;
+  }
+  .catalog-link{display:flex;align-items:center;gap:10px;background:var(--panel-alt);border-radius:6px;padding:8px 10px;flex-wrap:wrap;}
+  .catalog-link[hidden]{display:none;}
+  .catalog-link-info{min-width:0;flex:1;}
+  .catalog-link-title{font-size:13px;color:var(--parchment);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .catalog-link-sub{font-size:11.5px;color:var(--muted);margin-top:1px;}
+  .catalog-link-actions{display:flex;gap:2px;flex-wrap:wrap;}
+  .catalog-overrides{font-size:11.5px;color:var(--muted);line-height:1.5;}
+  .catalog-overrides[hidden]{display:none;}
+  .catalog-overrides strong{color:var(--parchment);font-weight:500;}
+  .catalog-note{font-size:12px;color:var(--muted);margin:0;line-height:1.5;}
+  .field-error{font-size:11px;color:var(--danger);min-height:0;}
+  .field-error:empty{display:none;}
+  .catalog-spec-row:empty{display:none;}
+  .catalog-similar{background:var(--panel-alt);border:1px solid var(--brass);border-radius:6px;padding:10px 12px;font-size:12.5px;}
+  .catalog-similar[hidden]{display:none;}
+  .catalog-similar p{margin:0 0 8px;color:var(--parchment);}
+  .catalog-similar-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line);}
+  .catalog-similar-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .catalog-similar .ghost-btn{padding:5px 10px;font-size:11.5px;flex:none;}
+  .catalog-detail-modal{max-width:600px;}
+  .catalog-detail{padding:14px 20px 20px;display:flex;flex-direction:column;gap:10px;}
+  #cdBody{display:flex;flex-direction:column;gap:12px;}
+  #cdBody[hidden]{display:none;}
+  .cd-sub{font-size:12.5px;color:var(--muted);}
+  #cdLoading:empty{display:none;}
+  #cdPhotos{margin-top:0;}
+  #cdPhotos:empty{display:none;}
+  .cd-photo-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .cd-photo-bar .upload-status{margin-top:0;}
+  .cd-photo-btn{display:inline-block;}
+  .cd-facts{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0;font-size:12.5px;}
+  .cd-facts dt{color:var(--muted);}
+  .cd-facts dd{margin:0;color:var(--parchment);overflow-wrap:anywhere;}
+  .cd-facts a{color:var(--brass);}
+  .cd-description{font-size:13px;line-height:1.55;margin:0;white-space:pre-wrap;}
+  .cd-description:empty{display:none;}
+  .cd-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .cd-meta{font-size:11.5px;color:var(--muted);margin-right:auto;}
+  .cd-reviews-head{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap;}
+  .cd-reviews-head h4{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0;}
+  .cd-rating-summary{font-size:12.5px;color:var(--muted);margin-right:auto;}
+  .stars{color:var(--brass);letter-spacing:1px;}
+  .stars .off{color:rgba(243,237,225,0.2);}
+  .cd-review-form{display:flex;flex-direction:column;gap:10px;background:var(--panel-alt);border-radius:6px;padding:12px;}
+  .cd-review-form[hidden]{display:none;}
+  .cd-review-form .form-field input, .cd-review-form .form-field textarea{background:var(--panel);}
+  .star-input{display:flex;gap:2px;}
+  .star-input label{cursor:pointer;font-size:24px;line-height:1;color:rgba(243,237,225,0.25);padding:2px;}
+  .star-input label.on{color:var(--brass);}
+  .star-input input{position:absolute;opacity:0;width:1px;height:1px;}
+  .star-input label:has(input:focus-visible){outline:1px solid var(--brass);border-radius:4px;}
+  .cd-review{border-bottom:1px solid var(--line);padding:10px 0;}
+  .cd-review:last-child{border-bottom:none;}
+  .cd-review-head{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+  .cd-review-author{color:var(--parchment);font-weight:500;}
+  .cd-review-text{font-size:13px;line-height:1.55;margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;}
+  .cd-empty{font-size:12.5px;color:var(--muted);}
 
   /* ---- Import activities ---- */
   .trips-header-actions{display:flex;gap:8px;align-self:flex-start;flex-wrap:wrap;justify-content:flex-end;}
@@ -608,7 +691,7 @@
   .modal-close:hover{color:var(--parchment);}
   .modal-form{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
   .form-row{display:flex;gap:10px;}
-  .form-field{flex:1;display:flex;flex-direction:column;gap:5px;}
+  .form-field{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;}
   .form-field label{font-size:11.5px;color:var(--muted);}
   .form-field input, .form-field select, .form-field textarea{
     background:var(--panel-alt);border:1px solid var(--line);color:var(--parchment);
@@ -618,6 +701,11 @@
     outline:1px solid var(--brass);border-color:var(--brass);
   }
   .form-field textarea{resize:vertical;min-height:56px;}
+  .form-field input, .form-field select, .form-field textarea{width:100%;min-width:0;}
+  @media (max-width:560px){
+    .form-row{flex-wrap:wrap;}
+    .form-row > .form-field{flex:1 1 140px;}
+  }
   .modal-actions{
     display:flex;justify-content:space-between;align-items:center;
     padding-top:6px;border-top:1px solid var(--line);margin-top:6px;
@@ -1011,6 +1099,28 @@
       <button class="modal-close" aria-label="Close" id="gearModalClose" type="button">&times;</button>
     </div>
     <div class="modal-form" style="padding-bottom:0;">
+      <div class="form-field catalog-field" id="catalogField" hidden>
+        <label for="catalogSearchInput" id="catalogSearchLabel">Find it in the gear catalog</label>
+        <div id="catalogSearchWrap">
+          <input type="search" id="catalogSearchInput" placeholder="Search by name, brand or model…" autocomplete="off"
+            role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="catalogResults">
+          <div class="catalog-results" id="catalogResults" role="listbox" aria-label="Catalog products" hidden></div>
+        </div>
+        <div class="catalog-link" id="catalogLink" hidden>
+          <div class="catalog-thumb" id="catalogLinkThumb"></div>
+          <div class="catalog-link-info">
+            <div class="catalog-link-title" id="catalogLinkTitle"></div>
+            <div class="catalog-link-sub" id="catalogLinkSub"></div>
+          </div>
+          <div class="catalog-link-actions">
+            <button type="button" class="link-btn" id="catalogLinkView">View</button>
+            <button type="button" class="link-btn" id="catalogLinkRefresh">Update from catalog</button>
+            <button type="button" class="link-btn" id="catalogLinkUnlink">Unlink</button>
+          </div>
+        </div>
+        <div class="catalog-overrides" id="catalogOverrides" hidden></div>
+        <div class="upload-status" id="catalogStatus"></div>
+      </div>
       <div class="form-field">
         <label for="gearUrlInput">Quick add: product link or barcode</label>
         <div style="display:flex;gap:8px;">
@@ -1137,6 +1247,126 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="catalogProductModalOverlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="cpTitle">Add to the gear catalog</h3>
+      <button class="modal-close" aria-label="Close" id="catalogProductModalClose" type="button">&times;</button>
+    </div>
+    <form class="modal-form" id="catalogProductForm" novalidate>
+      <p class="catalog-note" id="cpNote"></p>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="cpBrand">Brand *</label>
+          <input type="text" id="cpBrand" maxlength="80">
+          <span class="field-error" data-for="brand"></span>
+        </div>
+        <div class="form-field" style="flex:2;">
+          <label for="cpName">Product name *</label>
+          <input type="text" id="cpName" maxlength="120" placeholder="e.g. Exos 58">
+          <span class="field-error" data-for="name"></span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="cpModel">Model / version</label>
+          <input type="text" id="cpModel" maxlength="80" placeholder="e.g. 2023, men's L">
+          <span class="field-error" data-for="model"></span>
+        </div>
+        <div class="form-field">
+          <label for="cpCategory">Category</label>
+          <select id="cpCategory"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="cpWeight">Listed weight</label>
+          <input type="text" id="cpWeight" inputmode="decimal" placeholder="1240 g, 1.2 kg, 42 oz…">
+          <span class="field-error" data-for="weight_g"></span>
+        </div>
+        <div class="form-field">
+          <label for="cpUrl">Product link</label>
+          <input type="url" id="cpUrl" placeholder="https://…">
+          <span class="field-error" data-for="product_url"></span>
+        </div>
+      </div>
+      <div class="form-row catalog-spec-row" id="cpSpecs"></div>
+      <div class="form-field">
+        <label for="cpDescription">Description</label>
+        <textarea id="cpDescription" maxlength="2000" placeholder="What it is, materials, sizes…"></textarea>
+        <span class="field-error" data-for="description"></span>
+      </div>
+      <div class="catalog-similar" id="cpSimilar" hidden></div>
+      <div class="upload-error" id="cpError"></div>
+      <div class="modal-actions">
+        <div style="display:flex;gap:8px;margin-left:auto;">
+          <button type="button" class="ghost-btn" id="cpCancelBtn">Cancel</button>
+          <button type="submit" class="primary-btn" id="cpSubmitBtn">Add to catalog</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="catalogDetailModalOverlay" style="display:none;">
+  <div class="modal catalog-detail-modal">
+    <div class="modal-header">
+      <h3 id="cdTitle">Product</h3>
+      <button class="modal-close" aria-label="Close" id="catalogDetailModalClose" type="button">&times;</button>
+    </div>
+    <div class="catalog-detail">
+      <div class="upload-status" id="cdLoading"></div>
+      <div id="cdBody" hidden>
+        <div class="cd-sub" id="cdSub"></div>
+        <div class="photo-grid" id="cdPhotos"></div>
+        <div class="cd-photo-bar">
+          <label class="ghost-btn cd-photo-btn" id="cdAddPhotoLabel" for="cdPhotoInput">+ Add photos</label>
+          <input type="file" id="cdPhotoInput" accept="image/jpeg,image/png,image/webp" multiple hidden>
+          <span class="upload-status" id="cdPhotoStatus"></span>
+        </div>
+        <dl class="cd-facts" id="cdFacts"></dl>
+        <p class="cd-description" id="cdDescription"></p>
+        <div class="cd-actions">
+          <span class="cd-meta" id="cdMeta"></span>
+          <button type="button" class="ghost-btn" id="cdEditBtn">Edit details</button>
+          <button type="button" class="primary-btn" id="cdUseBtn" hidden>Use this product</button>
+        </div>
+        <div class="cd-reviews-head">
+          <h4>Reviews</h4>
+          <span class="cd-rating-summary" id="cdRatingSummary"></span>
+          <button type="button" class="ghost-btn" id="cdWriteReviewBtn">Write a review</button>
+        </div>
+        <form class="cd-review-form" id="cdReviewForm" hidden novalidate>
+          <div class="form-field" id="cdNameField" hidden>
+            <label for="cdDisplayName">Your display name — shown with your reviews (never your email)</label>
+            <input type="text" id="cdDisplayName" maxlength="40" autocomplete="nickname">
+          </div>
+          <div class="star-input" id="cdStars" role="radiogroup" aria-label="Rating">
+            <label><input type="radio" name="cdRating" value="1"><span aria-hidden="true">★</span><span class="sr-only">1 star</span></label>
+            <label><input type="radio" name="cdRating" value="2"><span aria-hidden="true">★</span><span class="sr-only">2 stars</span></label>
+            <label><input type="radio" name="cdRating" value="3"><span aria-hidden="true">★</span><span class="sr-only">3 stars</span></label>
+            <label><input type="radio" name="cdRating" value="4"><span aria-hidden="true">★</span><span class="sr-only">4 stars</span></label>
+            <label><input type="radio" name="cdRating" value="5"><span aria-hidden="true">★</span><span class="sr-only">5 stars</span></label>
+          </div>
+          <div class="form-field">
+            <label for="cdReviewText">Your review</label>
+            <textarea id="cdReviewText" maxlength="4000" placeholder="How did it hold up? Fit, durability, weather, what you'd change…"></textarea>
+          </div>
+          <div class="upload-error" id="cdReviewError"></div>
+          <div class="modal-actions">
+            <button type="button" class="danger-btn" id="cdReviewDeleteBtn" hidden>Delete review</button>
+            <div style="display:flex;gap:8px;margin-left:auto;">
+              <button type="button" class="ghost-btn" id="cdReviewCancelBtn">Cancel</button>
+              <button type="submit" class="primary-btn" id="cdReviewSubmitBtn">Post review</button>
+            </div>
+          </div>
+        </form>
+        <div class="cd-reviews" id="cdReviews"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1389,6 +1619,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/dist/umd/supabase.js"></script>
+<script src="catalog-core.js"></script>
 <script>
 (function(){
   'use strict';
@@ -3239,10 +3470,11 @@
   }
   async function renderLightboxImage(){
     if(!lightboxTrip) return;
-    const ids = lightboxTrip.photoIds || [];
+    // Either a trip (local photo ids) or a plain list of URLs (catalog photos).
+    const ids = lightboxTrip.photoUrls || lightboxTrip.photoIds || [];
     if(!ids.length){ closePhotoLightbox(); return; }
     lightboxIndex = (lightboxIndex + ids.length) % ids.length;
-    const url = await loadTripPhoto(ids[lightboxIndex]);
+    const url = lightboxTrip.photoUrls ? ids[lightboxIndex] : await loadTripPhoto(ids[lightboxIndex]);
     document.getElementById('photoLightboxImg').src = url || '';
     const multi = ids.length > 1;
     document.getElementById('photoLightboxPrev').style.display = multi ? 'flex' : 'none';
@@ -4131,10 +4363,12 @@
           '<button class="icon-btn" data-action="edit">Edit</button>'+
           '<button class="icon-btn" data-action="duplicate">Duplicate</button>'+
           '<button class="icon-btn" data-action="toggle-retire">'+(g.status==='retired' ? 'Reactivate' : 'Retire')+'</button>'+
+          (g.catalogProductId && CATALOG_ENABLED ? '<button class="icon-btn" data-action="catalog" title="Product info, photos and reviews">Reviews</button>' : '')+
         '</div>';
       card.querySelector('[data-action="edit"]').addEventListener('click', ()=> openGearModal(g.id));
       card.querySelector('[data-action="duplicate"]').addEventListener('click', ()=> duplicateGear(g.id));
       card.querySelector('[data-action="toggle-retire"]').addEventListener('click', ()=> toggleRetireGear(g.id));
+      if(card.querySelector('[data-action="catalog"]')) card.querySelector('[data-action="catalog"]').addEventListener('click', ()=> openCatalogDetail(g.catalogProductId));
       grid.appendChild(card);
     });
   }
@@ -4331,12 +4565,13 @@
     delBtn.textContent = 'Delete';
     delBtn.dataset.armed = '';
 
+    resetGearCatalogUI(g);
     document.getElementById('gearUrlInput').value = '';
     document.getElementById('gearQuickAddStatus').textContent = '';
     document.getElementById('gearQuickAddStatus').className = 'upload-status';
 
     document.getElementById('gearModalOverlay').style.display = 'flex';
-    document.getElementById('gearName').focus();
+    document.getElementById(!g && CATALOG_ENABLED ? 'catalogSearchInput' : 'gearName').focus();
     onModalOpened('gearModalOverlay');
   }
 
@@ -4344,6 +4579,734 @@
     document.getElementById('gearModalOverlay').style.display = 'none';
     closeBarcodeScanner();
     onModalClosed('gearModalOverlay');
+  }
+
+  // ---- Shared gear catalog ----
+  // Product definitions everyone shares live in Supabase (see
+  // supabase/migrations/002_catalog.sql); the gear room only stores a
+  // catalogProductId + snapshot on each item (see catalog-core.js), so
+  // owned gear keeps working offline and signed out. Searching and
+  // contributing need a connection; contributing also needs sign-in.
+  const CC = window.CatalogCore || null;
+  const CATALOG_ENABLED = !!(CC && sb);
+
+  function catalogPhotoUrl(path){ return CC ? CC.photoPublicUrl(SUPABASE_URL, path) : ''; }
+  function catalogTitle(p){ return [p.brand, p.name, p.model].filter(Boolean).join(' '); }
+  // Exact grams where small differences matter (formatWeight rounds kg).
+  function gramsLabel(g){ return Math.round(g).toLocaleString('en-US') + ' g'; }
+
+  const catalogApi = {
+    async search(q){
+      const { data, error } = await sb.rpc('search_catalog', { q, max_results: 8 });
+      if(error) throw error;
+      return data || [];
+    },
+    async similar(v){
+      const { data, error } = await sb.rpc('find_similar_products', { p_brand: v.brand, p_name: v.name, p_model: v.model });
+      if(error) throw error;
+      return data || [];
+    },
+    async get(id){
+      const { data, error } = await sb.from('catalog_products')
+        .select('*, catalog_photos(id, storage_path, uploaded_by, created_at)').eq('id', id).maybeSingle();
+      if(error) throw error;
+      if(data) data.catalog_photos = (data.catalog_photos || []).slice().sort((a,b)=> a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0);
+      return data;
+    },
+    async create(v){
+      const { data, error } = await sb.from('catalog_products').insert(v).select('*').single();
+      if(error) throw error;
+      return data;
+    },
+    async update(id, v){
+      const { data, error } = await sb.from('catalog_products').update(v).eq('id', id).select('*').single();
+      if(error) throw error;
+      return data;
+    },
+    async revisionCount(id){
+      const { count, error } = await sb.from('catalog_product_revisions').select('id', { count: 'exact', head: true }).eq('product_id', id);
+      if(error) throw error;
+      return count || 0;
+    },
+    async reviews(id){
+      const { data, error } = await sb.from('reviews')
+        .select('id, user_id, rating, text, created_at, updated_at, profiles(display_name)')
+        .eq('product_id', id).order('created_at', { ascending: false });
+      if(error) throw error;
+      return data || [];
+    },
+    async saveReview(productId, rating, text){
+      const { error } = await sb.from('reviews').upsert(
+        { product_id: productId, user_id: cloudUser.id, rating, text: text || null },
+        { onConflict: 'product_id,user_id' });
+      if(error) throw error;
+    },
+    async deleteReview(id){
+      const { error } = await sb.from('reviews').delete().eq('id', id);
+      if(error) throw error;
+    },
+    async profile(){
+      const { data, error } = await sb.from('profiles').select('display_name').eq('user_id', cloudUser.id).maybeSingle();
+      if(error) throw error;
+      return data;
+    },
+    async saveProfile(name){
+      const { error } = await sb.from('profiles').upsert({ user_id: cloudUser.id, display_name: name });
+      if(error) throw error;
+    },
+    async addPhoto(productId, blob){
+      const path = cloudUser.id + '/' + productId + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2,6) + '.jpg';
+      const up = await sb.storage.from('catalog-photos').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+      if(up.error) throw up.error;
+      const { error } = await sb.from('catalog_photos').insert({ product_id: productId, storage_path: path, uploaded_by: cloudUser.id });
+      if(error){
+        // Don't leave an orphaned file behind (e.g. the 12-photo cap hit).
+        await sb.storage.from('catalog-photos').remove([path]).catch(()=>{});
+        throw error;
+      }
+    },
+    async removePhoto(photo){
+      const { error } = await sb.from('catalog_photos').delete().eq('id', photo.id);
+      if(error) throw error;
+      await sb.storage.from('catalog-photos').remove([photo.storage_path]).catch(()=>{});
+    },
+  };
+
+  function catalogErrorMessage(err){
+    const msg = String((err && (err.message || err.error_description)) || err || '');
+    if(err instanceof TypeError || /fetch|network|load failed/i.test(msg)) return 'Couldn\'t reach the gear catalog — check your connection.';
+    if(err && err.code === '23505') return 'That product is already in the catalog.';
+    if(/maximum of 12 photos/.test(msg)) return 'This product already has the maximum of 12 photos.';
+    if(/row-level security|permission denied|JWT/i.test(msg)) return 'Please sign in again to contribute to the catalog.';
+    if(err && err.code === '23514') return 'Some details weren\'t accepted — check the fields and try again.';
+    return 'Something went wrong with the gear catalog (' + msg.slice(0, 120) + ').';
+  }
+
+  // ---- Gear form <-> catalog ----
+  const GEAR_LINKED_INPUTS = {
+    name: 'gearName', brand: 'gearBrand', model: 'gearModel', category: 'gearCategory',
+    weightGrams: 'gearWeight', imageUrl: 'gearImageUrl', productUrl: 'gearProductUrl',
+    waterproof: 'gearWaterproof', tempRating: 'gearTempRating',
+  };
+  let gearFormCatalog = null;    // {product, photoUrl} picked or refreshed in this form session
+  let gearFormUnlinked = false;  // the user unlinked an item that was linked
+  let catalogSearchSeq = 0, catalogSearchTimer = null, catalogSearchedValue = null;
+
+  function gearFormValues(){
+    const out = {};
+    for(const [f, id] of Object.entries(GEAR_LINKED_INPUTS)){
+      const v = document.getElementById(id).value;
+      out[f] = f === 'weightGrams' ? (v === '' ? null : Number(v)) : v.trim();
+    }
+    return out;
+  }
+  function setGearFormValues(values){
+    for(const [f, id] of Object.entries(GEAR_LINKED_INPUTS)){
+      if(!(f in values)) continue;
+      const el = document.getElementById(id);
+      const v = values[f];
+      el.value = v == null ? '' : v;
+      // A select silently keeps its old value for an unknown option.
+      if(el.tagName === 'SELECT' && el.value !== String(v == null ? '' : v)) el.value = f === 'category' ? 'Other' : '';
+    }
+  }
+  function editingGearItem(){
+    const id = document.getElementById('gearId').value;
+    return id ? gearItems.find(x=>x.id===id) || null : null;
+  }
+  // The link as it stands in the open form: a fresh pick, or the item's
+  // existing link (unless unlinked).
+  function currentFormLink(){
+    if(gearFormCatalog) return {
+      id: gearFormCatalog.product.id,
+      snapshot: CC.productToGearFields(gearFormCatalog.product, gearFormCatalog.photoUrl),
+      fresh: true,
+    };
+    const item = editingGearItem();
+    if(item && item.catalogProductId && !gearFormUnlinked) return { id: item.catalogProductId, snapshot: item.catalogSnapshot || {}, fresh: false };
+    return null;
+  }
+
+  function setCatalogStatus(msg, isError){
+    const el = document.getElementById('catalogStatus');
+    el.textContent = msg || '';
+    el.className = isError ? 'upload-error' : 'upload-status';
+  }
+
+  function resetGearCatalogUI(item){
+    gearFormCatalog = null;
+    gearFormUnlinked = false;
+    catalogSearchedValue = null;
+    clearTimeout(catalogSearchTimer);
+    catalogSearchSeq++;
+    const field = document.getElementById('catalogField');
+    field.hidden = !CATALOG_ENABLED;
+    if(!CATALOG_ENABLED) return;
+    const input = document.getElementById('catalogSearchInput');
+    // Existing, unlinked items get a ready-made query to link them later.
+    input.value = item && !item.catalogProductId ? CC.suggestQueryForItem(item) : '';
+    hideCatalogResults();
+    setCatalogStatus('');
+    renderCatalogLink();
+  }
+
+  function renderCatalogLink(){
+    if(!CATALOG_ENABLED) return;
+    const link = currentFormLink();
+    const editing = !!editingGearItem();
+    document.getElementById('catalogSearchLabel').textContent = link ? 'Linked to the gear catalog'
+      : editing ? 'Link this item to the gear catalog' : 'Find it in the gear catalog';
+    document.getElementById('catalogSearchWrap').hidden = !!link;
+    document.getElementById('catalogLink').hidden = !link;
+    if(link){
+      const snap = link.snapshot;
+      document.getElementById('catalogLinkTitle').textContent = catalogTitle(snap) || 'Catalog product';
+      document.getElementById('catalogLinkSub').textContent = [snap.category, snap.weightGrams ? 'catalog weight ' + gramsLabel(snap.weightGrams) : ''].filter(Boolean).join(' · ');
+      const thumb = document.getElementById('catalogLinkThumb');
+      thumb.style.backgroundImage = snap.imageUrl ? 'url("' + snap.imageUrl.replace(/"/g, '%22') + '")' : '';
+      thumb.textContent = snap.imageUrl ? '' : '▣';
+      // "Update" only makes sense for a link saved earlier.
+      document.getElementById('catalogLinkRefresh').hidden = link.fresh;
+    }
+    renderCatalogOverrides();
+  }
+
+  const LINKED_FIELD_LABELS = { name:'name', brand:'brand', model:'model', category:'category', weightGrams:'weight',
+    imageUrl:'image', productUrl:'product link', waterproof:'waterproof', tempRating:'temp rating' };
+  function renderCatalogOverrides(){
+    const el = document.getElementById('catalogOverrides');
+    const link = CATALOG_ENABLED ? currentFormLink() : null;
+    if(!link){ el.hidden = true; return; }
+    const item = Object.assign(gearFormValues(), { catalogProductId: link.id, catalogSnapshot: link.snapshot });
+    const fields = CC.overriddenFields(item);
+    if(!fields.length){ el.hidden = true; return; }
+    const cmp = CC.weightComparison(item);
+    const parts = fields.map(f => f === 'weightGrams' && cmp
+      ? 'weight <strong>' + gramsLabel(cmp.mine) + '</strong> (catalog ' + gramsLabel(cmp.catalog) + ')'
+      : escapeHtml(LINKED_FIELD_LABELS[f] || f));
+    el.innerHTML = 'Your own values, kept on your item only — the shared catalog isn\'t changed: ' + parts.join(', ') + '.';
+    el.hidden = false;
+  }
+
+  function hideCatalogResults(){
+    const r = document.getElementById('catalogResults');
+    r.hidden = true;
+    r.innerHTML = '';
+    document.getElementById('catalogSearchInput').setAttribute('aria-expanded', 'false');
+  }
+
+  function onCatalogSearchInput(){
+    clearTimeout(catalogSearchTimer);
+    const q = document.getElementById('catalogSearchInput').value.trim();
+    if(q.length < 2){ catalogSearchSeq++; hideCatalogResults(); return; }
+    catalogSearchTimer = setTimeout(()=> runCatalogSearch(q), 250);
+  }
+
+  async function runCatalogSearch(q){
+    const seq = ++catalogSearchSeq;
+    catalogSearchedValue = q;
+    const box = document.getElementById('catalogResults');
+    box.hidden = false;
+    document.getElementById('catalogSearchInput').setAttribute('aria-expanded', 'true');
+    box.innerHTML = '<div class="catalog-result-msg">Searching…</div>';
+    let rows, err = null;
+    try{ rows = await catalogApi.search(q); }catch(e){ err = e; }
+    if(seq !== catalogSearchSeq) return; // a newer search is running
+    box.innerHTML = '';
+    if(err){
+      box.innerHTML = '<div class="catalog-result-msg"></div>';
+      box.firstChild.textContent = catalogErrorMessage(err);
+    } else if(!rows.length){
+      box.innerHTML = '<div class="catalog-result-msg">No matches in the catalog yet.</div>';
+    }
+    (rows || []).forEach(p=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'catalog-result';
+      b.setAttribute('role', 'option');
+      const meta = [p.category, p.weight_g ? gramsLabel(p.weight_g) : '',
+        p.review_count ? '★ ' + Number(p.avg_rating).toFixed(1) + ' (' + p.review_count + ')' : ''].filter(Boolean).join(' · ');
+      b.innerHTML = '<span class="catalog-thumb"></span><span class="catalog-result-info"><span class="catalog-result-title"></span><span class="catalog-result-meta"></span></span>';
+      const thumb = b.querySelector('.catalog-thumb');
+      if(p.photo_path) thumb.style.backgroundImage = 'url("' + catalogPhotoUrl(p.photo_path) + '")';
+      else thumb.textContent = '▣';
+      b.querySelector('.catalog-result-title').textContent = catalogTitle(p);
+      b.querySelector('.catalog-result-meta').textContent = meta;
+      b.addEventListener('click', ()=> pickCatalogProduct(p.id));
+      // Reviews and photos before choosing; "Use this product" there picks it.
+      const row = document.createElement('div');
+      row.className = 'catalog-result-row';
+      const details = document.createElement('button');
+      details.type = 'button';
+      details.className = 'link-btn';
+      details.textContent = 'Details';
+      details.setAttribute('aria-label', 'Details for ' + catalogTitle(p));
+      details.addEventListener('click', ()=> openCatalogDetail(p.id, { onUse: id => pickCatalogProduct(id) }));
+      row.appendChild(b);
+      row.appendChild(details);
+      box.appendChild(row);
+    });
+    if(!err){
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'catalog-result';
+      add.innerHTML = '<span class="catalog-thumb">+</span><span class="catalog-result-info"><span class="catalog-result-title catalog-result-add"></span><span class="catalog-result-meta"></span></span>';
+      add.querySelector('.catalog-result-add').textContent = cloudUser ? 'Can\'t find it? Add "' + q + '" to the catalog' : 'Can\'t find it? Sign in to add it to the catalog';
+      add.querySelector('.catalog-result-meta').textContent = 'Shared with everyone — your own details stay private';
+      add.addEventListener('click', ()=>{
+        if(!cloudUser){ openCloudSignInModal(); return; }
+        openCatalogProductModal({ mode: 'create', seed: catalogSeedFromGearForm(q), onSaved: p => pickCatalogProduct(p.id, p), onPickExisting: id => pickCatalogProduct(id) });
+      });
+      box.appendChild(add);
+    }
+  }
+
+  function catalogSeedFromGearForm(q){
+    const f = gearFormValues();
+    return {
+      brand: f.brand, name: f.name || q, model: f.model,
+      category: f.category && f.category !== 'Other' ? f.category : 'Other',
+      weight_g: f.weightGrams, product_url: f.productUrl,
+    };
+  }
+
+  // Pre-fill the open gear form from a catalog product. A new item takes
+  // the catalog's values; an item the user already had keeps what they'd
+  // entered (it becomes their override) and only gains the missing bits.
+  async function pickCatalogProduct(id, already){
+    hideCatalogResults();
+    setCatalogStatus('Loading product…');
+    let product = null;
+    try{ product = already && already.catalog_photos ? already : await catalogApi.get(id); }
+    catch(e){ setCatalogStatus(catalogErrorMessage(e), true); return; }
+    if(!product){ setCatalogStatus('That product is no longer in the catalog.', true); return; }
+    const photos = product.catalog_photos || [];
+    const photoUrl = photos.length ? catalogPhotoUrl(photos[0].storage_path) : '';
+    const keepExisting = !!editingGearItem();
+    setGearFormValues(CC.prefillFields(gearFormValues(), product, photoUrl, keepExisting));
+    gearFormCatalog = { product, photoUrl };
+    gearFormUnlinked = false;
+    document.getElementById('catalogSearchInput').value = '';
+    renderCatalogLink();
+    setCatalogStatus(keepExisting
+      ? 'Linked — your existing values were kept. Save to keep the link.'
+      : 'Filled in from the catalog — add your own details (price, purchase date, condition, notes) and save.');
+  }
+
+  async function refreshGearFromCatalog(){
+    const item = editingGearItem();
+    if(!item || !item.catalogProductId) return;
+    setCatalogStatus('Checking the catalog…');
+    let product;
+    try{ product = await catalogApi.get(item.catalogProductId); }
+    catch(e){ setCatalogStatus(catalogErrorMessage(e), true); return; }
+    if(!product){ setCatalogStatus('That product is no longer in the catalog.', true); return; }
+    const photos = product.catalog_photos || [];
+    const photoUrl = photos.length ? catalogPhotoUrl(photos[0].storage_path) : '';
+    const current = Object.assign(gearFormValues(), { catalogProductId: item.catalogProductId, catalogSnapshot: item.catalogSnapshot || {} });
+    const { item: out, updated, kept } = CC.refreshFromCatalog(current, product, photoUrl);
+    setGearFormValues(out);
+    gearFormCatalog = { product, photoUrl };
+    renderCatalogLink();
+    const names = fs => fs.map(f => LINKED_FIELD_LABELS[f] || f).join(', ');
+    if(!updated.length && !kept.length) setCatalogStatus('Already up to date with the catalog.');
+    else setCatalogStatus([updated.length ? 'Updated ' + names(updated) + ' from the catalog.' : '',
+      kept.length ? 'Kept your own ' + names(kept) + '.' : '', 'Save to apply.'].filter(Boolean).join(' '));
+  }
+
+  function unlinkGearFromCatalog(){
+    gearFormCatalog = null;
+    gearFormUnlinked = true;
+    renderCatalogLink();
+    setCatalogStatus('Unlinked — save to keep it that way. Your item\'s details stay as they are.');
+  }
+
+  // Applied by handleGearFormSubmit to the item being saved.
+  function applyCatalogLinkOnSave(data, existing){
+    if(gearFormCatalog && CC) return CC.linkItem(data, gearFormCatalog.product, gearFormCatalog.photoUrl);
+    if(existing && existing.catalogProductId && !gearFormUnlinked){
+      return Object.assign({}, data, { catalogProductId: existing.catalogProductId, catalogSnapshot: existing.catalogSnapshot });
+    }
+    return data;
+  }
+
+  // ---- Add / edit a catalog product ----
+  let cpState = null; // {mode, product?, seed?, onSaved, onPickExisting, confirmedDifferent}
+
+  function renderSpecFields(category, specs){
+    const wrap = document.getElementById('cpSpecs');
+    wrap.innerHTML = '';
+    (CC.SPEC_FIELDS[category] || []).forEach(def=>{
+      const field = document.createElement('div');
+      field.className = 'form-field';
+      const id = 'cpSpec_' + def.key;
+      const label = def.label + (def.unit ? ' (' + def.unit + ')' : '');
+      const val = specs && specs[def.key] != null ? specs[def.key] : '';
+      if(def.type === 'yesno'){
+        field.innerHTML = '<label for="'+id+'"></label><select id="'+id+'" data-spec="'+def.key+'"><option value="">Not set</option><option value="yes">Yes</option><option value="no">No</option></select>';
+        field.querySelector('select').value = val === true ? 'yes' : val === false ? 'no' : '';
+      } else {
+        field.innerHTML = '<label for="'+id+'"></label><input id="'+id+'" data-spec="'+def.key+'" '+(def.type === 'number' ? 'type="number" step="any"' : 'type="text" maxlength="120"')+'>';
+        field.querySelector('input').value = val;
+      }
+      field.querySelector('label').textContent = label;
+      const err = document.createElement('span');
+      err.className = 'field-error';
+      err.dataset.for = 'spec_' + def.key;
+      field.appendChild(err);
+      wrap.appendChild(field);
+    });
+  }
+
+  function openCatalogProductModal(opts){
+    if(!cloudUser){ openCloudSignInModal(); return; }
+    cpState = Object.assign({ confirmedDifferent: false }, opts);
+    const p = opts.mode === 'edit' ? opts.product : (opts.seed || {});
+    const sel = document.getElementById('cpCategory');
+    if(!sel.options.length) CC.CATEGORIES.forEach(c=>{ const o = document.createElement('option'); o.textContent = c; sel.appendChild(o); });
+    document.getElementById('cpTitle').textContent = opts.mode === 'edit' ? 'Edit catalog product' : 'Add to the gear catalog';
+    document.getElementById('cpNote').textContent = opts.mode === 'edit'
+      ? 'Changes are visible to everyone and kept in the product\'s history. Fix what the product is as sold — your own measured weight belongs on your gear item.'
+      : 'The catalog is shared with everyone using Hike-in-one. Describe the product as sold — your own measured weight, price and notes stay private on your gear item.';
+    document.getElementById('cpBrand').value = p.brand || '';
+    document.getElementById('cpName').value = p.name || '';
+    document.getElementById('cpModel').value = p.model || '';
+    sel.value = CC.CATEGORIES.includes(p.category) ? p.category : 'Other';
+    document.getElementById('cpWeight').value = p.weight_g ? p.weight_g + ' g' : '';
+    document.getElementById('cpUrl').value = p.product_url || '';
+    document.getElementById('cpDescription').value = p.description || '';
+    renderSpecFields(sel.value, p.specs || {});
+    document.querySelectorAll('#catalogProductForm .field-error').forEach(e=> e.textContent = '');
+    document.getElementById('cpError').textContent = '';
+    document.getElementById('cpSimilar').hidden = true;
+    const submit = document.getElementById('cpSubmitBtn');
+    submit.disabled = false;
+    submit.textContent = opts.mode === 'edit' ? 'Save changes' : 'Add to catalog';
+    document.getElementById('catalogProductModalOverlay').style.display = 'flex';
+    document.getElementById(p.brand ? 'cpName' : 'cpBrand').focus();
+    onModalOpened('catalogProductModalOverlay');
+  }
+  function closeCatalogProductModal(){
+    document.getElementById('catalogProductModalOverlay').style.display = 'none';
+    cpState = null;
+    onModalClosed('catalogProductModalOverlay');
+  }
+
+  function readCatalogProductForm(){
+    const specs = {};
+    document.querySelectorAll('#cpSpecs [data-spec]').forEach(el=>{ specs[el.dataset.spec] = el.value; });
+    const weightText = document.getElementById('cpWeight').value.trim();
+    const weight = CC.parseWeightInput(weightText);
+    const v = CC.validateProduct({
+      brand: document.getElementById('cpBrand').value,
+      name: document.getElementById('cpName').value,
+      model: document.getElementById('cpModel').value,
+      category: document.getElementById('cpCategory').value,
+      weight_g: weight,
+      product_url: document.getElementById('cpUrl').value,
+      description: document.getElementById('cpDescription').value,
+      specs,
+    });
+    if(weightText && weight == null){ v.ok = false; v.errors.weight_g = 'Couldn\'t read that weight — try "1240 g", "1.2 kg" or "42 oz"'; }
+    return v;
+  }
+
+  function showSimilarProducts(list){
+    const box = document.getElementById('cpSimilar');
+    const exact = list.some(p => p.exact);
+    box.innerHTML = '';
+    const msg = document.createElement('p');
+    msg.textContent = exact
+      ? 'This product is already in the catalog — use it instead:'
+      : 'Is it one of these? Using an existing product keeps the catalog tidy.';
+    box.appendChild(msg);
+    list.forEach(p=>{
+      const row = document.createElement('div');
+      row.className = 'catalog-similar-row';
+      row.innerHTML = '<span></span><button type="button" class="ghost-btn">Use this</button>';
+      row.querySelector('span').textContent = catalogTitle(p) + (p.weight_g ? ' · ' + gramsLabel(p.weight_g) : '');
+      row.querySelector('button').addEventListener('click', ()=>{
+        const pick = cpState && cpState.onPickExisting;
+        closeCatalogProductModal();
+        if(pick) afterModalCleanup(()=> pick(p.id));
+      });
+      box.appendChild(row);
+    });
+    if(!exact){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'link-btn';
+      btn.style.marginTop = '6px';
+      btn.textContent = 'None of these — add mine as a new product';
+      btn.addEventListener('click', ()=>{
+        cpState.confirmedDifferent = true;
+        box.hidden = true;
+        document.getElementById('catalogProductForm').requestSubmit();
+      });
+      box.appendChild(btn);
+    }
+    box.hidden = false;
+  }
+
+  async function submitCatalogProduct(e){
+    e.preventDefault();
+    if(!cpState) return;
+    const v = readCatalogProductForm();
+    document.querySelectorAll('#catalogProductForm .field-error').forEach(el=> el.textContent = v.errors[el.dataset.for] || '');
+    const errEl = document.getElementById('cpError');
+    errEl.textContent = '';
+    if(!v.ok) return;
+    const submit = document.getElementById('cpSubmitBtn');
+    submit.disabled = true;
+    const state = cpState;
+    try{
+      if(state.mode === 'create' && !state.confirmedDifferent){
+        const similar = await catalogApi.similar(v.value);
+        if(similar.length){ showSimilarProducts(similar); return; }
+      }
+      const saved = state.mode === 'edit'
+        ? await catalogApi.update(state.product.id, v.value)
+        : await catalogApi.create(v.value);
+      closeCatalogProductModal();
+      if(state.onSaved) afterModalCleanup(()=> state.onSaved(saved));
+    }catch(err){
+      if(err && err.code === '23505'){
+        if(state.mode === 'create'){
+          try{ showSimilarProducts((await catalogApi.similar(v.value)).filter(p => p.exact)); return; }catch(_e){}
+        }
+        errEl.textContent = 'Another catalog product already has this brand, name and model.';
+      } else errEl.textContent = catalogErrorMessage(err);
+    }finally{
+      submit.disabled = false;
+    }
+  }
+
+  // ---- Product page: info, photos, reviews ----
+  let cdState = null; // {id, product, reviews, revisions, onUse}
+
+  async function openCatalogDetail(id, opts = {}){
+    if(!CATALOG_ENABLED) return;
+    cdState = { id, onUse: opts.onUse || null, product: null, reviews: [] };
+    document.getElementById('cdTitle').textContent = 'Product';
+    document.getElementById('cdBody').hidden = true;
+    document.getElementById('cdLoading').textContent = 'Loading…';
+    document.getElementById('cdLoading').className = 'upload-status';
+    document.getElementById('catalogDetailModalOverlay').style.display = 'flex';
+    onModalOpened('catalogDetailModalOverlay');
+    await loadCatalogDetail();
+  }
+  function closeCatalogDetail(){
+    document.getElementById('catalogDetailModalOverlay').style.display = 'none';
+    cdState = null;
+    onModalClosed('catalogDetailModalOverlay');
+  }
+
+  async function loadCatalogDetail(){
+    const state = cdState;
+    if(!state) return;
+    try{
+      const [product, reviews, revisions] = await Promise.all([
+        catalogApi.get(state.id), catalogApi.reviews(state.id), catalogApi.revisionCount(state.id).catch(()=>0)]);
+      if(cdState !== state) return;
+      if(!product){
+        document.getElementById('cdLoading').textContent = 'That product is no longer in the catalog.';
+        document.getElementById('cdLoading').className = 'upload-error';
+        return;
+      }
+      Object.assign(state, { product, reviews, revisions });
+      document.getElementById('cdLoading').textContent = '';
+      renderCatalogDetail();
+    }catch(e){
+      if(cdState !== state) return;
+      document.getElementById('cdLoading').textContent = catalogErrorMessage(e);
+      document.getElementById('cdLoading').className = 'upload-error';
+    }
+  }
+
+  function starsHtml(rating){
+    const r = Math.round(rating);
+    return '<span class="stars" aria-label="'+rating+' out of 5">' + '★'.repeat(r) + '<span class="off">' + '★'.repeat(5 - r) + '</span></span>';
+  }
+
+  function renderCatalogDetail(){
+    const { product: p, reviews, revisions } = cdState;
+    document.getElementById('cdBody').hidden = false;
+    document.getElementById('cdTitle').textContent = catalogTitle(p);
+    document.getElementById('cdSub').textContent = [p.category, p.weight_g ? gramsLabel(p.weight_g) + ' listed' : ''].filter(Boolean).join(' · ');
+
+    const photos = p.catalog_photos || [];
+    const grid = document.getElementById('cdPhotos');
+    grid.innerHTML = '';
+    photos.forEach((ph, i)=>{
+      const t = document.createElement('div');
+      t.className = 'photo-thumb';
+      t.innerHTML = '<img loading="lazy" alt="">';
+      t.querySelector('img').src = catalogPhotoUrl(ph.storage_path);
+      t.querySelector('img').alt = catalogTitle(p) + ' photo ' + (i + 1);
+      t.addEventListener('click', ()=> openPhotoLightbox({ photoUrls: photos.map(x => catalogPhotoUrl(x.storage_path)) }, i));
+      if(cloudUser && ph.uploaded_by === cloudUser.id){
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'photo-thumb-remove';
+        rm.setAttribute('aria-label', 'Remove your photo');
+        rm.textContent = '×';
+        rm.addEventListener('click', async ev=>{
+          ev.stopPropagation();
+          setCdPhotoStatus('Removing…');
+          try{ await catalogApi.removePhoto(ph); setCdPhotoStatus(''); await loadCatalogDetail(); }
+          catch(err){ setCdPhotoStatus(catalogErrorMessage(err), true); }
+        });
+        t.appendChild(rm);
+      }
+      grid.appendChild(t);
+    });
+    document.getElementById('cdAddPhotoLabel').textContent = cloudUser ? '+ Add photos' : 'Sign in to add photos';
+    document.getElementById('cdAddPhotoLabel').htmlFor = cloudUser ? 'cdPhotoInput' : '';
+
+    const facts = [];
+    if(p.model) facts.push(['Model', escapeHtml(p.model)]);
+    facts.push(['Category', escapeHtml(p.category)]);
+    if(p.weight_g) facts.push(['Listed weight', gramsLabel(p.weight_g)]);
+    (CC.SPEC_FIELDS[p.category] || []).forEach(def=>{
+      const v = p.specs ? p.specs[def.key] : null;
+      if(v == null || v === '') return;
+      const shown = def.type === 'yesno' ? (v ? 'Yes' : 'No') : escapeHtml(String(v)) + (def.unit ? ' ' + escapeHtml(def.unit) : '');
+      facts.push([escapeHtml(def.label), shown]);
+    });
+    if(p.product_url && /^https?:\/\//i.test(p.product_url)){
+      facts.push(['Link', '<a target="_blank" rel="noopener noreferrer nofollow" href="'+escapeHtml(p.product_url)+'">'+escapeHtml(p.product_url.replace(/^https?:\/\/(www\.)?/i, '').slice(0, 60))+'</a>']);
+    }
+    document.getElementById('cdFacts').innerHTML = facts.map(([k, v]) => '<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
+    document.getElementById('cdDescription').textContent = p.description || '';
+    document.getElementById('cdMeta').textContent = 'Added ' + String(p.created_at).slice(0, 10) +
+      (revisions ? ' · edited ' + revisions + ' time' + (revisions !== 1 ? 's' : '') + ', last ' + String(p.updated_at).slice(0, 10) : '');
+    document.getElementById('cdEditBtn').textContent = cloudUser ? 'Edit details' : 'Sign in to edit';
+    document.getElementById('cdUseBtn').hidden = !cdState.onUse;
+
+    // Reviews
+    const count = reviews.length;
+    const avg = count ? reviews.reduce((s, r) => s + r.rating, 0) / count : 0;
+    document.getElementById('cdRatingSummary').innerHTML = count
+      ? starsHtml(avg) + ' ' + avg.toFixed(1) + ' · ' + count + ' review' + (count !== 1 ? 's' : '') : 'No reviews yet';
+    const mine = cloudUser ? reviews.find(r => r.user_id === cloudUser.id) : null;
+    const writeBtn = document.getElementById('cdWriteReviewBtn');
+    writeBtn.textContent = !cloudUser ? 'Sign in to review' : mine ? 'Edit your review' : 'Write a review';
+    writeBtn.hidden = !document.getElementById('cdReviewForm').hidden;
+    const list = document.getElementById('cdReviews');
+    list.innerHTML = count ? '' : '<div class="cd-empty">Be the first to share how it held up on the trail.</div>';
+    reviews.forEach(r=>{
+      const el = document.createElement('div');
+      el.className = 'cd-review';
+      const edited = new Date(r.updated_at) - new Date(r.created_at) > 60000;
+      el.innerHTML = '<div class="cd-review-head">' + starsHtml(r.rating) + '<span class="cd-review-author"></span><span class="cd-review-date"></span></div><p class="cd-review-text"></p>';
+      el.querySelector('.cd-review-author').textContent = (r.profiles && r.profiles.display_name) || 'A hiker';
+      el.querySelector('.cd-review-date').textContent = String(r.created_at).slice(0, 10) + (edited ? ' · edited' : '');
+      el.querySelector('.cd-review-text').textContent = r.text || '';
+      list.appendChild(el);
+    });
+  }
+
+  function setCdPhotoStatus(msg, isError){
+    const el = document.getElementById('cdPhotoStatus');
+    el.textContent = msg || '';
+    el.className = isError ? 'upload-error' : 'upload-status';
+  }
+
+  async function addCatalogPhotos(fileList){
+    if(!cdState || !cdState.product || !cloudUser) return;
+    const files = Array.from(fileList).filter(f => /^image\//.test(f.type));
+    if(!files.length) return;
+    const id = cdState.product.id;
+    let added = 0;
+    for(const file of files){
+      setCdPhotoStatus('Uploading photo ' + (added + 1) + ' of ' + files.length + '…');
+      try{
+        const dataUrl = await downscaleImage(file, 1600, 0.82);
+        const blob = await (await fetch(dataUrl)).blob();
+        await catalogApi.addPhoto(id, blob);
+        added++;
+      }catch(err){
+        setCdPhotoStatus(catalogErrorMessage(err), true);
+        break;
+      }
+    }
+    if(added) setCdPhotoStatus('Added ' + added + ' photo' + (added !== 1 ? 's' : '') + ' — thanks!');
+    if(cdState && cdState.id === id) await loadCatalogDetail();
+  }
+
+  async function openReviewForm(){
+    if(!cloudUser){ openCloudSignInModal(); return; }
+    const form = document.getElementById('cdReviewForm');
+    const mine = cdState.reviews.find(r => r.user_id === cloudUser.id);
+    form.dataset.reviewId = mine ? mine.id : '';
+    setReviewStars(mine ? mine.rating : 0);
+    document.getElementById('cdReviewText').value = mine ? (mine.text || '') : '';
+    document.getElementById('cdReviewDeleteBtn').hidden = !mine;
+    document.getElementById('cdReviewSubmitBtn').textContent = mine ? 'Save review' : 'Post review';
+    document.getElementById('cdReviewError').textContent = '';
+    form.hidden = false;
+    document.getElementById('cdWriteReviewBtn').hidden = true;
+    // Reviews are signed with a display name, asked for once.
+    let profile = null;
+    try{ profile = await catalogApi.profile(); }catch(e){}
+    document.getElementById('cdNameField').hidden = !!profile;
+    if(!profile) document.getElementById('cdDisplayName').focus();
+  }
+  function closeReviewForm(){
+    document.getElementById('cdReviewForm').hidden = true;
+    document.getElementById('cdWriteReviewBtn').hidden = false;
+  }
+  function setReviewStars(n){
+    document.querySelectorAll('#cdStars label').forEach((l, i)=>{
+      const input = l.querySelector('input');
+      input.checked = i + 1 === n;
+      l.classList.toggle('on', i < n);
+    });
+  }
+
+  async function submitReview(e){
+    e.preventDefault();
+    const err = document.getElementById('cdReviewError');
+    const checked = document.querySelector('#cdStars input:checked');
+    const rating = checked ? Number(checked.value) : 0;
+    const text = document.getElementById('cdReviewText').value.trim();
+    const needName = !document.getElementById('cdNameField').hidden;
+    const name = document.getElementById('cdDisplayName').value.trim();
+    if(needName && (name.length < 2 || name.length > 40)){ err.textContent = 'Choose a display name of 2–40 characters.'; return; }
+    if(rating < 1 || rating > 5){ err.textContent = 'Pick a star rating.'; return; }
+    if(text.length > 4000){ err.textContent = 'Reviews can be up to 4000 characters.'; return; }
+    err.textContent = '';
+    const btn = document.getElementById('cdReviewSubmitBtn');
+    btn.disabled = true;
+    try{
+      if(needName){ await catalogApi.saveProfile(name); document.getElementById('cdNameField').hidden = true; }
+      await catalogApi.saveReview(cdState.product.id, rating, text);
+      closeReviewForm();
+      await loadCatalogDetail();
+    }catch(ex){
+      err.textContent = catalogErrorMessage(ex);
+    }finally{
+      btn.disabled = false;
+    }
+  }
+
+  async function deleteMyReview(){
+    const btn = document.getElementById('cdReviewDeleteBtn');
+    if(btn.dataset.armed !== '1'){
+      btn.dataset.armed = '1';
+      btn.textContent = 'Click again to delete';
+      setTimeout(()=>{ btn.dataset.armed = ''; btn.textContent = 'Delete review'; }, 3000);
+      return;
+    }
+    btn.dataset.armed = '';
+    btn.textContent = 'Delete review';
+    try{
+      await catalogApi.deleteReview(document.getElementById('cdReviewForm').dataset.reviewId);
+      closeReviewForm();
+      await loadCatalogDetail();
+    }catch(ex){
+      document.getElementById('cdReviewError').textContent = catalogErrorMessage(ex);
+    }
   }
 
   // ---- Quick add: product link preview ----
@@ -4534,11 +5497,13 @@
       notes: document.getElementById('gearNotes').value.trim()
     };
 
+    const existing = id ? gearItems.find(x=>x.id===id) : null;
+    const saved = applyCatalogLinkOnSave(data, existing);
     if(id){
       const idx = gearItems.findIndex(x=>x.id===id);
-      if(idx > -1) gearItems[idx] = data;
+      if(idx > -1) gearItems[idx] = saved;
     } else {
-      gearItems.push(data);
+      gearItems.push(saved);
     }
     await saveGear();
     closeGearModal();
@@ -4628,6 +5593,8 @@
     stravaModalOverlay: closeStravaModal,
     photoLightboxOverlay: closePhotoLightbox,
     importModalOverlay: closeImportModal,
+    catalogProductModalOverlay: closeCatalogProductModal,
+    catalogDetailModalOverlay: closeCatalogDetail,
   };
   let openModalOrder = [];      // most-recently-opened last
   let expectingCleanupPop = false;  // a history.back() we triggered ourselves, to drop a closed modal's entry
@@ -4642,6 +5609,11 @@
   function onModalOpened(id){
     if(openModalOrder.includes(id)) return; // already open - re-opening to edit something else shouldn't stack another entry
     openModalOrder.push(id);
+    // Stack by opening order, so a modal opened from another (e.g. the
+    // catalog product form from the product page) is always on top,
+    // whatever their order in the markup.
+    const el = document.getElementById(id);
+    if(el && id !== 'photoLightboxOverlay') el.style.zIndex = String(1000 + openModalOrder.length);
     history.pushState({modal:id}, '', location.pathname + location.search);
   }
   function onModalClosed(id){
@@ -4860,6 +5832,84 @@
       handleTripGpxFiles(e.dataTransfer.files);
     });
   })();
+
+  // ---- Gear catalog wiring ----
+  document.getElementById('catalogSearchInput').addEventListener('input', onCatalogSearchInput);
+  document.getElementById('catalogSearchInput').addEventListener('focus', e=>{
+    // A prefilled "link this item" query searches the first time it's focused.
+    const q = e.target.value.trim();
+    if(q.length >= 2 && catalogSearchedValue !== q) runCatalogSearch(q);
+  });
+  document.getElementById('catalogSearchInput').addEventListener('keydown', e=>{
+    if(e.key === 'ArrowDown'){
+      const first = document.querySelector('#catalogResults .catalog-result');
+      if(first){ e.preventDefault(); first.focus(); }
+    } else if(e.key === 'Enter'){
+      e.preventDefault();
+      const q = e.target.value.trim();
+      if(q.length >= 2){ clearTimeout(catalogSearchTimer); runCatalogSearch(q); }
+    } else if(e.key === 'Escape' && !document.getElementById('catalogResults').hidden){
+      e.stopPropagation();
+      hideCatalogResults();
+    }
+  });
+  document.getElementById('catalogResults').addEventListener('keydown', e=>{
+    if(e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const items = Array.from(document.querySelectorAll('#catalogResults .catalog-result'));
+    const i = items.indexOf(document.activeElement);
+    if(i < 0) return;
+    e.preventDefault();
+    if(e.key === 'ArrowUp' && i === 0) document.getElementById('catalogSearchInput').focus();
+    else (items[i + (e.key === 'ArrowDown' ? 1 : -1)] || items[i]).focus();
+  });
+  Object.values(GEAR_LINKED_INPUTS).forEach(id=>{
+    document.getElementById(id).addEventListener('input', ()=>{ if(CATALOG_ENABLED) renderCatalogOverrides(); });
+    document.getElementById(id).addEventListener('change', ()=>{ if(CATALOG_ENABLED) renderCatalogOverrides(); });
+  });
+  document.getElementById('catalogLinkView').addEventListener('click', ()=>{
+    const link = currentFormLink();
+    if(link) openCatalogDetail(link.id);
+  });
+  document.getElementById('catalogLinkRefresh').addEventListener('click', refreshGearFromCatalog);
+  document.getElementById('catalogLinkUnlink').addEventListener('click', unlinkGearFromCatalog);
+  document.getElementById('catalogProductModalClose').addEventListener('click', closeCatalogProductModal);
+  document.getElementById('cpCancelBtn').addEventListener('click', closeCatalogProductModal);
+  document.getElementById('catalogProductForm').addEventListener('submit', submitCatalogProduct);
+  document.getElementById('cpCategory').addEventListener('change', e=>{
+    const specs = {};
+    document.querySelectorAll('#cpSpecs [data-spec]').forEach(el=>{ specs[el.dataset.spec] = el.value; });
+    renderSpecFields(e.target.value, specs);
+  });
+  ['cpBrand','cpName','cpModel'].forEach(id=> document.getElementById(id).addEventListener('input', ()=>{
+    // Identity changed: re-run the duplicate check on the next submit.
+    if(cpState){ cpState.confirmedDifferent = false; document.getElementById('cpSimilar').hidden = true; }
+  }));
+  document.getElementById('catalogDetailModalClose').addEventListener('click', closeCatalogDetail);
+  document.getElementById('cdEditBtn').addEventListener('click', ()=>{
+    if(!cdState || !cdState.product) return;
+    if(!cloudUser){ openCloudSignInModal(); return; }
+    openCatalogProductModal({ mode: 'edit', product: cdState.product, onSaved: ()=> loadCatalogDetail() });
+  });
+  document.getElementById('cdUseBtn').addEventListener('click', ()=>{
+    const use = cdState && cdState.onUse, id = cdState && cdState.id;
+    closeCatalogDetail();
+    if(use) afterModalCleanup(()=> use(id));
+  });
+  document.getElementById('cdAddPhotoLabel').addEventListener('click', e=>{
+    if(!cloudUser){ e.preventDefault(); openCloudSignInModal(); }
+  });
+  document.getElementById('cdPhotoInput').addEventListener('change', e=>{
+    const files = Array.from(e.target.files);
+    e.target.value = '';
+    addCatalogPhotos(files);
+  });
+  document.getElementById('cdWriteReviewBtn').addEventListener('click', openReviewForm);
+  document.getElementById('cdReviewCancelBtn').addEventListener('click', closeReviewForm);
+  document.getElementById('cdReviewForm').addEventListener('submit', submitReview);
+  document.getElementById('cdReviewDeleteBtn').addEventListener('click', deleteMyReview);
+  document.querySelectorAll('#cdStars input').forEach(input=>{
+    input.addEventListener('change', ()=> setReviewStars(Number(input.value)));
+  });
 
   // ---- Import activities wiring ----
   document.getElementById('importActivitiesBtn').addEventListener('click', openImportModal);

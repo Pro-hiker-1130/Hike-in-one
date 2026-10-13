@@ -1,0 +1,10 @@
+{
+  "name": "hike-in-one",
+  "private": true,
+  "description": "Hike-in-one PWA — tests only; the app itself is plain static files with no build step.",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "node --test tests/e2e/*.test.js",
+    "test:sql": "tests/run-sql-tests.sh"
+  }
+}
