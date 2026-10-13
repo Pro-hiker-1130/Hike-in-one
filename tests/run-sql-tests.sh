@@ -30,9 +30,9 @@ done
 # constraints) and be re-runnable without duplicating anything.
 before=$("${P[@]}" -d t -At -c "select count(*) from catalog_products")
 for pass in 1 2; do
-  for s in "$REPO"/supabase/seed/*.sql; do "${P[@]}" -d t -f "$s" >/dev/null; done
+  for s in "$REPO"/supabase/seed/*.sql "$REPO"/supabase/seed/auto/*.sql; do [ -e "$s" ] || continue; "${P[@]}" -d t -f "$s" >/dev/null; done
 done
 after=$("${P[@]}" -d t -At -c "select count(*) from catalog_products where origin = 'seed' and created_by is null")
-expected=$(cat "$REPO"/supabase/seed/*.sql | grep -c "^('")
+expected=$(cat "$REPO"/supabase/seed/*.sql $(ls "$REPO"/supabase/seed/auto/*.sql 2>/dev/null) | grep -c "^('")
 echo "seed: $expected rows in files, $after seed products in the catalog (catalog had $before before)"
 [ "$after" -ge "$((expected - 1))" ] || { echo "FAIL: seed rows missing"; exit 1; }

@@ -1,0 +1,54 @@
+# Loads the gear catalog seed files into Supabase whenever they change —
+# the starter seeds on main and the daily batches the catalog bot (a
+# scheduled Claude Code Routine) pushes to the catalog-bot branch.
+# Every seed file is idempotent (ON CONFLICT DO NOTHING), so applying all
+# of them each time is safe and self-healing.
+#
+# Needs one repository secret, SUPABASE_DB_URL: Supabase dashboard →
+# Connect → "Session pooler" connection string (URI), with your database
+# password filled in. (The "Direct connection" host is IPv6-only and
+# GitHub's runners can't reach it.)
+name: Load catalog seeds into Supabase
+
+on:
+  push:
+    branches: [main, catalog-bot]
+    paths: ['supabase/seed/**.sql']
+  workflow_dispatch:
+
+concurrency:
+  group: catalog-seed
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the database secret
+        id: secret
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::warning::SUPABASE_DB_URL secret is not set — skipping. See the comment at the top of this workflow."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Apply seed files
+        if: steps.secret.outputs.ok == 'true'
+        run: |
+          command -v psql >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q postgresql-client; }
+          shopt -s nullglob
+          for f in supabase/seed/*.sql supabase/seed/auto/*.sql; do
+            echo "Applying $f"
+            psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+      - name: Catalog size
+        if: steps.secret.outputs.ok == 'true'
+        run: psql "$SUPABASE_DB_URL" -At -F ' ' -c "select origin, count(*) from public.catalog_products group by origin order by origin"
