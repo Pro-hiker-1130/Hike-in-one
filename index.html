@@ -2902,8 +2902,10 @@
       if(!heatLayer) renderHeat();
       if(heatLayer) heatLayer.addTo(map);
     }
+    document.getElementById('emptyHint').style.display = (tracks.length || googlePoints.length) ? 'none' : 'block';
   }
 
+  let fitMapOnNextShow = false;
   function refreshEverything(){
     renderTracks();
     renderHeat();
@@ -4097,10 +4099,9 @@
       trips.push(...newTrips);
       await saveTracks();
       await saveTrips();
-      renderTracks();
-      updateLayers();
-      renderStats();
+      refreshEverything();
       renderTripCards();
+      fitMapOnNextShow = true;
       detectCountriesInBackground(newTracks.map(t=>t.id));
     }
 
@@ -5977,7 +5978,19 @@
       document.getElementById('pageMap').classList.toggle('active', page==='map');
       document.getElementById('pageGear').classList.toggle('active', page==='gear');
       document.getElementById('pageTrips').classList.toggle('active', page==='trips');
-      if(page === 'map'){ setTimeout(()=> map.invalidateSize(), 50); pushRouteState(); }
+      if(page === 'map'){
+        setTimeout(()=>{
+          map.invalidateSize();
+          // Fitting while the map was hidden (size 0) zooms to nonsense, so
+          // an import elsewhere just asks for a fit on the next visit.
+          if(fitMapOnNextShow){
+            fitMapOnNextShow = false;
+            const b = L.latLngBounds(allPoints());
+            if(b.isValid()) map.fitBounds(b, {padding:[40,40]});
+          }
+        }, 50);
+        pushRouteState();
+      }
       if(page === 'gear') showGarage();
       if(page === 'trips') showTripsList();
     });
