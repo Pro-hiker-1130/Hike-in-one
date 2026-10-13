@@ -1654,9 +1654,11 @@
     document.getElementById('cloudSignInSubmitBtn').textContent = 'Send magic link';
     document.getElementById('cloudSignInModalOverlay').style.display = 'flex';
     document.getElementById('cloudSignInEmail').focus();
+    onModalOpened('cloudSignInModalOverlay');
   }
   function closeCloudSignInModal(){
     document.getElementById('cloudSignInModalOverlay').style.display = 'none';
+    onModalClosed('cloudSignInModalOverlay');
   }
 
   async function sendMagicLink(email){
@@ -1829,6 +1831,7 @@
 
   function openStravaModal(){
     document.getElementById('stravaModalOverlay').style.display = 'flex';
+    onModalOpened('stravaModalOverlay');
     const status = document.getElementById('stravaModalStatus');
     status.textContent = ''; status.className = 'upload-status';
     const connectPrompt = document.getElementById('stravaConnectPrompt');
@@ -1844,6 +1847,7 @@
   }
   function closeStravaModal(){
     document.getElementById('stravaModalOverlay').style.display = 'none';
+    onModalClosed('stravaModalOverlay');
   }
 
   async function loadStravaActivities(){
@@ -2091,11 +2095,13 @@
     }
     updateTripGearWeightSummary();
     document.getElementById('tripGearModalOverlay').style.display = 'flex';
+    onModalOpened('tripGearModalOverlay');
   }
 
   function closeGearPickerModal(){
     document.getElementById('tripGearModalOverlay').style.display = 'none';
     gearPickerTripId = null;
+    onModalClosed('tripGearModalOverlay');
   }
 
   async function saveGearPicker(){
@@ -2202,6 +2208,7 @@
     document.getElementById('categoryView').style.display = 'none';
     document.getElementById('loadoutDetailView').style.display = 'flex';
     renderLoadoutDetail();
+    pushRouteState();
   }
 
   function renderLoadoutDetail(){
@@ -2289,10 +2296,12 @@
 
     document.getElementById('loadoutModalOverlay').style.display = 'flex';
     document.getElementById('loadoutName').focus();
+    onModalOpened('loadoutModalOverlay');
   }
 
   function closeLoadoutModal(){
     document.getElementById('loadoutModalOverlay').style.display = 'none';
+    onModalClosed('loadoutModalOverlay');
   }
 
   async function handleLoadoutFormSubmit(e){
@@ -2421,6 +2430,7 @@
     document.getElementById('tripsListView').style.display = 'flex';
     document.getElementById('tripDetailView').style.display = 'none';
     renderTripCards();
+    pushRouteState();
   }
 
   function showTripDetail(id){
@@ -2428,6 +2438,7 @@
     document.getElementById('tripsListView').style.display = 'none';
     document.getElementById('tripDetailView').style.display = 'flex';
     renderTripDetail();
+    pushRouteState();
   }
 
   function renderTripDetail(){
@@ -2595,10 +2606,12 @@
     lightboxIndex = index;
     await renderLightboxImage();
     document.getElementById('photoLightboxOverlay').hidden = false;
+    onModalOpened('photoLightboxOverlay');
   }
   function closePhotoLightbox(){
     document.getElementById('photoLightboxOverlay').hidden = true;
     lightboxTrip = null;
+    onModalClosed('photoLightboxOverlay');
   }
   async function renderLightboxImage(){
     if(!lightboxTrip) return;
@@ -2675,10 +2688,12 @@
 
     document.getElementById('tripModalOverlay').style.display = 'flex';
     document.getElementById('tripName').focus();
+    onModalOpened('tripModalOverlay');
   }
 
   function closeTripModal(){
     document.getElementById('tripModalOverlay').style.display = 'none';
+    onModalClosed('tripModalOverlay');
   }
 
   function setTripStatusToggle(status){
@@ -3261,6 +3276,7 @@
     renderGearStats();
     renderGarage();
     renderLoadoutCards();
+    pushRouteState();
   }
 
   function showCategory(cat){
@@ -3273,6 +3289,7 @@
     document.getElementById('gearStatusFilter').value = '';
     updateCategoryViewHeader();
     renderGearGrid();
+    pushRouteState();
   }
 
   function refreshGear(){
@@ -3341,11 +3358,13 @@
 
     document.getElementById('gearModalOverlay').style.display = 'flex';
     document.getElementById('gearName').focus();
+    onModalOpened('gearModalOverlay');
   }
 
   function closeGearModal(){
     document.getElementById('gearModalOverlay').style.display = 'none';
     closeBarcodeScanner();
+    onModalClosed('gearModalOverlay');
   }
 
   // ---- Quick add: product link preview ----
@@ -3424,6 +3443,7 @@
     statusEl.className = 'upload-status';
     statusEl.textContent = 'Hold the barcode flat, a few inches from the camera…';
     overlay.style.display = 'flex';
+    onModalOpened('barcodeModalOverlay');
 
     if(typeof ZXing === 'undefined'){
       statusEl.className = 'upload-error';
@@ -3469,6 +3489,7 @@
       barcodeReader = null;
     }
     document.getElementById('barcodeModalOverlay').style.display = 'none';
+    onModalClosed('barcodeModalOverlay');
   }
 
   function parseWeightToGrams(weightStr){
@@ -3560,6 +3581,107 @@
   }
 
 
+  // ---- Back-button support ----
+  // Every view change here just toggled a div's display — the browser's
+  // history never grew past the one entry from the initial page load, so
+  // Back/the phone's back gesture exited the app instead of undoing the
+  // last navigation. These two pieces fix that:
+  //   1. Route state for the three pages and their sub-views (garage/
+  //      category/loadout, trips list/detail) — pushed by the existing
+  //      show*() functions, which are already the single place every
+  //      navigation (nav tabs, map popup links, trip/loadout cards, the
+  //      in-app "<- Garage"/"<- Trips" buttons) already flows through.
+  //   2. A small modal stack, since this app also has ~8 modals/overlays
+  //      that can nest (e.g. the barcode scanner opens on top of the add-
+  //      gear modal) — Back should close the top one, matching how a
+  //      native app's back button dismisses a dialog before leaving the
+  //      page underneath it.
+  let appInitializing = true;
+  let suppressRoutePush = false;
+
+  function currentRouteState(){
+    const page = document.querySelector('.nav-tab.active')?.dataset.page || 'map';
+    if(page === 'gear'){
+      if(currentLoadoutId !== null) return {page, view:'loadout', param: currentLoadoutId};
+      if(currentGearCategory !== null) return {page, view:'category', param: currentGearCategory};
+      return {page, view:'garage'};
+    }
+    if(page === 'trips'){
+      if(currentTripId !== null) return {page, view:'detail', param: currentTripId};
+      return {page, view:'list'};
+    }
+    return {page};
+  }
+
+  function pushRouteState(){
+    if(suppressRoutePush || appInitializing) return;
+    history.pushState(currentRouteState(), '', location.pathname + location.search);
+  }
+
+  function applyRouteFromPopstate(route){
+    route = route || {page:'map'};
+    suppressRoutePush = true;
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active', t.dataset.page===route.page));
+    document.getElementById('pageMap').classList.toggle('active', route.page==='map');
+    document.getElementById('pageGear').classList.toggle('active', route.page==='gear');
+    document.getElementById('pageTrips').classList.toggle('active', route.page==='trips');
+    if(route.page==='map') setTimeout(()=> map.invalidateSize(), 50);
+    if(route.page==='gear'){
+      if(route.view==='category') showCategory(route.param);
+      else if(route.view==='loadout') showLoadoutDetail(route.param);
+      else showGarage();
+    } else if(route.page==='trips'){
+      if(route.view==='detail') showTripDetail(route.param);
+      else showTripsList();
+    }
+    suppressRoutePush = false;
+  }
+
+  // id -> close function, for every modal/overlay that can be open at once.
+  const MODAL_CLOSE_FNS = {
+    gearModalOverlay: closeGearModal,
+    tripGearModalOverlay: closeGearPickerModal,
+    tripModalOverlay: closeTripModal,
+    loadoutModalOverlay: closeLoadoutModal,
+    barcodeModalOverlay: closeBarcodeScanner,
+    cloudSignInModalOverlay: closeCloudSignInModal,
+    stravaModalOverlay: closeStravaModal,
+    photoLightboxOverlay: closePhotoLightbox,
+  };
+  let openModalOrder = [];      // most-recently-opened last
+  let expectingCleanupPop = false;  // a history.back() we triggered ourselves, to drop a closed modal's entry
+  let closingViaPopstate = false;   // true while a close fn runs because Back told it to, not a UI click
+
+  function onModalOpened(id){
+    if(openModalOrder.includes(id)) return; // already open - re-opening to edit something else shouldn't stack another entry
+    openModalOrder.push(id);
+    history.pushState({modal:id}, '', location.pathname + location.search);
+  }
+  function onModalClosed(id){
+    if(!openModalOrder.includes(id)) return; // wasn't open - e.g. a defensive double-close
+    openModalOrder = openModalOrder.filter(x=>x!==id);
+    if(!closingViaPopstate){
+      // Closed by a UI click, not by Back — the history entry this modal
+      // pushed is still sitting there as "current"; consume it so Back
+      // doesn't later land on a no-op (modal already closed) and need a
+      // second press to actually go anywhere.
+      expectingCleanupPop = true;
+      history.back();
+    }
+  }
+
+  window.addEventListener('popstate', (e)=>{
+    if(expectingCleanupPop){ expectingCleanupPop = false; return; }
+    if(openModalOrder.length){
+      const topId = openModalOrder[openModalOrder.length-1];
+      closingViaPopstate = true;
+      MODAL_CLOSE_FNS[topId]();
+      closingViaPopstate = false;
+      return;
+    }
+    applyRouteFromPopstate(e.state);
+  });
+
   // ---- Page navigation ----
   document.querySelectorAll('.nav-tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
@@ -3569,7 +3691,7 @@
       document.getElementById('pageMap').classList.toggle('active', page==='map');
       document.getElementById('pageGear').classList.toggle('active', page==='gear');
       document.getElementById('pageTrips').classList.toggle('active', page==='trips');
-      if(page === 'map') setTimeout(()=> map.invalidateSize(), 50);
+      if(page === 'map'){ setTimeout(()=> map.invalidateSize(), 50); pushRouteState(); }
       if(page === 'gear') showGarage();
       if(page === 'trips') showTripsList();
     });
@@ -3830,6 +3952,14 @@
       const b = L.latLngBounds(allPoints());
       if(b.isValid()) map.fitBounds(b, {padding:[40,40]});
     }
+
+    // showGarage() above (and anything else during init) must never push
+    // history — it's warming up the gear view's DOM, not navigating —
+    // appInitializing kept pushRouteState() a no-op until now. Establish
+    // the one clean starting entry for whichever page is actually visible
+    // (per the static HTML/CSS default, that's Map, not Gear).
+    appInitializing = false;
+    history.replaceState(currentRouteState(), '', location.pathname + location.search);
 
     // Backfill country tags for tracks saved before this feature existed.
     // Runs after first paint so it never blocks initial load.
