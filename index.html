@@ -843,6 +843,111 @@
     .app .map-area{order:-1;flex:1 1 55%;min-height:0;}
     .app .sidebar{flex:0 1 45%;max-height:none;border-bottom:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-14px;position:relative;z-index:500;box-shadow:0 -6px 20px rgba(52,78,65,0.1);}
   }
+
+  /* ==== Step 2: map overview, trips timeline, gear list, settings ==== */
+  .row-link{
+    width:100%;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    min-height:46px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);
+    color:var(--parchment);font:inherit;font-weight:600;font-size:14.5px;cursor:pointer;text-align:left;
+  }
+  .row-link svg{color:var(--brass);flex:none;}
+  .row-link:hover{border-color:var(--brass);}
+
+  .next-trip{
+    display:flex;align-items:stretch;margin:16px 24px 0;padding:0;flex:none;overflow:hidden;
+    border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--parchment);
+    font:inherit;text-align:left;cursor:pointer;box-shadow:0 1px 2px rgba(52,78,65,0.05);max-width:620px;
+  }
+  .next-trip:hover{border-color:var(--brass);}
+  .next-trip-count{
+    flex:none;width:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:12px 6px;background:var(--brass);color:var(--on-accent);text-align:center;
+  }
+  .next-trip-num{font-family:var(--font-display);font-weight:700;font-size:36px;line-height:1;}
+  .next-trip-unit{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+  .next-trip-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding:12px 16px;}
+  .next-trip-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
+  .next-trip-name{font-family:var(--font-display);font-weight:700;font-size:23px;text-transform:uppercase;letter-spacing:0.02em;line-height:1.1;}
+  .next-trip-meta{font-size:14px;color:var(--muted);}
+
+  .trip-timeline{display:flex;flex-direction:column;flex:none;}
+  .timeline-month-title{
+    margin:0;padding:10px 24px 0;font-family:var(--font-display);font-weight:700;font-size:15px;
+    letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);
+  }
+  .timeline-grid{flex:none;padding-top:8px;padding-bottom:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));}
+  .trip-card-timeline{padding:0;gap:0;overflow:hidden;}
+  .trip-card-profile{display:block;width:100%;height:44px;background:#F6F5F1;border-bottom:1px solid var(--line);}
+  .trip-card-profile-none{height:6px;background:var(--trip-color);opacity:0.5;border-bottom:none;}
+  .trip-card-body{display:flex;align-items:center;gap:12px;padding:10px 14px 12px;}
+  .trip-card-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .trip-card-figures{display:flex;flex-direction:column;align-items:flex-end;flex:none;}
+  .trip-card-km{font-family:var(--font-display);font-weight:700;font-size:21px;line-height:1.1;}
+  .trip-card-up{font-size:13px;color:var(--muted);white-space:nowrap;}
+  .trip-card-timeline:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+
+  .gear-view-toggle{width:190px;flex:none;}
+  .gear-view-head{max-width:868px;box-sizing:border-box;}
+  .pack-list{max-width:820px;margin:0 24px 8px;border-radius:12px;background:var(--panel);border:1px solid var(--line);overflow:hidden;flex:none;}
+  .pack-cat + .pack-cat{border-top:1px solid var(--line);}
+  .pack-cat-head{
+    width:100%;display:flex;flex-direction:column;gap:7px;padding:12px 16px;border:0;background:transparent;
+    font:inherit;color:inherit;text-align:left;cursor:pointer;
+  }
+  .pack-cat-head:hover{background:var(--sage-soft);}
+  .pack-cat-line{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;}
+  .pack-cat-name{font-weight:600;font-size:15px;display:flex;align-items:center;}
+  .pack-cat-count{color:var(--muted);font-weight:400;margin-left:4px;}
+  .pack-cat-weight{font-family:var(--font-display);font-weight:700;font-size:19px;font-variant-numeric:tabular-nums;}
+  .pack-bar{display:block;width:100%;height:6px;border-radius:3px;background:var(--sage-soft);}
+  .pack-bar span{display:block;height:6px;border-radius:3px;background:var(--fern);min-width:4px;}
+  .pack-cat.is-open .pack-bar span{background:var(--brass);}
+  .pack-items{padding:0 16px 10px;display:flex;flex-direction:column;}
+  .pack-item{
+    display:flex;align-items:center;gap:10px;min-height:46px;padding:4px 0;border:0;border-top:1px dashed var(--line);
+    background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer;
+  }
+  .pack-item:hover .pack-item-name{color:var(--brass);text-decoration:underline;}
+  .pack-item-text{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .pack-item-name{font-size:15px;}
+  .pack-item-brand{font-size:12.5px;color:var(--muted);}
+  .pack-item-weight{font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .pack-open-shelf{
+    align-self:flex-start;margin-top:4px;padding:8px 0;border:0;background:transparent;font:inherit;
+    font-size:14px;font-weight:600;color:var(--brass);cursor:pointer;
+  }
+  .pack-empty{padding:28px 16px;text-align:center;color:var(--muted);font-size:14px;}
+  .gear-scene[hidden]{display:none !important;}
+
+  .settings-view{max-width:720px;}
+  .settings-card{
+    margin:14px 24px 0;padding:16px 18px;border-radius:12px;background:var(--panel);border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:flex-start;gap:10px;
+  }
+  .settings-card:last-child{margin-bottom:24px;}
+  .settings-card h3{margin:0;font-family:var(--font-display);font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:0.03em;}
+  .settings-card .dropzone{align-self:stretch;}
+  .settings-card .upload-status{margin-top:0;}
+  .settings-card .upload-status:empty{display:none;}
+  .settings-note{margin:0;font-size:14px;color:var(--muted);line-height:1.45;}
+  .settings-account-email{margin:0;font-weight:600;}
+  .settings-card .clear-btn{width:auto;font-size:14px;padding:10px 16px;border-radius:8px;}
+  .clear-btn:disabled{opacity:0.45;cursor:default;background:transparent;}
+
+  @media (max-width:760px){
+    .nav-tabs{grid-template-columns:repeat(4,minmax(0,1fr));}
+    .map-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+    .map-stats .stat-card{padding:8px 4px;text-align:center;}
+    .map-stats .stat-num{font-size:22px;}
+    .map-stats .stat-label{font-size:11px;}
+    .next-trip{margin:14px 12px 0;}
+    .next-trip-count{width:88px;}
+    .timeline-month-title{padding:10px 12px 0;}
+    .timeline-grid{padding:8px 12px;grid-template-columns:1fr;}
+    .pack-list{margin:0 12px 8px;}
+    .gear-view-head{padding-left:12px;padding-right:12px;}
+    .settings-card{margin:12px 12px 0;}
+  }
 </style>
 </head>
 <body>
@@ -872,6 +977,7 @@
     <button class="nav-tab active" data-page="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>Map</button>
     <button class="nav-tab" data-page="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M8 7V5a4 4 0 018 0v2"/><rect x="5" y="7" width="14" height="14" rx="3"/><path d="M9 13h6"/></svg>Gear Room</button>
     <button class="nav-tab" data-page="trips"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l6-12 4 6 2-3 4 9z"/></svg>Trips</button>
+    <button class="nav-tab" data-page="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Settings</button>
   </div>
   <div class="nav-account" id="navAccount"></div>
 </nav>
@@ -906,24 +1012,28 @@
 
     <div class="section">
       <p class="section-label">Overview</p>
-      <div class="stats-grid">
+      <div class="stats-grid map-stats">
+        <div class="stat-card">
+          <div class="stat-num" id="statDistance">0</div>
+          <div class="stat-label">km</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statClimb">0</div>
+          <div class="stat-label">m up</div>
+        </div>
         <div class="stat-card">
           <div class="stat-num" id="statTrips">0</div>
           <div class="stat-label">trips</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num" id="statTracks">0</div>
-          <div class="stat-label">tracks</div>
-        </div>
-        <div class="stat-card">
           <div class="stat-num" id="statCountries" title="">0</div>
           <div class="stat-label">countries</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="statDistance">0</div>
-          <div class="stat-label">kilometers</div>
-        </div>
       </div>
+      <button class="row-link" id="mapImportBtn" type="button">
+        <span>Import from Strava or Garmin</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
     </div>
 
     <div class="section">
@@ -945,19 +1055,6 @@
       </div>
     </div>
 
-    <div class="section">
-      <p class="section-label">Location history</p>
-      <label class="dropzone" for="googleInput" id="googleDropzone">
-        <input type="file" id="googleInput" accept=".json" hidden>
-        <span class="dropzone-title">Add Google location history</span>
-        <span class="dropzone-sub">Records.json or a Timeline export</span>
-      </label>
-      <div class="upload-status" id="uploadStatus"></div>
-    </div>
-
-    <div class="footer">
-      <button class="clear-btn" id="clearBtn">Clear all data</button>
-    </div>
   </div>
 
   <div class="map-area">
@@ -980,7 +1077,7 @@
     <div class="garage-header">
       <div class="garage-heading">
         <h2>The Gear Room</h2>
-        <p>Your gear, where it lives — click a shelf, hook or bench to see what's on it</p>
+        <p id="gearRoomIntro">Your gear, where it lives — click a shelf, hook or bench to see what's on it</p>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="ghost-btn" id="catalogBulkBtn" hidden title="Add several products to the shared catalog from their web pages">Add to catalog</button>
@@ -1004,7 +1101,15 @@
       </div>
     </div>
 
-    <div class="gear-scene" id="gearScene"></div>
+    <div class="section-subhead gear-view-head">
+      <p class="section-label" style="margin:0;">Weight by category</p>
+      <div class="view-toggle gear-view-toggle" id="gearViewToggle" role="group" aria-label="Show gear as">
+        <button type="button" data-gearview="list" class="active" aria-pressed="true">List</button>
+        <button type="button" data-gearview="shelves" aria-pressed="false">Shelves</button>
+      </div>
+    </div>
+    <div class="pack-list" id="gearPackList"></div>
+    <div class="gear-scene" id="gearScene" hidden></div>
 
     <div class="section-subhead">
       <p class="section-label" style="margin:0;">Gear breakdown</p>
@@ -1137,8 +1242,17 @@
       </div>
     </div>
 
-    <div class="section-subhead">
-      <p class="section-label" style="margin:0;">Planned trips</p>
+    <button type="button" class="next-trip" id="nextTripCard" hidden>
+      <span class="next-trip-count"><span class="next-trip-num" id="nextTripNum"></span><span class="next-trip-unit" id="nextTripUnit"></span></span>
+      <span class="next-trip-body">
+        <span class="next-trip-label">Next trip</span>
+        <span class="next-trip-name" id="nextTripName"></span>
+        <span class="next-trip-meta" id="nextTripMeta"></span>
+      </span>
+    </button>
+
+    <div class="section-subhead" id="tripPlannedHead">
+      <p class="section-label" style="margin:0;" id="tripPlannedLabel">Planned trips</p>
     </div>
     <div class="gear-grid" id="tripPlannedGrid"></div>
     <div class="gear-empty" id="tripPlannedEmpty" style="display:none;">Nothing planned yet — click "+ New trip" to start one.</div>
@@ -1146,7 +1260,7 @@
     <div class="section-subhead">
       <p class="section-label" style="margin:0;">Completed trips</p>
     </div>
-    <div class="gear-grid" id="tripCompletedGrid"></div>
+    <div class="trip-timeline" id="tripCompletedGrid"></div>
     <div class="gear-empty" id="tripCompletedEmpty" style="display:none;">No completed trips yet.</div>
 
     <div class="gear-empty" id="tripsEmpty" style="display:none;">No trips yet — click "Import activities" to bring in your hikes from Strava or Garmin, or "+ New trip" to plan one.</div>
@@ -1223,6 +1337,40 @@
     </div>
   </div>
 
+</div>
+
+<div class="gear-room page" id="pageSettings">
+  <div class="garage-view settings-view">
+    <div class="garage-header">
+      <div class="garage-heading">
+        <h2>Settings</h2>
+        <p>Your account, location history and stored data</p>
+      </div>
+    </div>
+
+    <section class="settings-card" id="settingsAccountCard" hidden>
+      <h3>Account</h3>
+      <div id="settingsAccount"></div>
+    </section>
+
+    <section class="settings-card">
+      <h3>Location history</h3>
+      <p class="settings-note">Adds every place from a Google Takeout export to the map's heatmap. Nothing is uploaded — the file is read on this device.</p>
+      <label class="dropzone" for="googleInput" id="googleDropzone">
+        <input type="file" id="googleInput" accept=".json" hidden>
+        <span class="dropzone-title">Add Google location history</span>
+        <span class="dropzone-sub">Records.json or a Timeline export</span>
+      </label>
+      <div class="upload-status" id="uploadStatus"></div>
+    </section>
+
+    <section class="settings-card">
+      <h3>Stored data</h3>
+      <p class="settings-note" id="settingsDataSummary"></p>
+      <button class="clear-btn" id="clearBtn">Remove all tracks and location history</button>
+      <p class="settings-note">Your trips, gear and loadouts stay.</p>
+    </section>
+  </div>
 </div>
 </div>
 
@@ -2600,7 +2748,27 @@
     ]);
   }
 
+  function renderSettingsAccount(){
+    const card = document.getElementById('settingsAccountCard');
+    card.hidden = !CLOUD_SYNC_ENABLED;
+    if(!CLOUD_SYNC_ENABLED) return;
+    const el = document.getElementById('settingsAccount');
+    if(!cloudUser){
+      el.innerHTML = '<p class="settings-note">Sign in to keep your hikes, gear and trips in sync across your devices, and to add to the shared gear catalog.</p>'+
+        '<button class="primary-btn" type="button" id="settingsSignInBtn">Sign in</button>';
+      document.getElementById('settingsSignInBtn').addEventListener('click', openCloudSignInModal);
+      return;
+    }
+    const statusLabel = {syncing:'Syncing…', synced:'Everything is synced', error:'Sync error — changes are kept on this device', offline:'Offline — changes sync when you reconnect'}[cloudSyncStatus] || '';
+    el.innerHTML = '<p class="settings-account-email"></p><p class="settings-note"></p>'+
+      '<button class="ghost-btn" type="button" id="settingsSignOutBtn">Sign out</button>';
+    el.querySelector('.settings-account-email').textContent = 'Signed in as '+(cloudUser.email || '');
+    el.querySelector('.settings-note').textContent = statusLabel;
+    document.getElementById('settingsSignOutBtn').addEventListener('click', ()=> sb.auth.signOut());
+  }
+
   function renderNavAccount(){
+    renderSettingsAccount();
     const el = document.getElementById('navAccount');
     if(!el) return;
     if(!CLOUD_SYNC_ENABLED){
@@ -2998,7 +3166,7 @@
     if(!pts.length || typeof L.heatLayer !== 'function') return;
     heatLayer = L.heatLayer(pts, {
       radius: 16, blur: 20, maxZoom: 9, minOpacity: 0.35,
-      gradient: {0.2:'#243b32', 0.4:'#3c5c52', 0.65:'#C89B5C', 1:'#EDE6D5'}
+      gradient: {0.2:'#A3B18A', 0.45:'#588157', 0.7:'#3A5A40', 1:'#C4501C'}
     });
   }
 
@@ -3006,7 +3174,11 @@
     map.removeLayer(trackLayerGroup);
     if(heatLayer) map.removeLayer(heatLayer);
     if(currentView === 'tracks' || currentView === 'both') trackLayerGroup.addTo(map);
-    if(currentView === 'heatmap' || currentView === 'both'){
+    // The heat layer draws on a canvas the map's size; while the map page
+    // is hidden that size is 0 and drawing throws, so it waits until the
+    // map is shown again (the tab switch calls this again).
+    const mapShown = document.getElementById('map').offsetWidth > 0;
+    if(mapShown && (currentView === 'heatmap' || currentView === 'both')){
       if(!heatLayer) renderHeat();
       if(heatLayer) heatLayer.addTo(map);
     }
@@ -3022,15 +3194,26 @@
     document.getElementById('emptyHint').style.display = allPoints().length ? 'none' : 'block';
   }
 
+  // 55 / 3,375 / 12.4k — short enough for a stat tile.
+  function compactNumber(n){
+    n = Math.round(n);
+    return n >= 10000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : n.toLocaleString('en-US');
+  }
+
   function renderStats(){
     document.getElementById('statTrips').textContent = trips.length;
-    document.getElementById('statTracks').textContent = tracks.length;
     const dist = tracks.reduce((s,t)=>s+t.distanceKm,0);
-    document.getElementById('statDistance').textContent = dist >= 1000 ? (dist/1000).toFixed(1)+'k' : Math.round(dist);
+    document.getElementById('statDistance').textContent = compactNumber(dist);
+    const climb = tracks.reduce((s,t)=>s+(t.elevationGainM||0),0);
+    document.getElementById('statClimb').textContent = compactNumber(climb);
     const countries = allVisitedCountries();
     const countriesEl = document.getElementById('statCountries');
     countriesEl.textContent = countries.size;
     countriesEl.title = countries.size ? Array.from(countries).sort().join(', ') : '';
+    document.getElementById('settingsDataSummary').textContent =
+      tracks.length+' track'+(tracks.length!==1?'s':'')+' and '+
+      googlePoints.length.toLocaleString('en-US')+' location-history point'+(googlePoints.length!==1?'s':'')+' on this device.';
+    document.getElementById('clearBtn').disabled = !(tracks.length || googlePoints.length);
   }
 
   function escapeHtml(s){
@@ -3457,14 +3640,130 @@
     });
   }
 
+  // A trip's tracks laid end to end (in date order) as one profile, so a
+  // two-day hike reads as one line: [[km, ele], ...] or null.
+  function tripProfile(trip){
+    const tks = tripTracks(trip).filter(t => t.profile && t.profile.length > 1)
+      .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')));
+    const pts = [];
+    let offset = 0;
+    tks.forEach(t=>{
+      t.profile.forEach(([km, ele]) => pts.push([offset + km, ele]));
+      offset += t.profile[t.profile.length-1][0];
+    });
+    return pts.length > 1 ? pts : null;
+  }
+
+  function miniProfileSvg(pts, color){
+    const W = 300, H = 44, PAD = 4;
+    const step = Math.max(1, Math.ceil(pts.length / 150));
+    const sample = pts.filter((p,i) => i % step === 0 || i === pts.length-1);
+    const maxKm = sample[sample.length-1][0] || 1;
+    let lo = Infinity, hi = -Infinity;
+    sample.forEach(p=>{ if(p[1] < lo) lo = p[1]; if(p[1] > hi) hi = p[1]; });
+    // Keep flat walks looking flat: at least 150 m of vertical range.
+    const range = Math.max(hi - lo, 150);
+    const xy = sample.map(([km, ele]) =>
+      (km / maxKm * W).toFixed(1)+','+(H - PAD - (ele - lo) / range * (H - 2*PAD)).toFixed(1));
+    const line = 'M' + xy.join(' L');
+    return '<svg class="trip-card-profile" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">'+
+      '<path d="'+line+' L'+W+','+H+' L0,'+H+' Z" fill="'+color+'" fill-opacity="0.16"/>'+
+      '<path d="'+line+'" fill="none" stroke="'+color+'" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>'+
+      '</svg>';
+  }
+
+  const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // Completed trips grouped under month headings, newest first, each card
+  // with the trip's elevation profile drawn in its map color.
+  function renderTripTimeline(list){
+    const wrap = document.getElementById('tripCompletedGrid');
+    wrap.innerHTML = '';
+    document.getElementById('tripCompletedEmpty').style.display = list.length ? 'none' : 'block';
+    const trackColors = computeTrackColors();
+    const groups = [];
+    list.forEach(trip=>{
+      const d = isoDay(tripDisplayDate(trip) || '');
+      const key = d ? MONTHS_LONG[d.getUTCMonth()] + ' ' + d.getUTCFullYear() : 'No date';
+      let g = groups.find(x => x.key === key);
+      if(!g){ g = {key, trips:[]}; groups.push(g); }
+      g.trips.push(trip);
+    });
+    groups.forEach(g=>{
+      const section = document.createElement('section');
+      section.className = 'timeline-month';
+      const h = document.createElement('h3');
+      h.className = 'timeline-month-title';
+      h.textContent = g.key;
+      const grid = document.createElement('div');
+      grid.className = 'gear-grid timeline-grid';
+      section.appendChild(h);
+      section.appendChild(grid);
+      g.trips.forEach(trip=>{
+        const tks = tripTracks(trip);
+        const color = tks.length ? trackColors[tks[0].id] : 'var(--fern)';
+        const dist = tripDistanceKm(trip);
+        const climb = tks.reduce((sum,t)=>sum+(t.elevationGainM||0), 0);
+        const gearList = tripGearItemsList(trip);
+        const profile = tripProfile(trip);
+        const card = document.createElement('div');
+        card.className = 'trip-card trip-card-timeline';
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        const when = tripDateLabel(trip);
+        card.innerHTML =
+          (profile ? miniProfileSvg(profile, color) : '<div class="trip-card-profile trip-card-profile-none" style="--trip-color:'+color+'"></div>')+
+          '<div class="trip-card-body">'+
+            '<div class="trip-card-main">'+
+              '<div class="trip-card-name"></div>'+
+              '<div class="trip-card-when"></div>'+
+              (gearList.length ? '<div class="trip-card-meta">'+gearList.length+' item'+(gearList.length!==1?'s':'')+' packed</div>' : '')+
+            '</div>'+
+            (tks.length ? '<div class="trip-card-figures"><span class="trip-card-km">'+dist.toFixed(1)+' km</span>'+
+              (climb ? '<span class="trip-card-up">↑ '+climb.toLocaleString('en-US')+' m</span>' : '')+'</div>' : '')+
+          '</div>';
+        card.querySelector('.trip-card-name').textContent = trip.name;
+        card.querySelector('.trip-card-when').textContent = when;
+        card.addEventListener('click', ()=> showTripDetail(trip.id));
+        card.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); showTripDetail(trip.id); } });
+        grid.appendChild(card);
+      });
+      wrap.appendChild(section);
+    });
+  }
+
+  // The soonest dated planned trip that hasn't started yet, as a countdown.
+  function renderNextTrip(planned){
+    const card = document.getElementById('nextTripCard');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const upcoming = planned.find(t=>{
+      const d = tripDisplayDate(t);
+      return d && new Date(d + 'T00:00:00') >= today;
+    });
+    card.hidden = !upcoming;
+    if(!upcoming) return null;
+    const date = tripDisplayDate(upcoming);
+    const days = Math.round((new Date(date + 'T00:00:00') - today) / 86400000);
+    document.getElementById('nextTripNum').textContent = days === 0 ? 'Today' : days.toLocaleString('en-US');
+    document.getElementById('nextTripUnit').textContent = days === 0 ? '' : days === 1 ? 'day to go' : 'days to go';
+    document.getElementById('nextTripName').textContent = upcoming.name;
+    const gearList = tripGearItemsList(upcoming);
+    const weight = tripGearWeight(upcoming);
+    document.getElementById('nextTripMeta').textContent = friendlyDate(date) + ' · ' + (gearList.length
+      ? gearList.length + ' item' + (gearList.length !== 1 ? 's' : '') + ' packed' + (weight ? ', ' + formatWeight(weight) : '')
+      : 'nothing packed yet');
+    card.onclick = ()=> showTripDetail(upcoming.id);
+    return upcoming;
+  }
+
   function renderTripCards(){
     document.getElementById('tripsEmpty').style.display = trips.length ? 'none' : 'block';
-    document.querySelectorAll('#tripsListView .section-subhead, #tripsListView .gear-grid').forEach(el=>{
+    document.querySelectorAll('#tripsListView .section-subhead, #tripsListView .gear-grid, #tripCompletedGrid').forEach(el=>{
       el.style.display = trips.length ? '' : 'none';
     });
     document.getElementById('tripPlannedEmpty').style.display = 'none';
     document.getElementById('tripCompletedEmpty').style.display = 'none';
-    if(!trips.length) return;
+    if(!trips.length){ document.getElementById('nextTripCard').hidden = true; return; }
 
     const planned = trips.filter(t => tripStatus(t) === 'planned');
     const completed = trips.filter(t => tripStatus(t) === 'completed');
@@ -3487,8 +3786,17 @@
       return (b.createdAt||0)-(a.createdAt||0);
     });
 
-    renderTripSection(planned, 'tripPlannedGrid', 'tripPlannedEmpty', 'planned');
-    renderTripSection(completed, 'tripCompletedGrid', 'tripCompletedEmpty', 'completed');
+    // The next trip gets the countdown card; the planned grid holds the rest
+    // and disappears when there is no rest.
+    const next = renderNextTrip(planned);
+    const otherPlanned = planned.filter(t => t !== next);
+    const showPlanned = otherPlanned.length || !next;
+    document.getElementById('tripPlannedHead').style.display = showPlanned ? '' : 'none';
+    document.getElementById('tripPlannedGrid').style.display = showPlanned ? '' : 'none';
+    document.getElementById('tripPlannedLabel').textContent = next ? 'Also planned' : 'Planned trips';
+    renderTripSection(otherPlanned, 'tripPlannedGrid', 'tripPlannedEmpty', 'planned');
+    if(!showPlanned) document.getElementById('tripPlannedEmpty').style.display = 'none';
+    renderTripTimeline(completed);
   }
 
   function showTripsList(){
@@ -4283,7 +4591,11 @@
       googlePoints = pts;
       await saveGoogle();
       refreshEverything();
-      setStatus('Added '+pts.length.toLocaleString()+' location points.');
+      // Imported from Settings now, so make sure the points are visible
+      // (they only draw on the heatmap) and framed when the map opens.
+      if(currentView === 'tracks') document.querySelector('.view-toggle button[data-view="both"]').click();
+      fitMapOnNextShow = true;
+      setStatus('Added '+pts.length.toLocaleString()+' location points — they show on the map\'s heatmap.');
     }catch(err){
       setStatus('Could not read that JSON file: '+err.message, true);
     }
@@ -4604,7 +4916,89 @@
     });
   }
 
+  // ---- Gear list: categories as weight bars, each opening to its items ----
+  let gearView = 'list';
+  try{ if(localStorage.getItem('hio-gear-view') === 'shelves') gearView = 'shelves'; }catch(e){}
+  const openPackCategories = new Set();
+
+  function setGearView(view){
+    gearView = view;
+    try{ localStorage.setItem('hio-gear-view', view); }catch(e){}
+    document.querySelectorAll('#gearViewToggle button').forEach(b=>{
+      const on = b.dataset.gearview === view;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    document.getElementById('gearPackList').hidden = view !== 'list';
+    document.getElementById('gearRoomIntro').textContent = view === 'list'
+      ? 'Your gear by weight — open a category to see what\'s in it'
+      : 'Your gear, where it lives — click a shelf, hook or bench to see what\'s on it';
+    document.getElementById('gearScene').hidden = view !== 'shelves';
+  }
+
+  function renderGearPackList(){
+    const el = document.getElementById('gearPackList');
+    el.innerHTML = '';
+    const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
+    const itemWeight = g => (g.weightGrams||0)*(g.quantity||1);
+    const cats = GEAR_CATEGORIES.map(cat=>{
+      const items = owned.filter(g=>(GEAR_CATEGORIES.includes(g.category) ? g.category : 'Other') === cat)
+        .sort((a,b)=> itemWeight(b) - itemWeight(a) || a.name.localeCompare(b.name));
+      return {cat, items, count: items.reduce((s,g)=>s+(g.quantity||1),0), weight: items.reduce((s,g)=>s+itemWeight(g),0)};
+    }).filter(c=>c.items.length).sort((a,b)=> b.weight - a.weight || b.count - a.count);
+    if(!cats.length){
+      el.innerHTML = '<div class="pack-empty">No gear yet — click "+ Add item" to start your list.</div>';
+      return;
+    }
+    const max = Math.max(1, ...cats.map(c=>c.weight));
+    cats.forEach(c=>{
+      const open = openPackCategories.has(c.cat);
+      const row = document.createElement('div');
+      row.className = 'pack-cat' + (open ? ' is-open' : '');
+      const head = document.createElement('button');
+      head.type = 'button';
+      head.className = 'pack-cat-head';
+      head.setAttribute('aria-expanded', open ? 'true' : 'false');
+      head.innerHTML =
+        '<span class="pack-cat-line">'+
+          '<span class="pack-cat-name"><span class="track-color-dot" style="background:'+(GEAR_CATEGORY_COLORS[c.cat]||GEAR_CATEGORY_COLORS.Other)+'"></span>'+escapeHtml(c.cat)+
+            ' <span class="pack-cat-count">· '+c.count+'</span></span>'+
+          '<span class="pack-cat-weight">'+(c.weight ? escapeHtml(formatWeight(c.weight)) : '—')+'</span>'+
+        '</span>'+
+        '<span class="pack-bar"><span style="width:'+(c.weight / max * 100).toFixed(1)+'%"></span></span>';
+      head.addEventListener('click', ()=>{
+        if(openPackCategories.has(c.cat)) openPackCategories.delete(c.cat); else openPackCategories.add(c.cat);
+        renderGearPackList();
+      });
+      row.appendChild(head);
+      if(open){
+        const list = document.createElement('div');
+        list.className = 'pack-items';
+        c.items.forEach(g=>{
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'pack-item';
+          item.innerHTML = '<span class="pack-item-text"><span class="pack-item-name"></span><span class="pack-item-brand"></span></span><span class="pack-item-weight"></span>';
+          item.querySelector('.pack-item-name').textContent = g.name + ((g.quantity||1) > 1 ? ' ×'+g.quantity : '');
+          item.querySelector('.pack-item-brand').textContent = [g.brand, g.status !== 'active' ? g.status : ''].filter(Boolean).join(' · ');
+          item.querySelector('.pack-item-weight').textContent = g.weightGrams ? formatWeight(itemWeight(g)) : '—';
+          item.addEventListener('click', ()=> openGearModal(g.id, null));
+          list.appendChild(item);
+        });
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'pack-open-shelf';
+        more.textContent = 'Open '+c.cat+' →';
+        more.addEventListener('click', ()=> showCategory(c.cat));
+        list.appendChild(more);
+        row.appendChild(list);
+      }
+      el.appendChild(row);
+    });
+  }
+
   function renderGarage(){
+    renderGearPackList();
     const scene = document.getElementById('gearScene');
     scene.innerHTML = '';
 
@@ -6044,7 +6438,8 @@
     document.getElementById('pageMap').classList.toggle('active', route.page==='map');
     document.getElementById('pageGear').classList.toggle('active', route.page==='gear');
     document.getElementById('pageTrips').classList.toggle('active', route.page==='trips');
-    if(route.page==='map') setTimeout(()=> map.invalidateSize(), 50);
+    document.getElementById('pageSettings').classList.toggle('active', route.page==='settings');
+    if(route.page==='map') setTimeout(()=>{ map.invalidateSize(); updateLayers(); }, 50);
     if(route.page==='gear'){
       if(route.view==='category') showCategory(route.param);
       else if(route.view==='loadout') showLoadoutDetail(route.param);
@@ -6130,9 +6525,12 @@
       document.getElementById('pageMap').classList.toggle('active', page==='map');
       document.getElementById('pageGear').classList.toggle('active', page==='gear');
       document.getElementById('pageTrips').classList.toggle('active', page==='trips');
+      document.getElementById('pageSettings').classList.toggle('active', page==='settings');
+      if(page === 'settings') pushRouteState();
       if(page === 'map'){
         setTimeout(()=>{
           map.invalidateSize();
+          updateLayers();
           // Fitting while the map was hidden (size 0) zooms to nonsense, so
           // an import elsewhere just asks for a fit on the next visit.
           if(fitMapOnNextShow){
@@ -6151,6 +6549,8 @@
   // ---- Gear Room wiring ----
   document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openGearModal(null, null));
   document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
+  document.querySelectorAll('#gearViewToggle button').forEach(b=> b.addEventListener('click', ()=> setGearView(b.dataset.gearview)));
+  setGearView(gearView);
 
   // ---- Gear breakdown chart wiring (metric filter + table toggle, shared pattern) ----
   ['gear','loadout'].forEach(prefix=>{
@@ -6417,10 +6817,10 @@
 
   // ---- Import activities wiring ----
   document.getElementById('importActivitiesBtn').addEventListener('click', openImportModal);
-  document.getElementById('emptyHintImportBtn').addEventListener('click', ()=>{
+  ['emptyHintImportBtn','mapImportBtn'].forEach(id=> document.getElementById(id).addEventListener('click', ()=>{
     document.querySelector('.nav-tab[data-page="trips"]').click();
     openImportModal();
-  });
+  }));
   document.getElementById('importModalClose').addEventListener('click', closeImportModal);
   document.getElementById('importModalOverlay').addEventListener('click', e=>{
     // Don't lose a long scan to a stray click outside the dialog.
@@ -6494,9 +6894,9 @@
     else if(e.key === 'ArrowRight') lightboxStep(1);
   });
 
-  document.querySelectorAll('.view-toggle:not(#basemapToggle) button').forEach(btn=>{
+  document.querySelectorAll('.view-toggle:not(#basemapToggle):not(#gearViewToggle) button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.view-toggle:not(#basemapToggle) button').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.view-toggle:not(#basemapToggle):not(#gearViewToggle) button').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       currentView = btn.dataset.view;
       updateLayers();
@@ -6511,17 +6911,18 @@
     });
   });
 
+  const CLEAR_LABEL = 'Remove all tracks and location history';
   let clearArmed = false;
   document.getElementById('clearBtn').addEventListener('click', async (e)=>{
     if(!clearArmed){
       clearArmed = true;
       e.target.textContent = 'Click again to confirm';
-      setTimeout(()=>{ clearArmed=false; e.target.textContent='Clear all data'; }, 3000);
+      setTimeout(()=>{ clearArmed=false; e.target.textContent=CLEAR_LABEL; }, 3000);
       return;
     }
     tracks = []; googlePoints = [];
     await saveTracks(); await saveGoogle();
-    e.target.textContent = 'Clear all data';
+    e.target.textContent = CLEAR_LABEL;
     clearArmed = false;
     refreshEverything();
   });

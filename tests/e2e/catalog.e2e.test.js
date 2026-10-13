@@ -138,6 +138,9 @@ test('catalog: search, pre-fill, link, overrides, refresh, contribute, review, p
     assert.match(await page.innerText('#cdRatingSummary'), /4\.0 · 1 review/);
     await page.click('#cdUseBtn');
     await page.waitForSelector('#catalogDetailModalOverlay', { state: 'hidden' });
+    // The pre-fill runs once the closed modal's history entry is popped,
+    // a moment after the overlay hides.
+    await page.waitForFunction(()=> document.getElementById('gearName').value !== '');
     assert.equal(await val(page, 'gearName'), 'Exos 58');
     assert.equal(await val(page, 'gearBrand'), 'Osprey');
     assert.equal(await val(page, 'gearCategory'), 'Backpack');
