@@ -13,7 +13,12 @@ const path = require('node:path');
 let playwright = null;
 try{ playwright = require('playwright'); }catch(e){}
 
+const { createFakeSupabase, fakeSession } = require('./fake-supabase.js');
+
 const ROOT = path.resolve(__dirname, '../..');
+const SUPABASE_HOST = 'agdtujbsojhujffvhqcb.supabase.co';
+const SESSION_KEY = 'sb-agdtujbsojhujffvhqcb-auth-token';
+const ME = 'aaaaaaaa-0000-4000-8000-000000000001';
 
 function serveRepo(){
   const types = { '.html': 'text/html', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png' };
@@ -66,7 +71,9 @@ test.before(async ()=>{
 });
 test.after(()=> server && server.close());
 
-async function launch(t, viewport = { width: 1280, height: 900 }){
+// fake: a fake-supabase.js instance; when given, the browser is signed in
+// against it and the local data starts empty (a fresh phone).
+async function launch(t, viewport = { width: 1280, height: 900 }, fake = null){
   const browser = await playwright.chromium.launch(Object.assign({ args: ['--no-sandbox'] },
     process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}));
   t.after(()=> browser.close());
@@ -79,11 +86,14 @@ async function launch(t, viewport = { width: 1280, height: 900 }){
     });
   }
   await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|supabase\.co/, r => r.abort());
-  await ctx.addInitScript(gear=>{
+  // Registered last so it wins over the blanket supabase.co block above.
+  if(fake) await ctx.route(new RegExp(SUPABASE_HOST.replace(/\./g, '\\.')), r => fake.handle(r));
+  await ctx.addInitScript(({ gear, session, key })=>{
     if(localStorage.getItem('e2e-seeded')) return;
     localStorage.setItem('e2e-seeded', '1');
-    localStorage.setItem('waypoints-gear-v1', JSON.stringify(gear));
-  }, GEAR);
+    if(session) localStorage.setItem(key, JSON.stringify(session));
+    else localStorage.setItem('waypoints-gear-v1', JSON.stringify(gear));
+  }, { gear: GEAR, session: fake ? fakeSession(ME) : null, key: SESSION_KEY });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -202,5 +212,24 @@ test('settings: Google location history import and removing map data', { skip: !
   await page.click('.nav-tab[data-page="settings"]');
   await page.goBack();
   await page.waitForSelector('#pageTrips.active');
+  assert.deepEqual(errors, []);
+});
+
+test('trips arriving from the cloud show up on a Trips page that is already open', { skip: !playwright }, async t=>{
+  const track = { id: 't_cloud', name: 'Eiger trail', date: '2025-07-10', distanceKm: 11.1, elevationGainM: 605,
+    points: [[46.60, 7.60], [46.61, 7.61], [46.62, 7.62]], profile: [[0, 1000], [5, 1300], [11.1, 1605]] };
+  const fake = createFakeSupabase({ userId: ME, userDataDelayMs: 1500, seed: { userData: {
+    gear: [], loadouts: [], google_points: [], tracks: [track],
+    trips: [{ id: 'trip_cloud', name: 'Eiger trail', trackIds: ['t_cloud'], gearIds: [], status: 'completed', createdAt: 1 }],
+  } } });
+  const { page, errors } = await launch(t, { width: 390, height: 844 }, fake);
+  // Open Trips straight away, before the (slow) cloud pull has landed.
+  await page.click('.nav-tab[data-page="trips"]');
+  assert.ok(await page.isVisible('#tripsEmpty'), 'nothing local yet');
+  await page.waitForFunction(()=> document.getElementById('statTrips').textContent === '1', null, { timeout: 8000 });
+  await page.waitForSelector('#tripCompletedGrid .trip-card', { timeout: 2000 });
+  assert.equal(await text(page, '#tripCompletedGrid .trip-card-name'), 'Eiger trail');
+  assert.ok(!(await page.isVisible('#tripsEmpty')));
+  assert.ok(await page.isVisible('#pageTrips'), 'still on the Trips page');
   assert.deepEqual(errors, []);
 });

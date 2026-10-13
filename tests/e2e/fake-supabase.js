@@ -7,7 +7,9 @@ const C = require('../../catalog-core.js');
 
 const PNG_1PX = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
-function createFakeSupabase({ userId = null, seed = {}, lookups = {} } = {}){
+// seed.userData: the signed-in user's synced app data (gear, trips, tracks…);
+// userDataDelayMs holds that response back, like a slow phone connection.
+function createFakeSupabase({ userId = null, seed = {}, lookups = {}, userDataDelayMs = 0 } = {}){
   const db = {
     catalog_products: [], catalog_photos: [], reviews: [], profiles: [], revisions: [], user_data: [],
   };
@@ -28,6 +30,7 @@ function createFakeSupabase({ userId = null, seed = {}, lookups = {} } = {}){
   const dupError = () => ({ code: '23505', message: 'duplicate key value violates unique constraint "catalog_products_key_uq"', details: null, hint: null });
 
   (seed.products || []).forEach(p => addProduct(p, p.created_by || 'seed-user'));
+  if(seed.userData) db.user_data.push(Object.assign({ user_id: userId, updated_at: now() }, seed.userData));
   (seed.profiles || []).forEach(p => db.profiles.push(Object.assign({ created_at: now(), updated_at: now() }, p)));
   (seed.reviews || []).forEach(r => db.reviews.push(Object.assign({ id: uuid(), text: null, created_at: now(), updated_at: now() }, r)));
   (seed.photos || []).forEach(ph => db.catalog_photos.push(Object.assign({ id: uuid(), created_at: now() }, ph)));
@@ -121,7 +124,10 @@ function createFakeSupabase({ userId = null, seed = {}, lookups = {} } = {}){
     const params = Array.from(url.searchParams.entries());
 
     if(table === 'user_data'){
-      if(method === 'GET') return reply([]);
+      if(method === 'GET'){
+        if(userDataDelayMs) await new Promise(r => setTimeout(r, userDataDelayMs));
+        return reply(db.user_data);
+      }
       return json(201, undefined);
     }
     if(table === 'catalog_products'){

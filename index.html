@@ -2852,6 +2852,10 @@
         await applyCloudSnapshot(data);
         refreshEverything();
         showGarage();
+        // The Trips page only redraws when it is opened, so one already on
+        // screen (common on a phone, where this pull can take a few
+        // seconds) would keep showing the pre-sync list.
+        if(currentTripId !== null) renderTripDetail(); else renderTripCards();
       } else {
         await pushToCloud();
       }
@@ -3651,13 +3655,17 @@
   // A trip's tracks laid end to end (in date order) as one profile, so a
   // two-day hike reads as one line: [[km, ele], ...] or null.
   function tripProfile(trip){
-    const tks = tripTracks(trip).filter(t => t.profile && t.profile.length > 1)
+    const tks = tripTracks(trip).filter(t => Array.isArray(t.profile) && t.profile.length > 1)
       .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')));
     const pts = [];
     let offset = 0;
     tks.forEach(t=>{
-      t.profile.forEach(([km, ele]) => pts.push([offset + km, ele]));
-      offset += t.profile[t.profile.length-1][0];
+      // Skip anything that isn't a [km, ele] pair rather than let one odd
+      // track take the whole list down.
+      const own = t.profile.filter(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1]) && p[1] !== null);
+      if(own.length < 2) return;
+      own.forEach(([km, ele]) => pts.push([offset + km, ele]));
+      offset += own[own.length-1][0];
     });
     return pts.length > 1 ? pts : null;
   }
