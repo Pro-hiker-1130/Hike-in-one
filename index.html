@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hike-in-one</title>
 <meta name="description" content="Your hikes, gear, and trips — all in one place">
-<meta name="theme-color" content="#0F1714">
+<meta name="theme-color" content="#132A4E">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -235,8 +235,13 @@
   }
   .ghost-btn:hover{border-color:var(--brass);}
 
-  .gear-stats-row{display:flex;gap:12px;padding:18px 24px 0;flex:none;}
+  .gear-stats-row{display:flex;flex-wrap:wrap;gap:12px;padding:18px 24px 0;flex:none;}
   .gear-stats-row .stat-card{flex:none;min-width:130px;padding:12px 16px;}
+  @media (max-width:560px){
+    .gear-stats-row{padding:14px 12px 0;gap:8px;}
+    .gear-stats-row .stat-card{flex:1 1 calc(50% - 4px);min-width:0;}
+    .gear-stats-row .stat-num{overflow-wrap:anywhere;}
+  }
 
   .gear-grid{
     flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
@@ -924,7 +929,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3 id="gearModalTitle">Add gear</h3>
-      <button class="modal-close" id="gearModalClose" type="button">&times;</button>
+      <button class="modal-close" aria-label="Close" id="gearModalClose" type="button">&times;</button>
     </div>
     <div class="modal-form" style="padding-bottom:0;">
       <div class="form-field">
@@ -1054,7 +1059,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3 id="tripGearModalTitle">Trip gear</h3>
-      <button class="modal-close" id="tripGearModalClose" type="button">&times;</button>
+      <button class="modal-close" aria-label="Close" id="tripGearModalClose" type="button">&times;</button>
     </div>
     <div class="trip-gear-list" id="tripGearList"></div>
     <div class="modal-actions" style="padding:14px 20px;">
@@ -1071,7 +1076,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3 id="tripModalTitle">New trip</h3>
-      <button class="modal-close" id="tripModalClose" type="button">&times;</button>
+      <button class="modal-close" aria-label="Close" id="tripModalClose" type="button">&times;</button>
     </div>
     <form class="modal-form" id="tripForm">
       <input type="hidden" id="tripId">
@@ -1125,7 +1130,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3 id="loadoutModalTitle">New loadout</h3>
-      <button class="modal-close" id="loadoutModalClose" type="button">&times;</button>
+      <button class="modal-close" aria-label="Close" id="loadoutModalClose" type="button">&times;</button>
     </div>
     <form class="modal-form" id="loadoutForm">
       <input type="hidden" id="loadoutId">
@@ -1156,7 +1161,7 @@
   <div class="modal" style="max-width:420px;">
     <div class="modal-header">
       <h3>Scan a barcode</h3>
-      <button class="modal-close" id="barcodeModalClose" type="button">&times;</button>
+      <button class="modal-close" aria-label="Close" id="barcodeModalClose" type="button">&times;</button>
     </div>
     <div style="padding:18px 20px;">
       <video id="barcodeVideo" style="width:100%;border-radius:6px;background:#000;display:block;" playsinline muted></video>
@@ -1169,7 +1174,7 @@
   <div class="modal" style="max-width:360px;">
     <div class="modal-header">
       <h3>Sign in</h3>
-      <button class="modal-close" id="cloudSignInModalClose" type="button">&times;</button>
+      <button class="modal-close" aria-label="Close" id="cloudSignInModalClose" type="button">&times;</button>
     </div>
     <div style="padding:18px 20px;">
       <p style="margin:0 0 14px;font-size:12.5px;color:var(--muted);">Enter your email and we'll send you a link to sign in — no password needed.</p>
@@ -1191,7 +1196,7 @@
   <div class="modal" style="max-width:440px;">
     <div class="modal-header">
       <h3>Import from Strava</h3>
-      <button class="modal-close" id="stravaModalClose" type="button">&times;</button>
+      <button class="modal-close" aria-label="Close" id="stravaModalClose" type="button">&times;</button>
     </div>
     <div style="padding:18px 20px;">
       <div id="stravaConnectPrompt">
@@ -1208,10 +1213,10 @@
 <div class="global-toast" id="globalToast" hidden></div>
 
 <div class="photo-lightbox-overlay" id="photoLightboxOverlay" hidden>
-  <button type="button" class="photo-lightbox-close" id="photoLightboxClose">&times;</button>
-  <button type="button" class="photo-lightbox-nav prev" id="photoLightboxPrev">&larr;</button>
+  <button type="button" class="photo-lightbox-close" id="photoLightboxClose" aria-label="Close photo">&times;</button>
+  <button type="button" class="photo-lightbox-nav prev" id="photoLightboxPrev" aria-label="Previous photo">&larr;</button>
   <img id="photoLightboxImg" alt="Trip photo">
-  <button type="button" class="photo-lightbox-nav next" id="photoLightboxNext">&rarr;</button>
+  <button type="button" class="photo-lightbox-nav next" id="photoLightboxNext" aria-label="Next photo">&rarr;</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1296,7 +1301,7 @@
   }
   Object.values(BASEMAPS).forEach(watchTileErrors);
 
-  function setBasemap(key){
+  function setBasemap(key, persist = true){
     if(!['dark','light','terrain','satellite'].includes(key)) return;
     const wantsTile = (key === 'dark' || key === 'light') ? 'osm' : key;
     if(currentTileKey !== wantsTile){
@@ -1305,9 +1310,11 @@
       currentTileKey = wantsTile;
     }
     map.getContainer().classList.toggle('dark-tiles', key === 'dark');
-    storeSet('waypoints-basemap', key);
+    if(persist) storeSet('waypoints-basemap', key);
   }
-  setBasemap('dark');
+  // Startup default only — not a user choice, so don't persist it. (It also
+  // runs before the storage layer below is initialized.)
+  setBasemap('dark', false);
 
   let trackLayerGroup = L.layerGroup();
   let heatLayer = null;
@@ -2062,7 +2069,7 @@
     const checked = Array.from(document.querySelectorAll('#tripGearList input[type="checkbox"]:checked'));
     const weight = checked.reduce((s,cb)=>{
       const g = gearItems.find(x=>x.id===cb.dataset.id);
-      return s + (g && g.weightGrams ? g.weightGrams : 0);
+      return s + (g && g.weightGrams ? g.weightGrams * (g.quantity || 1) : 0);
     },0);
     document.getElementById('tripGearWeightSummary').textContent = checked.length
       ? checked.length+' item'+(checked.length>1?'s':'')+' · '+formatWeight(weight)
@@ -2132,7 +2139,7 @@
     return trip.gearIds.map(id=>gearItems.find(g=>g.id===id)).filter(Boolean);
   }
   function tripGearWeight(trip){
-    return tripGearItemsList(trip).reduce((s,g)=>s+(g.weightGrams||0),0);
+    return tripGearItemsList(trip).reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
   }
 
   // ---- Gear usage (derived from trips, never stored separately so it
@@ -2173,7 +2180,7 @@
     return loadout.gearIds.map(id=>gearItems.find(g=>g.id===id)).filter(Boolean);
   }
   function loadoutWeight(loadout){
-    return loadoutItemsList(loadout).reduce((s,g)=>s+(g.weightGrams||0),0);
+    return loadoutItemsList(loadout).reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
   }
   function loadoutTripsUsing(loadoutId){
     return trips.filter(tr=>tr.loadoutId===loadoutId);
@@ -2587,7 +2594,7 @@
       if(!url) return;
       const thumb = document.createElement('div');
       thumb.className = 'photo-thumb';
-      thumb.innerHTML = '<img loading="lazy" alt="Trip photo"><button type="button" class="photo-thumb-remove" title="Remove photo">&times;</button>';
+      thumb.innerHTML = '<img loading="lazy" alt="Trip photo"><button type="button" class="photo-thumb-remove" title="Remove photo" aria-label="Remove photo">&times;</button>';
       thumb.querySelector('img').src = url;
       thumb.addEventListener('click', ()=> openPhotoLightbox(trip, i));
       thumb.querySelector('.photo-thumb-remove').addEventListener('click', (e)=>{
@@ -2649,7 +2656,7 @@
           '<span class="trip-gear-row-name">'+escapeHtml(t.name)+'<span class="trip-gear-row-cat">'+(t.date?escapeHtml(t.date):'')+'</span></span>'+
         '</label>'+
         '<span class="trip-gear-row-weight">'+t.distanceKm.toFixed(1)+' km</span>'+
-        '<button type="button" class="track-remove" title="Delete track">&times;</button>';
+        '<button type="button" class="track-remove" title="Delete track" aria-label="Delete track">&times;</button>';
       row.querySelector('.track-remove').addEventListener('click', async (e)=>{
         e.preventDefault(); e.stopPropagation();
         const id = t.id;
