@@ -5,27 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hike-in-one</title>
 <meta name="description" content="Your hikes, gear, and trips — all in one place">
-<meta name="theme-color" content="#132A4E">
+<meta name="theme-color" content="#F3F5EF">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
 <style>
+  /* Topo Light: a light, trail-sign look that stays readable outdoors.
+     The variable names predate it (ink = page ground, panel = surfaces,
+     brass = the accent, parchment = text). */
   :root{
-    --ink:#0E1B33;
-    --panel:#132A4E;
-    --panel-alt:#1B3A64;
-    --brass:#E2764F;
-    --brass-soft:rgba(226,118,79,0.18);
-    --parchment:#F3EDE1;
-    --muted:#7FA398;
-    --line:rgba(243,237,225,0.12);
-    --danger:#C23B2E;
+    --ink:#F3F5EF;
+    --panel:#FFFFFF;
+    --panel-alt:#EEF2EA;
+    --brass:#2E6A4C;
+    --brass-soft:rgba(46,106,76,0.12);
+    --parchment:#1C2620;
+    --muted:#55635A;
+    --line:rgba(28,38,32,0.13);
+    --danger:#B3261E;
+    --signal:#C4501C;
+    --on-accent:#FFFFFF;
+    --font-body:'Barlow',system-ui,sans-serif;
+    --font-display:'Barlow Condensed','Barlow',system-ui,sans-serif;
   }
   *{box-sizing:border-box;}
   [hidden]{display:none !important;}
-  html,body{margin:0;height:100%;background:var(--ink);color:var(--parchment);font-family:'Inter',sans-serif;}
+  html,body{margin:0;height:100%;background:var(--ink);color:var(--parchment);font-family:var(--font-body);}
   button{font-family:inherit;}
   body{display:flex;flex-direction:column;height:100vh;width:100vw;overflow:hidden;}
 
@@ -34,7 +41,7 @@
     flex:none;height:52px;display:flex;align-items:center;gap:22px;
     padding:0 18px;background:var(--panel);border-bottom:1px solid var(--line);
   }
-  .top-nav-brand{display:flex;align-items:center;gap:8px;font-family:'Fraunces',serif;font-size:16px;font-weight:600;}
+  .top-nav-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:16px;font-weight:600;}
   .nav-tabs{display:flex;gap:4px;}
   .nav-tab{
     background:transparent;border:none;color:var(--muted);font-size:13px;
@@ -77,7 +84,7 @@
 
   .brand{padding:22px 20px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;}
   .brand svg{flex:none;}
-  .brand-text h1{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin:0;letter-spacing:0.2px;}
+  .brand-text h1{font-family:var(--font-display);font-size:21px;font-weight:600;margin:0;letter-spacing:0.2px;}
   .brand-text p{margin:2px 0 0;font-size:12.5px;color:var(--muted);}
 
   .section{padding:16px 20px;border-bottom:1px solid var(--line);}
@@ -108,7 +115,7 @@
   .stats-row{display:flex;gap:10px;}
   .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .stat-card{flex:1;background:var(--panel-alt);border-radius:6px;padding:10px 12px;}
-  .stat-num{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--parchment);cursor:default;}
+  .stat-num{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--parchment);cursor:default;}
   .stat-label{font-size:11px;color:var(--muted);margin-top:2px;}
 
   .track-color-dot{width:8px;height:8px;border-radius:50%;flex:none;margin-right:8px;display:inline-block;vertical-align:middle;}
@@ -179,18 +186,18 @@
     max-width:calc(100% - 32px);
   }
   .empty-hint .primary-btn{pointer-events:auto;margin-top:14px;}
-  .empty-hint h2{font-family:'Fraunces',serif;font-weight:500;font-size:16px;margin:0 0 4px;}
+  .empty-hint h2{font-family:var(--font-display);font-weight:500;font-size:16px;margin:0 0 4px;}
   .empty-hint p{font-size:12.5px;color:var(--muted);margin:0;}
 
   .leaflet-popup-content-wrapper{background:var(--panel);color:var(--parchment);border-radius:6px;}
   .leaflet-popup-tip{background:var(--panel);}
-  .leaflet-popup-content{font-family:'Inter',sans-serif;font-size:12.5px;}
+  .leaflet-popup-content{font-family:var(--font-body);font-size:12.5px;}
   .leaflet-popup-content a.popup-trip-link{color:var(--brass);font-weight:600;}
   .leaflet-popup-content a.popup-photo-link{color:var(--muted);display:inline-block;margin-top:2px;}
   .leaflet-container a.leaflet-popup-close-button{color:var(--muted);}
   .leaflet-tooltip{
     background:var(--panel);color:var(--parchment);border:1px solid var(--line);
-    border-radius:5px;font-family:'Inter',sans-serif;font-size:12px;box-shadow:none;
+    border-radius:5px;font-family:var(--font-body);font-size:12px;box-shadow:none;
   }
   .leaflet-tooltip-top:before{border-top-color:var(--panel);}
 
@@ -301,7 +308,7 @@
   .wear-text{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:4px;}
   .wear-label.wear-soon{color:#D9B26F;font-weight:600;}
   .wear-label.wear-worn{color:#E77A6E;font-weight:600;}
-  .gear-card-weight{font-family:'Fraunces',serif;font-size:16px;color:var(--brass);}
+  .gear-card-weight{font-family:var(--font-display);font-size:16px;color:var(--brass);}
   .gear-card-actions{display:flex;gap:6px;margin-top:auto;padding-top:6px;}
   .icon-btn{
     background:var(--panel-alt);border:1px solid var(--line);color:var(--parchment);
@@ -316,7 +323,7 @@
     display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
     padding:22px 24px 4px;flex:none;
   }
-  .garage-heading h2{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0;}
+  .garage-heading h2{font-family:var(--font-display);font-weight:600;font-size:21px;margin:0;}
   .garage-header{flex-wrap:wrap;}
   .garage-heading{flex:1 1 240px;min-width:0;}
   .garage-heading p{font-size:12.5px;color:var(--muted);margin:4px 0 0;}
@@ -450,7 +457,7 @@
   .donut-seg:hover,.donut-seg:focus-visible,.donut-seg.is-hovered{filter:brightness(1.18);}
   .donut-wrap.is-hovered .donut-seg:not(.is-hovered){opacity:0.45;}
   .donut-center-value{
-    font-family:'Fraunces',serif;font-size:17px;font-weight:600;fill:var(--parchment);
+    font-family:var(--font-display);font-size:17px;font-weight:600;fill:var(--parchment);
   }
   .donut-center-label{font-size:9.5px;fill:var(--muted);letter-spacing:0.02em;}
   .breakdown-legend{flex:1;min-width:180px;display:flex;flex-direction:column;gap:9px;}
@@ -548,7 +555,7 @@
   /* ---- Category detail view ---- */
   .category-view{flex:1;display:flex;flex-direction:column;overflow-y:auto;width:100%;}
   .category-view-heading{display:flex;flex-direction:column;gap:1px;}
-  .category-view-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:0;white-space:nowrap;}
+  .category-view-title{font-family:var(--font-display);font-size:16px;font-weight:600;margin:0;white-space:nowrap;}
   .category-view-count{font-size:11px;color:var(--muted);white-space:nowrap;}
 
   /* ---- Gear catalog ---- */
@@ -615,7 +622,7 @@
   .cd-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .cd-meta{font-size:11.5px;color:var(--muted);margin-right:auto;}
   .cd-reviews-head{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap;}
-  .cd-reviews-head h4{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0;}
+  .cd-reviews-head h4{font-family:var(--font-display);font-size:15px;font-weight:600;margin:0;}
   .cd-rating-summary{font-size:12.5px;color:var(--muted);margin-right:auto;}
   .stars{color:var(--brass);letter-spacing:1px;}
   .stars .off{color:rgba(243,237,225,0.2);}
@@ -689,7 +696,7 @@
   .import-row-tag{font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:2px 8px;white-space:nowrap;flex:none;}
   .import-group-opt{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--parchment);cursor:pointer;}
   .import-group-opt input{width:15px;height:15px;accent-color:var(--brass);}
-  .import-done-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;}
+  .import-done-title{font-family:var(--font-display);font-size:18px;font-weight:600;}
   .import-done-sub{font-size:12.5px;color:var(--muted);line-height:1.5;}
   @media (max-width:560px){
     .trips-header-actions{flex-direction:column-reverse;align-items:stretch;}
@@ -711,7 +718,7 @@
     padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;
     background:var(--panel);
   }
-  .modal-header h3{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:0;}
+  .modal-header h3{font-family:var(--font-display);font-size:17px;font-weight:600;margin:0;}
   .modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;}
   .modal-close:hover{color:var(--parchment);}
   .modal-form{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
@@ -734,6 +741,101 @@
   .modal-actions{
     display:flex;justify-content:space-between;align-items:center;
     padding-top:6px;border-top:1px solid var(--line);margin-top:6px;
+  }
+
+  /* ==== Topo Light overrides ====
+     Places the original dark design hard-coded light-on-dark colors. */
+  body{font-size:15px;}
+  .primary-btn,.nav-tab.active,.view-toggle button.active{color:var(--on-accent);}
+  .primary-btn{border-radius:8px;}
+  .ghost-btn,.danger-btn,.icon-btn{border-radius:8px;}
+  .ghost-btn{border-color:rgba(28,38,32,0.2);font-weight:500;}
+  .icon-btn{background:var(--panel);}
+  .top-nav{background:var(--panel);box-shadow:0 1px 0 var(--line);}
+  .top-nav-brand{font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
+  .nav-tab{font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;border-radius:8px;}
+  .nav-tab svg{width:18px;height:18px;flex:none;}
+  .nav-tab:hover{background:var(--brass-soft);color:var(--brass);}
+  .sidebar .brand{display:none;}
+  .sidebar{background:var(--panel);}
+  .section-label,.scene-band-label{font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.07em;}
+  .stat-card{background:var(--ink);border:1px solid var(--line);border-radius:10px;}
+  .stat-num{font-family:var(--font-display);font-size:26px;font-weight:700;line-height:1.1;}
+  .stat-label{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;}
+  .garage-heading h2,.category-view-title,.empty-hint h2,.import-done-title{font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:0.02em;}
+  .garage-heading h2{font-size:30px;}
+  .category-view-title{font-size:20px;}
+  .modal-header h3,.cd-reviews-head h4{font-family:var(--font-display);font-weight:700;font-size:21px;text-transform:uppercase;letter-spacing:0.02em;}
+  .gear-card,.trip-card,.trip-track-block,.trip-track-row,.strava-activity-row{border-radius:12px;box-shadow:0 1px 2px rgba(28,38,32,0.05);}
+  .trip-card-name,.gear-card-name{font-size:16px;font-weight:600;}
+  .trip-card-meta,.gear-card-meta{font-size:13px;}
+  .trip-card-when{font-size:13px;color:var(--muted);}
+  .trip-card-countdown{align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#FFFFFF;background:var(--signal);border-radius:6px;padding:3px 8px;}
+  .gear-card-weight{font-family:var(--font-display);font-size:21px;font-weight:700;color:var(--parchment);}
+  .dropzone{border-color:rgba(28,38,32,0.25);background:var(--panel);}
+  #map{background:#EEF1E6;}
+  .tile-warning{background:rgba(255,255,255,0.96);}
+  .empty-hint{background:rgba(255,255,255,0.97);box-shadow:0 10px 30px rgba(28,38,32,0.15);border-radius:12px;}
+  .modal-overlay{background:rgba(28,38,32,0.45);}
+  .modal{border-radius:14px;box-shadow:0 20px 50px rgba(28,38,32,0.25);}
+  .form-field label{font-size:12.5px;font-weight:500;}
+  .form-field input,.form-field select,.form-field textarea{background:var(--panel);border-color:rgba(28,38,32,0.22);font-size:15px;padding:9px 11px;border-radius:8px;}
+  .gear-toolbar input[type="search"],.gear-toolbar select,.mini-select{background:var(--panel);border-color:rgba(28,38,32,0.22);border-radius:8px;}
+  .gear-badge{font-weight:600;}
+  .gear-badge.status-active,.gear-badge.status-completed{color:#24573E;background:#E3EFE8;}
+  .gear-badge.status-loaned,.gear-badge.status-planned{color:#7A4E00;background:#FBEFD5;}
+  .gear-badge.status-wishlist{color:#2F5E86;background:#E3EDF6;}
+  .wear-meter{background:var(--panel-alt);}
+  .wear-fill.wear-soon{background:#C58A00;}
+  .wear-fill.wear-worn{background:var(--danger);}
+  .wear-label.wear-soon{color:#7A4E00;}
+  .wear-label.wear-worn{color:var(--danger);}
+  .bulk-row-note.warn{color:#7A4E00;}
+  .ele-cursor{background:rgba(28,38,32,0.35);}
+  .legend-row:hover,.legend-row.is-hovered{background:rgba(28,38,32,0.05);}
+  .chart-tooltip{background:var(--panel);box-shadow:0 6px 16px rgba(28,38,32,0.18);}
+  .global-toast{background:var(--parchment);color:#FFFFFF;border-color:transparent;box-shadow:0 8px 20px rgba(28,38,32,0.3);}
+  .global-toast.is-error{background:var(--danger);color:#FFFFFF;}
+  .stars .off,.star-input label{color:rgba(28,38,32,0.2);}
+  .stars{color:var(--signal);}
+  .star-input label.on{color:var(--signal);}
+  .photo-thumb-remove,.photo-lightbox-close,.photo-lightbox-nav{background:rgba(28,38,32,0.72);color:#FFFFFF;}
+  .leaflet-popup-content-wrapper{border-radius:10px;box-shadow:0 8px 24px rgba(28,38,32,0.2);}
+  .leaflet-popup-content{font-size:13.5px;}
+  /* Gear room: a light painted wall instead of the dark shiplap. */
+  .gear-scene{
+    background:
+      repeating-linear-gradient(90deg, rgba(28,38,32,0.05) 0 1px, transparent 1px 96px),
+      linear-gradient(180deg, #F7F8F3 0%, #E8ECE2 100%);
+    border:1px solid var(--line);
+  }
+  .gear-scene::after{opacity:0.03;}
+  .scene-item-icon svg,.bench-boot-icon svg{filter:drop-shadow(0 4px 3px rgba(28,38,32,0.22));}
+  .scene-item-icon::after,.bench-boot-icon::after{background:rgba(28,38,32,0.18);}
+  .shelf-plank,.bench-plank{box-shadow:0 5px 7px rgba(28,38,32,0.25), inset 0 1px 0 rgba(255,235,210,0.5);}
+  .hook-rail{box-shadow:0 3px 4px rgba(28,38,32,0.25), inset 0 1px 0 rgba(255,255,255,0.4);}
+  .hook-strap{background:rgba(28,38,32,0.3);}
+  .scene-floor{box-shadow:inset 0 3px 6px rgba(0,0,0,0.25);}
+  .scene-item-name{font-size:13px;font-weight:600;}
+  .scene-item-count{font-size:11.5px;}
+
+  /* Phones: tabs move to a bottom bar, the map comes first and the
+     overview sits below it like a sheet. */
+  @media (max-width:760px){
+    .top-nav{height:56px;flex-wrap:nowrap;padding:0 14px;}
+    .nav-account{width:auto;margin-left:auto;}
+    .nav-tabs{
+      position:fixed;left:0;right:0;bottom:0;z-index:900;
+      display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+      padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+      background:var(--panel);border-top:1px solid var(--line);
+    }
+    .nav-tab{flex-direction:column;gap:2px;font-size:12px;padding:6px 4px;min-height:48px;justify-content:center;}
+    .nav-tab svg{width:22px;height:22px;}
+    .nav-tab.active{background:#E3EFE8;color:var(--brass);}
+    .page-container{margin-bottom:calc(66px + env(safe-area-inset-bottom));}
+    .app .map-area{order:-1;flex:1 1 55%;min-height:0;}
+    .app .sidebar{flex:0 1 45%;max-height:none;border-bottom:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-14px;position:relative;z-index:500;box-shadow:0 -6px 20px rgba(28,38,32,0.1);}
   }
 </style>
 </head>
@@ -761,9 +863,9 @@
     Hike-in-one
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" data-page="map">Map</button>
-    <button class="nav-tab" data-page="gear">Gear Room</button>
-    <button class="nav-tab" data-page="trips">Trips</button>
+    <button class="nav-tab active" data-page="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>Map</button>
+    <button class="nav-tab" data-page="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M8 7V5a4 4 0 018 0v2"/><rect x="5" y="7" width="14" height="14" rx="3"/><path d="M9 13h6"/></svg>Gear Room</button>
+    <button class="nav-tab" data-page="trips"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l6-12 4 6 2-3 4 9z"/></svg>Trips</button>
   </div>
   <div class="nav-account" id="navAccount"></div>
 </nav>
@@ -830,10 +932,10 @@
     <div class="section">
       <p class="section-label">Basemap</p>
       <div class="view-toggle toggle-4" id="basemapToggle">
-        <button data-basemap="dark" class="active">Dark</button>
-        <button data-basemap="light">Light</button>
+        <button data-basemap="light" class="active">Light</button>
         <button data-basemap="terrain">Terrain</button>
         <button data-basemap="satellite">Satellite</button>
+        <button data-basemap="dark">Dark</button>
       </div>
     </div>
 
@@ -1730,7 +1832,7 @@
   let cloudPushTimer = null;
   let suppressNextPush = false;      // set while applying a pulled snapshot, so it doesn't bounce straight back to the cloud
 
-  const COLORS = ['#C89B5C','#7C9885','#C9695A','#8FA096','#B08968','#6B8F8A','#D9B26F','#5B7B7A'];
+  const COLORS = ['#C4501C','#2E6A4C','#6A4C93','#1F6FA8','#A3366B','#8A6A00','#2F8F83','#5B5F97'];
   const STORAGE_TRACKS = 'waypoints-tracks-v1';
   const STORAGE_GOOGLE = 'waypoints-google-points-v1';
   const MAX_STORED_POINTS_PER_TRACK = 1500;
@@ -1790,7 +1892,7 @@
   }
   // Startup default only — not a user choice, so don't persist it. (It also
   // runs before the storage layer below is initialized.)
-  setBasemap('dark', false);
+  setBasemap('light', false);
 
   let trackLayerGroup = L.layerGroup();
   let heatLayer = null;
@@ -1955,7 +2057,7 @@
     const base = filename.split('/').pop().replace(/\.(gpx|tcx|fit)(\.gz)?$/i, '');
     const idLike = /^[\d_-]*(activity)?$/i.test(base) || /_\d{6,}(_activity)?$/i.test(base) || base.includes('@');
     if(base && !idLike) return base;
-    return (sport || 'Activity') + (date ? ' · ' + date : '');
+    return (sport || 'Activity') + (date ? ' · ' + friendlyDate(date, false) : '');
   }
 
   async function parseActivityBytes(bytes, filename, meta = {}){
@@ -2837,7 +2939,7 @@
       const photoCount = trip ? (trip.photoIds||[]).length : 0;
       let popupHtml =
         '<strong>'+escapeHtml(t.name)+'</strong><br>'+
-        (t.date ? escapeHtml(t.date)+', ' : '') +
+        (t.date ? escapeHtml(friendlyDate(t.date))+', ' : '') +
         (sportLabel(t.sport) ? escapeHtml(sportLabel(t.sport))+', ' : '') +
         t.distanceKm.toFixed(1)+' km';
       const climbLine = trackClimbSummary(t);
@@ -3275,8 +3377,42 @@
     if(days === 1) return 'Tomorrow';
     if(days === -1) return 'Yesterday';
     if(days > 1 && days <= 60) return 'In ' + days + ' days';
+    if(days > 60){
+      const months = Math.round(days / 30.44);
+      return months < 18 ? 'In ' + months + ' months' : 'In ' + Math.round(days / 365.25) + ' years';
+    }
     if(days < -1 && days >= -60) return days*-1 + ' days ago';
-    return dateStr;
+    return friendlyDate(dateStr);
+  }
+
+  // "Fri 15 Aug 2025" rather than "2025-08-15". Dates are calendar days
+  // (YYYY-MM-DD), so format them in UTC to avoid an off-by-one shift.
+  // Spelled out by hand: browsers disagree on short month names
+  // ("Sep" vs "Sept"), and the app should read the same everywhere.
+  const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DATE_DAY_MONTH = { format: d => d.getUTCDate() + ' ' + MONTHS_SHORT[d.getUTCMonth()] };
+  function isoDay(iso){ const d = new Date(String(iso).slice(0,10) + 'T00:00:00Z'); return isNaN(d) ? null : d; }
+  function friendlyDate(iso, withWeekday = true){
+    const d = iso && isoDay(iso);
+    if(!d) return iso || '';
+    return (withWeekday ? WEEKDAYS[d.getUTCDay()] + ' ' : '') + DATE_DAY_MONTH.format(d) + ' ' + d.getUTCFullYear();
+  }
+  // A multi-day trip: "10–11 Jul 2025", "30 Aug – 2 Sep 2025".
+  function friendlyRange(isoDates){
+    const days = Array.from(new Set(isoDates.filter(Boolean).map(x => String(x).slice(0,10)))).sort();
+    if(!days.length) return '';
+    if(days.length === 1) return friendlyDate(days[0]);
+    const a = isoDay(days[0]), b = isoDay(days[days.length-1]);
+    if(!a || !b) return friendlyDate(days[0]);
+    const year = b.getUTCFullYear();
+    if(a.getUTCFullYear() !== year) return friendlyDate(days[0]) + ' – ' + friendlyDate(days[days.length-1]);
+    if(a.getUTCMonth() === b.getUTCMonth()) return a.getUTCDate() + '–' + DATE_DAY_MONTH.format(b) + ' ' + year;
+    return DATE_DAY_MONTH.format(a) + ' – ' + DATE_DAY_MONTH.format(b) + ' ' + year;
+  }
+  function tripDateLabel(trip){
+    const trackDates = tripTracks(trip).map(t => t.date).filter(Boolean);
+    return trackDates.length ? friendlyRange(trackDates) : friendlyDate(tripDisplayDate(trip));
   }
 
   function renderTripSection(list, gridId, emptyId, status){
@@ -3294,12 +3430,22 @@
       const climb = tks.reduce((sum,t)=>sum+(t.elevationGainM||0), 0);
       const card = document.createElement('div');
       card.className = 'trip-card';
+      // Only lines that say something: no "0 tracks · 0.0 km" on a trip
+      // that hasn't happened, no "0 gear items" on an old hike.
+      const dateLabel = status === 'planned' ? friendlyDate(displayDate) : tripDateLabel(trip);
+      const trackLine = tks.length
+        ? dist.toFixed(1)+' km'+(climb?' · ↑ '+climb.toLocaleString('en-US')+' m':'')+(tks.length>1?' · '+tks.length+' tracks':'')
+        : '';
+      const gearLine = gearList.length
+        ? gearList.length+' item'+(gearList.length!==1?'s':'')+' packed'+(weight?' · '+formatWeight(weight):'')
+        : (status === 'planned' ? 'Nothing packed yet' : '');
       card.innerHTML =
+        (status === 'planned' && displayDate ? '<span class="trip-card-countdown">'+escapeHtml(relativeDayLabel(displayDate))+'</span>' : '')+
         '<div class="trip-card-name">'+(dotColor?'<span class="track-color-dot" style="background:'+dotColor+'"></span>':'')+escapeHtml(trip.name)+'</div>'+
+        (dateLabel ? '<div class="trip-card-when">'+escapeHtml(dateLabel)+'</div>' : '')+
         (trip.notes ? '<div class="trip-card-notes">'+escapeHtml(trip.notes)+'</div>' : '')+
-        (displayDate ? '<div class="trip-card-meta">'+escapeHtml(status==='planned' ? relativeDayLabel(displayDate) : displayDate)+'</div>' : '')+
-        '<div class="trip-card-meta">'+tks.length+' track'+(tks.length!==1?'s':'')+' · '+dist.toFixed(1)+' km'+(climb?' · ↑ '+climb+' m':'')+'</div>'+
-        '<div class="trip-card-meta">'+gearList.length+' gear item'+(gearList.length!==1?'s':'')+(weight?' · '+formatWeight(weight):'')+'</div>';
+        (trackLine ? '<div class="trip-card-meta">'+escapeHtml(trackLine)+'</div>' : '')+
+        (gearLine ? '<div class="trip-card-meta">'+escapeHtml(gearLine)+'</div>' : '');
       card.addEventListener('click', ()=> showTripDetail(trip.id));
       grid.appendChild(card);
     });
@@ -3373,7 +3519,7 @@
     document.getElementById('tripStatDistance').textContent = dist.toFixed(1);
     const climbTracks = tks.filter(t => t.elevationGainM != null);
     document.getElementById('tripStatClimb').textContent = climbTracks.length
-      ? climbTracks.reduce((s,t)=>s+t.elevationGainM, 0) : '—';
+      ? climbTracks.reduce((s,t)=>s+t.elevationGainM, 0).toLocaleString('en-US') : '—';
     document.getElementById('tripStatGearCount').textContent = gearList.length;
     document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
 
@@ -3393,7 +3539,7 @@
         row.className = 'trip-track-row';
         row.innerHTML =
           '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+'</span>'+
-          '<span class="trip-track-row-meta">'+(t.date?escapeHtml(t.date)+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>';
+          '<span class="trip-track-row-meta">'+(t.date?escapeHtml(friendlyDate(t.date))+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>';
         block.appendChild(row);
         const climb = trackClimbSummary(t);
         if(climb){
@@ -3582,7 +3728,7 @@
       row.innerHTML =
         '<label style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;">'+
           '<input type="checkbox" data-id="'+t.id+'"'+(checkedIds.has(t.id)?' checked':'')+'>'+
-          '<span class="trip-gear-row-name">'+escapeHtml(t.name)+'<span class="trip-gear-row-cat">'+(t.date?escapeHtml(t.date):'')+'</span></span>'+
+          '<span class="trip-gear-row-name">'+escapeHtml(t.name)+'<span class="trip-gear-row-cat">'+(t.date?escapeHtml(friendlyDate(t.date)):'')+'</span></span>'+
         '</label>'+
         '<span class="trip-gear-row-weight">'+t.distanceKm.toFixed(1)+' km</span>'+
         '<button type="button" class="track-remove" title="Delete track" aria-label="Delete track">&times;</button>';
@@ -4009,7 +4155,7 @@
     importItems.forEach(it=>{
       const row = document.createElement('label');
       row.className = 'import-row' + (it.dup ? ' is-dup' : '');
-      const meta = [it.date, sportLabel(it.sport), it.distanceKm != null ? it.distanceKm.toFixed(1)+' km' : '', it.gainM ? '↑ '+it.gainM+' m' : '']
+      const meta = [friendlyDate(it.date), sportLabel(it.sport), it.distanceKm != null ? it.distanceKm.toFixed(1)+' km' : '', it.gainM ? '↑ '+it.gainM+' m' : '']
         .filter(Boolean).join(' · ');
       row.innerHTML =
         '<input type="checkbox"'+(it.selected?' checked':'')+(it.dup?' disabled':'')+'>'+
@@ -4139,9 +4285,9 @@
 
   // ---- Gear Room logic ----
   const GEAR_CATEGORY_COLORS = {
-    'Backpack':'#C89B5C','Shelter':'#7C9885','Sleep system':'#8FA096','Clothing':'#B08968',
-    'Footwear':'#6B8F8A','Cooking':'#C9695A','Water':'#5B7B7A','Navigation':'#D9B26F',
-    'Electronics':'#9AA39C','Safety':'#C9695A','Hygiene':'#8FA096','Food':'#B08968','Other':'#8FA096'
+    'Backpack':'#2E6A4C','Shelter':'#C4501C','Sleep system':'#1F6FA8','Clothing':'#6A4C93',
+    'Footwear':'#8A6A00','Cooking':'#A3366B','Water':'#2F8F83','Navigation':'#5B5F97',
+    'Electronics':'#7A8B3A','Safety':'#B3261E','Hygiene':'#4F8FBF','Food':'#B87333','Other':'#7D8A82'
   };
   const GEAR_CATEGORIES = [
     'Backpack','Shelter','Sleep system','Clothing','Footwear','Cooking',

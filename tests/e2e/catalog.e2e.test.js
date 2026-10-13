@@ -131,7 +131,7 @@ test('catalog: search, pre-fill, link, overrides, refresh, contribute, review, p
   await t.test('product page shows info, photos and reviews; "Use this product" pre-fills', async ()=>{
     await page.click('.catalog-result-row .link-btn');
     await page.waitForSelector('#cdBody', { state: 'visible' });
-    assert.equal(await page.innerText('#cdTitle'), 'Osprey Exos 58');
+    assert.equal(await page.textContent('#cdTitle'), 'Osprey Exos 58');
     assert.match(await page.innerText('#cdFacts'), /Listed weight\s+1,240 g[\s\S]*Volume\s+58 L/);
     assert.equal(await page.locator('#cdPhotos .photo-thumb').count(), 1);
     assert.match(await page.innerText('#cdReviews'), /Bea[\s\S]*Comfy, small hipbelt pockets\./);
@@ -196,7 +196,7 @@ test('catalog: search, pre-fill, link, overrides, refresh, contribute, review, p
   await t.test('gear card opens the product page', async ()=>{
     await page.locator('.gear-card', { hasText: 'Exos 58' }).locator('[data-action="catalog"]').click();
     await page.waitForSelector('#cdBody', { state: 'visible' });
-    assert.equal(await page.innerText('#cdTitle'), 'Osprey Exos 58 2023');
+    assert.equal(await page.textContent('#cdTitle'), 'Osprey Exos 58 2023');
     assert.ok(!(await page.isVisible('#cdUseBtn')));
     await page.click('#catalogDetailModalClose');
     await page.waitForSelector('#catalogDetailModalOverlay', { state: 'hidden' });
@@ -464,7 +464,7 @@ test('catalog: "Look it up" from a link and bulk "Add products from links"', { s
     await poles.locator('[data-f="weight_g"]').fill('290');
     await page.click('#bulkAddBtn');
     await page.waitForSelector('#bulkStepDone', { state: 'visible' });
-    assert.equal(await page.innerText('#bulkDoneTitle'), 'Added 1 product to the catalog');
+    assert.equal(await page.textContent('#bulkDoneTitle'), 'Added 1 product to the catalog');
     const bd = fake.db.catalog_products.find(p => p.brand === 'Black Diamond');
     assert.equal(bd.weight_g, 290);
     assert.equal(bd.source_url, 'https://brand.example.com/poles');
