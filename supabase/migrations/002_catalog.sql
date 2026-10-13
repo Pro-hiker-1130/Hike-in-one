@@ -1,5 +1,8 @@
 -- Hike-in-one shared gear catalog — run once in the Supabase SQL Editor,
 -- after schema.sql. Safe to re-run: every statement is idempotent.
+-- If the editor offers "Run and enable RLS", choose "Run without RLS":
+-- this script already enables RLS on every table, and the editor's
+-- helper can paste its lines into the middle of a function and break it.
 --
 -- The catalog holds product *definitions* shared by everyone ("Osprey
 -- Exos 58"), not the items people own. Owned items stay in each user's
@@ -75,6 +78,7 @@ create table if not exists public.catalog_products (
   constraint catalog_products_specs check (jsonb_typeof(specs) = 'object' and pg_column_size(specs) <= 8192),
   constraint catalog_products_url check (product_url is null or (product_url ~* '^https?://' and char_length(product_url) <= 500))
 );
+alter table public.catalog_products enable row level security;
 
 create unique index if not exists catalog_products_key_uq on public.catalog_products (normalized_key);
 create index if not exists catalog_products_search_trgm on public.catalog_products using gin (search_text extensions.gin_trgm_ops);
@@ -86,6 +90,7 @@ create table if not exists public.catalog_product_revisions (
   changed_at timestamptz not null default now(),
   previous jsonb not null
 );
+alter table public.catalog_product_revisions enable row level security;
 create index if not exists catalog_product_revisions_product on public.catalog_product_revisions (product_id, changed_at desc);
 
 -- Who created/edited a product is set here, never trusted from the
@@ -131,6 +136,7 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now(),
   constraint profiles_display_name_len check (char_length(btrim(display_name)) between 2 and 40)
 );
+alter table public.profiles enable row level security;
 
 -- Photos live in the public "catalog-photos" storage bucket under
 -- <uploader's user id>/<file>; this table ties them to a product.
@@ -142,6 +148,7 @@ create table if not exists public.catalog_photos (
   created_at timestamptz not null default now(),
   constraint catalog_photos_path check (storage_path ~ '^[0-9a-f-]{36}/[A-Za-z0-9._-]{1,100}$')
 );
+alter table public.catalog_photos enable row level security;
 create index if not exists catalog_photos_product on public.catalog_photos (product_id, created_at);
 
 -- Keeps one product from collecting an unbounded pile of photos.
@@ -169,6 +176,7 @@ create table if not exists public.reviews (
   constraint reviews_text_len check (text is null or char_length(text) <= 4000),
   constraint reviews_one_per_user unique (product_id, user_id)
 );
+alter table public.reviews enable row level security;
 
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql as $$
@@ -185,12 +193,8 @@ create trigger profiles_touch before update on public.profiles
   for each row execute function public.touch_updated_at();
 
 -- ---------------------------------------------------------------------
--- Row-level security
-alter table public.catalog_products enable row level security;
-alter table public.catalog_product_revisions enable row level security;
-alter table public.catalog_photos enable row level security;
-alter table public.reviews enable row level security;
-alter table public.profiles enable row level security;
+-- Row-level security policies (RLS itself is switched on right after
+-- each create table above).
 
 drop policy if exists "Catalog is public" on public.catalog_products;
 create policy "Catalog is public" on public.catalog_products for select using (true);
