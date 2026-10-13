@@ -270,6 +270,34 @@
   .gear-badge.status-planned{color:#D9B26F;background:rgba(217,178,111,0.12);}
   .gear-badge.status-completed{color:#8FBF9A;background:rgba(143,191,154,0.12);}
   .gear-card-meta{font-size:12px;color:var(--muted);}
+  .trip-track-block{
+    padding:10px 14px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);
+  }
+  .trip-track-block + .trip-track-block{margin-top:6px;}
+  .trip-track-block .trip-track-row{padding:0;border:none;background:none;}
+  .track-climb{font-size:12px;color:var(--muted);margin-top:4px;}
+  .track-climb-hint{font-size:11.5px;color:var(--muted);margin-top:4px;font-style:italic;}
+  .ele-profile{position:relative;margin-top:10px;padding-left:48px;outline:none;border-radius:4px;}
+  .ele-profile:focus-visible{outline:2px solid var(--brass);outline-offset:3px;}
+  .ele-plot{position:relative;height:84px;border-bottom:1px solid var(--line);cursor:crosshair;touch-action:pan-y;}
+  .ele-plot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+  .ele-area{fill:var(--brass);fill-opacity:0.12;stroke:none;}
+  .ele-line{fill:none;stroke:var(--brass);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;}
+  .ele-axis{position:absolute;left:0;width:42px;text-align:right;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .ele-axis-max{top:-4px;}
+  .ele-axis-min{top:74px;}
+  .ele-axis-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;}
+  .ele-cursor{position:absolute;top:0;bottom:0;width:1px;margin-left:-0.5px;background:rgba(243,237,225,0.35);pointer-events:none;}
+  .ele-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--brass);box-shadow:0 0 0 2px var(--panel);pointer-events:none;}
+  .wear{margin-top:2px;}
+  .wear-meter{height:4px;border-radius:2px;background:rgba(243,237,225,0.1);overflow:hidden;}
+  .wear-fill{display:block;height:100%;border-radius:2px;}
+  .wear-fill.wear-ok{background:var(--muted);}
+  .wear-fill.wear-soon{background:#D9B26F;}
+  .wear-fill.wear-worn{background:#E77A6E;}
+  .wear-text{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:4px;}
+  .wear-label.wear-soon{color:#D9B26F;font-weight:600;}
+  .wear-label.wear-worn{color:#E77A6E;font-weight:600;}
   .gear-card-weight{font-family:'Fraunces',serif;font-size:16px;color:var(--brass);}
   .gear-card-actions{display:flex;gap:6px;margin-top:auto;padding-top:6px;}
   .icon-btn{
@@ -879,6 +907,10 @@
         <div class="stat-label">kilometers</div>
       </div>
       <div class="stat-card">
+        <div class="stat-num" id="tripStatClimb">—</div>
+        <div class="stat-label">m climbed</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-num" id="tripStatGearCount">0</div>
         <div class="stat-label">gear items</div>
       </div>
@@ -1024,6 +1056,12 @@
         <div class="form-field">
           <label for="gearTempRating">Temp rating</label>
           <input type="text" id="gearTempRating" placeholder="e.g. -5°C">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="gearLifespanKm">Lifespan (km)</label>
+          <input type="number" id="gearLifespanKm" min="0" step="1" placeholder="e.g. 800 for trail runners — optional">
         </div>
       </div>
       <div class="form-row">
@@ -1259,6 +1297,7 @@
   const STORAGE_TRACKS = 'waypoints-tracks-v1';
   const STORAGE_GOOGLE = 'waypoints-google-points-v1';
   const MAX_STORED_POINTS_PER_TRACK = 1500;
+  const MAX_PROFILE_POINTS = 300;
   const MAX_GOOGLE_POINTS = 20000;
 
   let tracks = [];        // {id, name, date, distanceKm, points:[[lat,lon],...], colorIdx}
@@ -1343,11 +1382,16 @@
     if(!ptEls.length) ptEls = Array.from(xml.querySelectorAll('wpt'));
     if(!ptEls.length) throw new Error('No track points found');
 
-    const points = ptEls.map(p=>{
+    const raw = ptEls.map(p=>{
       const lat=parseFloat(p.getAttribute('lat')), lon=parseFloat(p.getAttribute('lon'));
-      return (isFinite(lat)&&isFinite(lon)) ? [lat,lon] : null;
+      if(!(isFinite(lat)&&isFinite(lon))) return null;
+      const eleEl = p.querySelector('ele'), timeEl = p.querySelector('time');
+      const ele = eleEl ? parseFloat(eleEl.textContent) : NaN;
+      const t = timeEl ? Date.parse(timeEl.textContent) : NaN;
+      return { ll:[lat,lon], ele: isFinite(ele) ? ele : null, t: isFinite(t) ? t : null };
     }).filter(Boolean);
-    if(!points.length) throw new Error('No valid coordinates found');
+    if(!raw.length) throw new Error('No valid coordinates found');
+    const points = raw.map(r=>r.ll);
 
     const nameEl = xml.querySelector('trk > name') || xml.querySelector('metadata > name');
     const name = (nameEl && nameEl.textContent.trim()) || filename.replace(/\.gpx$/i,'');
@@ -1355,14 +1399,156 @@
     const timeEl = xml.querySelector('trkpt time') || xml.querySelector('metadata time');
     const date = timeEl ? timeEl.textContent.slice(0,10) : null;
 
-    let distanceKm = 0;
-    for(let i=1;i<points.length;i++) distanceKm += haversine(points[i-1], points[i]);
+    // Cumulative distance per point, so the elevation profile's x-axis is
+    // distance along the trail rather than point index.
+    const cumKm = [0];
+    for(let i=1;i<points.length;i++) cumKm.push(cumKm[i-1] + haversine(points[i-1], points[i]));
+    const distanceKm = cumKm[cumKm.length-1];
+
+    // Elevation stats come from the full-resolution points (downsampling
+    // first would shave off real climbs); only the chart is downsampled.
+    const eleStats = elevationStats(raw.map(r=>r.ele));
+    let profile = null;
+    if(eleStats){
+      const full = raw.map((r,i)=> r.ele == null ? null : [+cumKm[i].toFixed(3), Math.round(r.ele)]).filter(Boolean);
+      profile = downsample(full, MAX_PROFILE_POINTS);
+      // downsample()'s stride can skip the final point; keep it so the
+      // profile reaches the track's full distance.
+      if(profile[profile.length-1] !== full[full.length-1]) profile.push(full[full.length-1]);
+    }
+    const times = raw.map(r=>r.t).filter(t=>t != null);
+    const durationSec = times.length >= 2 ? Math.round((times[times.length-1] - times[0]) / 1000) : null;
 
     return {
       id: 't_' + Math.random().toString(36).slice(2,10),
       name, date, distanceKm,
-      points: downsample(points, MAX_STORED_POINTS_PER_TRACK)
+      points: downsample(points, MAX_STORED_POINTS_PER_TRACK),
+      // null (not undefined) means "this file has no elevation", which
+      // the UI tells apart from tracks imported before elevation existed.
+      elevationGainM: eleStats ? eleStats.gain : null,
+      elevationLossM: eleStats ? eleStats.loss : null,
+      minEleM: eleStats ? eleStats.min : null,
+      maxEleM: eleStats ? eleStats.max : null,
+      profile,
+      durationSec: durationSec > 0 ? durationSec : null,
     };
+  }
+
+  // GPS elevation is noisy — summing every tiny up/down tick wildly
+  // overstates the climb. Hysteresis only counts a rise or drop once it's
+  // moved ELE_THRESHOLD_M past the last turning point, the same idea most
+  // watches and apps use.
+  const ELE_THRESHOLD_M = 4;
+  function elevationStats(eles){
+    const vals = eles.filter(e => e != null);
+    if(vals.length < 2) return null;
+    let anchor = vals[0], gain = 0, loss = 0, min = vals[0], max = vals[0];
+    for(const v of vals){
+      if(v < min) min = v;
+      if(v > max) max = v;
+      if(v - anchor >= ELE_THRESHOLD_M){ gain += v - anchor; anchor = v; }
+      else if(anchor - v >= ELE_THRESHOLD_M){ loss += anchor - v; anchor = v; }
+    }
+    return { gain: Math.round(gain), loss: Math.round(loss), min: Math.round(min), max: Math.round(max) };
+  }
+
+  function formatDuration(sec){
+    if(!sec) return '';
+    const d = Math.floor(sec/86400), h = Math.floor(sec%86400/3600), m = Math.round(sec%3600/60);
+    if(d) return d+' d '+h+' h';
+    if(h) return h+' h '+String(m).padStart(2,'0')+' min';
+    return m+' min';
+  }
+
+  // Elevation profile: elevation (y) against distance along the trail (x).
+  // The SVG stretches to the container (preserveAspectRatio="none") with a
+  // non-scaling stroke; the hover cursor and dot are HTML so the dot stays
+  // round however wide the chart is.
+  function buildElevationProfile(t){
+    const pts = t.profile;
+    const totalKm = pts[pts.length-1][0] || t.distanceKm || 1;
+    let lo = t.minEleM, hi = t.maxEleM;
+    // A near-flat walk shouldn't have 3 m of GPS noise blown up to fill
+    // the whole chart height.
+    if(hi - lo < 40){ const mid = (hi + lo) / 2; lo = mid - 20; hi = mid + 20; }
+    const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+    const W = 1000, H = 100;
+    const xOf = km => km / totalKm * W;
+    const yOf = e => H - (e - lo) / (hi - lo) * H;
+    const line = pts.map((p,i)=> (i?'L':'M') + xOf(p[0]).toFixed(1) + ',' + yOf(p[1]).toFixed(1)).join('');
+    const area = line + 'L' + xOf(pts[pts.length-1][0]).toFixed(1) + ',' + H + 'L' + xOf(pts[0][0]).toFixed(1) + ',' + H + 'Z';
+
+    const el = document.createElement('div');
+    el.className = 'ele-profile';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', 'Elevation profile: '+t.minEleM+' to '+t.maxEleM+' m over '+totalKm.toFixed(1)+' km, '+t.elevationGainM+' m climbed. Use left and right arrow keys to read points.');
+    el.innerHTML =
+      '<div class="ele-axis ele-axis-max">'+t.maxEleM+' m</div>'+
+      '<div class="ele-axis ele-axis-min">'+t.minEleM+' m</div>'+
+      '<div class="ele-plot">'+
+        '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">'+
+          '<path class="ele-area" d="'+area+'"/>'+
+          '<path class="ele-line" d="'+line+'" vector-effect="non-scaling-stroke"/>'+
+        '</svg>'+
+        '<div class="ele-cursor" hidden></div><div class="ele-dot" hidden></div>'+
+      '</div>'+
+      '<div class="ele-axis-x"><span>0 km</span><span>'+totalKm.toFixed(1)+' km</span></div>';
+
+    const plot = el.querySelector('.ele-plot');
+    const cursor = el.querySelector('.ele-cursor');
+    const dot = el.querySelector('.ele-dot');
+    let idx = -1;
+
+    function showAt(i, clientX, clientY){
+      idx = Math.max(0, Math.min(pts.length-1, i));
+      const [km, ele] = pts[idx];
+      const xPct = km / totalKm * 100, yPct = yOf(ele) / H * 100;
+      cursor.style.left = xPct + '%';
+      dot.style.left = xPct + '%';
+      dot.style.top = yPct + '%';
+      cursor.hidden = dot.hidden = false;
+      if(clientX == null){
+        const r = dot.getBoundingClientRect();
+        clientX = r.left + r.width/2; clientY = r.top;
+      }
+      showChartTooltip(clientX, clientY, ele+' m', 'at '+km.toFixed(1)+' km', null);
+    }
+    function hide(){ cursor.hidden = dot.hidden = true; hideChartTooltip(); }
+    function nearestIndex(km){
+      let best = 0;
+      for(let i=1;i<pts.length;i++) if(Math.abs(pts[i][0]-km) < Math.abs(pts[best][0]-km)) best = i;
+      return best;
+    }
+
+    plot.addEventListener('pointermove', e=>{
+      const r = plot.getBoundingClientRect();
+      const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      showAt(nearestIndex(frac * totalKm), e.clientX, e.clientY);
+    });
+    plot.addEventListener('pointerleave', hide);
+    el.addEventListener('focus', ()=>{
+      let hiIdx = 0;
+      pts.forEach((p,i)=>{ if(p[1] > pts[hiIdx][1]) hiIdx = i; });
+      showAt(idx >= 0 ? idx : hiIdx);
+    });
+    el.addEventListener('blur', hide);
+    el.addEventListener('keydown', e=>{
+      const step = Math.max(1, Math.round(pts.length / 50));
+      if(e.key === 'ArrowRight'){ e.preventDefault(); showAt(idx + step); }
+      else if(e.key === 'ArrowLeft'){ e.preventDefault(); showAt(idx - step); }
+      else if(e.key === 'Home'){ e.preventDefault(); showAt(0); }
+      else if(e.key === 'End'){ e.preventDefault(); showAt(pts.length-1); }
+    });
+    return el;
+  }
+
+  // "↑ 820 m · ↓ 790 m · 4 h 05 min" — whatever a track actually has.
+  function trackClimbSummary(t){
+    const parts = [];
+    if(t.elevationGainM != null) parts.push('↑ '+t.elevationGainM+' m', '↓ '+t.elevationLossM+' m');
+    if(t.durationSec) parts.push(formatDuration(t.durationSec));
+    return parts.join(' · ');
   }
 
   // ---- Country detection (offline point-in-polygon against a bundled,
@@ -1977,6 +2163,8 @@
         '<strong>'+escapeHtml(t.name)+'</strong><br>'+
         (t.date ? escapeHtml(t.date)+', ' : '') +
         t.distanceKm.toFixed(1)+' km';
+      const climbLine = trackClimbSummary(t);
+      if(climbLine) popupHtml += '<br>'+climbLine;
       if(trip){
         const tripGear = tripGearItemsList(trip);
         if(tripGear.length){
@@ -2164,12 +2352,51 @@
   function gearUsageTrips(gearId){
     return trips.filter(tr => (tr.gearIds||[]).includes(gearId));
   }
+  // Distance only counts completed trips — a planned trip's route hasn't
+  // been walked yet, so it shouldn't wear anything out.
+  function gearDistanceKm(gearId){
+    return gearUsageTrips(gearId)
+      .filter(tr => tripStatus(tr) === 'completed')
+      .reduce((s,tr) => s + tripDistanceKm(tr), 0);
+  }
   function gearUsageSummary(gearId){
-    const used = gearUsageTrips(gearId);
-    if(!used.length) return '';
-    const dates = used.map(tripPrimaryDate).filter(Boolean).sort();
-    const last = dates.length ? dates[dates.length-1] : null;
-    return 'Used on '+used.length+' trip'+(used.length>1?'s':'')+(last?' · last '+last:'');
+    const all = gearUsageTrips(gearId);
+    if(!all.length) return '';
+    const done = all.filter(tr => tripStatus(tr) === 'completed');
+    const planned = all.length - done.length;
+    const parts = [];
+    if(done.length){
+      parts.push('Used on '+done.length+' trip'+(done.length>1?'s':''));
+      const km = gearDistanceKm(gearId);
+      if(km >= 0.1) parts.push(km.toFixed(km < 100 ? 1 : 0)+' km');
+      const dates = done.map(tripDisplayDate).filter(Boolean).sort();
+      if(dates.length) parts.push('last '+dates[dates.length-1]);
+    }
+    if(planned) parts.push('packed for '+planned+' planned trip'+(planned>1?'s':''));
+    return parts.join(' · ');
+  }
+  // null when the item has no lifespan set; otherwise distance vs lifespan
+  // plus a severity level for the card's wear meter.
+  function gearWear(g){
+    if(!g.lifespanKm) return null;
+    const km = gearDistanceKm(g.id);
+    const ratio = km / g.lifespanKm;
+    return { km, ratio, level: ratio >= 1 ? 'worn' : ratio >= 0.9 ? 'soon' : 'ok' };
+  }
+  function gearWearHtml(g){
+    const w = gearWear(g);
+    if(!w) return '';
+    const pct = Math.min(100, Math.round(w.ratio * 100));
+    const label = w.level === 'worn' ? 'Worn out — time to replace'
+      : w.level === 'soon' ? 'Replace soon'
+      : Math.round(w.ratio*100)+'% of lifespan';
+    return '<div class="wear">'+
+      '<div class="wear-meter" role="meter" aria-valuemin="0" aria-valuemax="'+g.lifespanKm+'" aria-valuenow="'+Math.round(w.km)+'" aria-label="Distance used of lifespan">'+
+        '<span class="wear-fill wear-'+w.level+'" style="width:'+pct+'%"></span>'+
+      '</div>'+
+      '<div class="wear-text"><span class="wear-label wear-'+w.level+'">'+(w.level==='ok'?'':'⚠ ')+label+'</span>'+
+      '<span>'+Math.round(w.km)+' / '+g.lifespanKm+' km</span></div>'+
+    '</div>';
   }
 
   // ---- Loadouts (reusable gear lists) ----
@@ -2385,13 +2612,14 @@
       const weight = tripGearWeight(trip);
       const dotColor = tks.length ? trackColors[tks[0].id] : null;
       const displayDate = tripDisplayDate(trip);
+      const climb = tks.reduce((sum,t)=>sum+(t.elevationGainM||0), 0);
       const card = document.createElement('div');
       card.className = 'trip-card';
       card.innerHTML =
         '<div class="trip-card-name">'+(dotColor?'<span class="track-color-dot" style="background:'+dotColor+'"></span>':'')+escapeHtml(trip.name)+'</div>'+
         (trip.notes ? '<div class="trip-card-notes">'+escapeHtml(trip.notes)+'</div>' : '')+
         (displayDate ? '<div class="trip-card-meta">'+escapeHtml(status==='planned' ? relativeDayLabel(displayDate) : displayDate)+'</div>' : '')+
-        '<div class="trip-card-meta">'+tks.length+' track'+(tks.length!==1?'s':'')+' · '+dist.toFixed(1)+' km</div>'+
+        '<div class="trip-card-meta">'+tks.length+' track'+(tks.length!==1?'s':'')+' · '+dist.toFixed(1)+' km'+(climb?' · ↑ '+climb+' m':'')+'</div>'+
         '<div class="trip-card-meta">'+gearList.length+' gear item'+(gearList.length!==1?'s':'')+(weight?' · '+formatWeight(weight):'')+'</div>';
       card.addEventListener('click', ()=> showTripDetail(trip.id));
       grid.appendChild(card);
@@ -2464,6 +2692,9 @@
     badge.textContent = status === 'planned' ? 'Planned' : 'Completed';
     document.getElementById('tripStatTracks').textContent = tks.length;
     document.getElementById('tripStatDistance').textContent = dist.toFixed(1);
+    const climbTracks = tks.filter(t => t.elevationGainM != null);
+    document.getElementById('tripStatClimb').textContent = climbTracks.length
+      ? climbTracks.reduce((s,t)=>s+t.elevationGainM, 0) : '—';
     document.getElementById('tripStatGearCount').textContent = gearList.length;
     document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
 
@@ -2477,12 +2708,30 @@
       trackList.innerHTML = '<div class="trip-gear-empty">No tracks linked yet — click Edit to add some.</div>';
     } else {
       tks.forEach(t=>{
+        const block = document.createElement('div');
+        block.className = 'trip-track-block';
         const row = document.createElement('div');
         row.className = 'trip-track-row';
         row.innerHTML =
           '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+'</span>'+
           '<span class="trip-track-row-meta">'+(t.date?escapeHtml(t.date)+' · ':'')+t.distanceKm.toFixed(1)+' km</span>';
-        trackList.appendChild(row);
+        block.appendChild(row);
+        const climb = trackClimbSummary(t);
+        if(climb){
+          const c = document.createElement('div');
+          c.className = 'track-climb';
+          c.textContent = climb;
+          block.appendChild(c);
+        } else if(t.elevationGainM === undefined){
+          // Added before elevation was kept — the original file's data is
+          // gone, so say how to get it rather than silently show nothing.
+          const c = document.createElement('div');
+          c.className = 'track-climb-hint';
+          c.textContent = 'Added before elevation tracking — re-add this GPX to see its profile.';
+          block.appendChild(c);
+        }
+        if(t.profile && t.profile.length > 1) block.appendChild(buildElevationProfile(t));
+        trackList.appendChild(block);
       });
     }
 
@@ -3156,6 +3405,7 @@
         (g.brand || g.model ? '<div class="gear-card-meta">'+escapeHtml([g.brand,g.model].filter(Boolean).join(' '))+'</div>' : '')+
         '<div class="gear-card-weight">'+formatWeight(g.weightGrams)+'</div>'+
         (gearUsageSummary(g.id) ? '<div class="gear-card-meta">'+escapeHtml(gearUsageSummary(g.id))+'</div>' : '')+
+        gearWearHtml(g)+
         '<div class="gear-card-actions">'+
           '<button class="icon-btn" data-action="edit">Edit</button>'+
           '<button class="icon-btn" data-action="duplicate">Duplicate</button>'+
@@ -3347,6 +3597,7 @@
     document.getElementById('gearCurrency').value = g ? (g.currency || 'EUR') : 'EUR';
     document.getElementById('gearPurchaseDate').value = g ? (g.purchaseDate || '') : '';
     document.getElementById('gearCondition').value = g ? (g.condition || '') : '';
+    document.getElementById('gearLifespanKm').value = g && g.lifespanKm ? g.lifespanKm : '';
     document.getElementById('gearWaterproof').value = g ? (g.waterproof || '') : '';
     document.getElementById('gearTempRating').value = g ? (g.tempRating || '') : '';
     document.getElementById('gearProductUrl').value = g ? (g.productUrl || '') : '';
@@ -3553,6 +3804,7 @@
       currency: document.getElementById('gearCurrency').value,
       purchaseDate: document.getElementById('gearPurchaseDate').value,
       condition: document.getElementById('gearCondition').value,
+      lifespanKm: document.getElementById('gearLifespanKm').value ? Number(document.getElementById('gearLifespanKm').value) : null,
       waterproof: document.getElementById('gearWaterproof').value,
       tempRating: document.getElementById('gearTempRating').value.trim(),
       productUrl: document.getElementById('gearProductUrl').value.trim(),
