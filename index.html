@@ -32,6 +32,7 @@
     --danger:#B3261E;
     --signal:#588157;
     --on-accent:#FFFFFF;
+    --tabbar-h:72px;
     --font-body:'Barlow',system-ui,sans-serif;
     --font-display:'Barlow Condensed','Barlow',system-ui,sans-serif;
   }
@@ -39,7 +40,10 @@
   [hidden]{display:none !important;}
   html,body{margin:0;height:100%;background:var(--ink);color:var(--parchment);font-family:var(--font-body);}
   button{font-family:inherit;}
-  body{display:flex;flex-direction:column;height:100vh;width:100vw;overflow:hidden;}
+  /* dvh, not vh: on phones 100vh is the height with the browser's toolbars
+     hidden, so the page ran taller than the screen and its bottom slid under
+     the tab bar. */
+  body{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%;overflow:hidden;}
 
   /* ---- Top nav ---- */
   .top-nav{
@@ -716,7 +720,7 @@
   }
   .modal{
     background:var(--panel);border:1px solid var(--line);border-radius:8px;
-    width:100%;max-width:520px;max-height:88vh;overflow-y:auto;
+    width:100%;max-width:520px;max-height:88vh;max-height:88dvh;overflow-y:auto;
   }
   .modal-header{
     display:flex;align-items:center;justify-content:space-between;
@@ -833,13 +837,17 @@
     .nav-tabs{
       position:fixed;left:0;right:0;bottom:0;z-index:900;
       display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+      height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
       padding:8px 12px calc(8px + env(safe-area-inset-bottom));
       background:var(--panel);border-top:1px solid var(--line);
     }
     .nav-tab{flex-direction:column;gap:2px;font-size:12px;padding:6px 4px;min-height:48px;justify-content:center;}
     .nav-tab svg{width:22px;height:22px;}
     .nav-tab.active{background:var(--sage-soft);color:var(--brass);}
-    .page-container{margin-bottom:calc(66px + env(safe-area-inset-bottom));}
+    /* The tab bar and the space kept free for it share one height, so
+       nothing scrolls to a stop underneath it. */
+    .page-container{margin-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));}
+    .global-toast{bottom:calc(var(--tabbar-h) + 14px + env(safe-area-inset-bottom));}
     .app .map-area{order:-1;flex:1 1 55%;min-height:0;}
     .app .sidebar{flex:0 1 45%;max-height:none;border-bottom:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-14px;position:relative;z-index:500;box-shadow:0 -6px 20px rgba(52,78,65,0.1);}
   }
@@ -4619,6 +4627,16 @@
     {type:'shelf', label:'Lower shelf', categories:['Navigation','Electronics','Safety','Hygiene','Food','Other']},
     {type:'bench', label:'Boot bench', categories:['Footwear']}
   ];
+  // Phones fit three items per row: hanging the sleeping bag on the hooks
+  // leaves 3 on the hooks, 3 on the upper shelf and 2 even rows below,
+  // instead of a lone item wrapping onto its own line.
+  const NARROW_SCENE = window.matchMedia('(max-width:760px)');
+  function gearSceneBands(){
+    if(!NARROW_SCENE.matches) return GEAR_SCENE_BANDS;
+    return GEAR_SCENE_BANDS.map(band => band.type === 'hook'
+      ? Object.assign({}, band, {categories: band.categories.concat('Sleep system')})
+      : Object.assign({}, band, {categories: band.categories.filter(c => c !== 'Sleep system')}));
+  }
   const ICON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
   const GEAR_ICONS = {
     All: '<svg '+ICON_ATTRS+'><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
@@ -5002,7 +5020,7 @@
     const scene = document.getElementById('gearScene');
     scene.innerHTML = '';
 
-    GEAR_SCENE_BANDS.forEach(band=>{
+    gearSceneBands().forEach(band=>{
       const bandEl = document.createElement('div');
       bandEl.className = 'scene-band';
 
@@ -6551,6 +6569,9 @@
   document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
   document.querySelectorAll('#gearViewToggle button').forEach(b=> b.addEventListener('click', ()=> setGearView(b.dataset.gearview)));
   setGearView(gearView);
+  NARROW_SCENE.addEventListener('change', ()=>{
+    if(currentGearCategory === null && currentLoadoutId === null) renderGarage();
+  });
 
   // ---- Gear breakdown chart wiring (metric filter + table toggle, shared pattern) ----
   ['gear','loadout'].forEach(prefix=>{
