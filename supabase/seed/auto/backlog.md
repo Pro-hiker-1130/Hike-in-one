@@ -9,7 +9,6 @@ pin down to "Skipped" with a reason.
 - Sea to Summit Pack Liner 50L (Other)
 
 - Forclaz MT900 Ultralight Down Jacket (Clothing)
-- Forclaz MT500 Hiking Pole (Other)
 - Jack Wolfskin Wolftrail 28 (Backpack)
 
 ## Skipped
@@ -20,7 +19,6 @@ pin down to "Skipped" with a reason.
 - MSR FreeLite 2: V3/U24 version unclear.
 - Deuter Aircontact Lite 50+10: sources disagree (1640 vs 1750 g) and no size named.
 - Forclaz MT900 Hooded Down Jacket: several versions (660/800 fill) with different weights.
-- Forclaz MT500 Hiking Pole: only one source, pair weight is derived from the per-pole figure.
 - Forclaz MT100 boots: no men's pair weight found.
 - Tatonka Bison 75: only an old third-party weight (3.3 kg) found.
 - Fjällräven Keb Trousers: only one discontinued listing (REI) found.
