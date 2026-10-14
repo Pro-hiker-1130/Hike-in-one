@@ -418,6 +418,15 @@ test('Escape closes the dialog on top, one at a time', { skip: !playwright }, as
   await page.waitForSelector('#tripModalOverlay', { state: 'hidden' });
   await page.click('.nav-tab[data-page="gear"]');
   await page.click('#addGearBtnGarage');
+  await page.waitForSelector('#catalogBrowseModalOverlay', { state: 'visible' });
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('#catalogBrowseModalOverlay', { state: 'hidden' });
+  await page.click('#addLoadoutBtn');
+  await page.waitForSelector('#loadoutModalOverlay', { state: 'visible' });
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('#loadoutModalOverlay', { state: 'hidden' });
+  await page.click('#viewAllGearBtn');
+  await page.click('#gearGrid .gear-card [data-action="edit"]');
   await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
   await page.keyboard.press('Escape');
   await page.waitForSelector('#gearModalOverlay', { state: 'hidden' });

@@ -48,7 +48,7 @@ function createFakeSupabase({ userId = null, seed = {}, lookups = {}, userDataDe
   function filterRows(rows, params){
     return rows.filter(r => {
       for(const [k, v] of params){
-        if(['select', 'order', 'limit', 'on_conflict', 'columns'].includes(k)) continue;
+        if(['select', 'order', 'limit', 'offset', 'or', 'on_conflict', 'columns'].includes(k)) continue;
         const m = /^eq\.(.*)$/.exec(v);
         if(m && String(r[k]) !== m[1]) return false;
       }
@@ -137,12 +137,44 @@ function createFakeSupabase({ userId = null, seed = {}, lookups = {}, userDataDe
     }
     if(table === 'catalog_products'){
       if(method === 'GET'){
-        const rows = filterRows(db.catalog_products, params).map(x => {
+        let rows = filterRows(db.catalog_products, params);
+        // or=(name.ilike.*x*,brand.ilike.*x*) — the browser's text search
+        const or = url.searchParams.get('or');
+        if(or){
+          const conds = or.replace(/^\(|\)$/g, '').split(',').map(c => {
+            const m = /^(\w+)\.ilike\.\*(.*)\*$/.exec(c);
+            return m && { col: m[1], term: m[2].toLowerCase() };
+          }).filter(Boolean);
+          rows = rows.filter(r => conds.some(c => String(r[c.col] || '').toLowerCase().includes(c.term)));
+        }
+        // order=weight_g.asc.nullslast,brand.asc,name.asc
+        const order = url.searchParams.get('order');
+        if(order){
+          const keys = order.split(',').map(o => { const [col, dir = 'asc', nulls] = o.split('.'); return { col, desc: dir === 'desc', nullsLast: nulls ? nulls === 'nullslast' : dir !== 'desc' }; });
+          rows = rows.slice().sort((a, b) => {
+            for(const k of keys){
+              const x = a[k.col], y = b[k.col];
+              if(x == null || y == null){ if(x == null && y == null) continue; return (x == null) === k.nullsLast ? 1 : -1; }
+              const c = typeof x === 'number' ? x - y : String(x).localeCompare(String(y));
+              if(c) return k.desc ? -c : c;
+            }
+            return 0;
+          });
+        }
+        const total = rows.length;
+        const offset = Number(url.searchParams.get('offset') || 0);
+        const limit = url.searchParams.get('limit');
+        if(limit != null) rows = rows.slice(offset, offset + Number(limit));
+        rows = rows.map(x => {
           const out = Object.assign({}, x);
           delete out.normalized_key;
           if((url.searchParams.get('select') || '').includes('catalog_photos')) out.catalog_photos = db.catalog_photos.filter(ph => ph.product_id === x.id);
           return out;
         });
+        if(/count=exact/.test(req.headers()['prefer'] || '') && !wantsObject){
+          const range = rows.length ? offset + '-' + (offset + rows.length - 1) : '*';
+          return json(200, rows, { 'content-range': range + '/' + total, 'access-control-expose-headers': 'content-range' });
+        }
         return reply(rows);
       }
       if(!authed) return deny();

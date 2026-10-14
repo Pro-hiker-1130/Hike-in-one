@@ -950,6 +950,31 @@
   .settings-note{margin:0;font-size:14px;color:var(--muted);line-height:1.45;}
   .settings-account-email{margin:0;font-weight:600;}
   .settings-error{color:var(--danger);}
+  .catalog-browse-modal{max-width:640px;display:flex;flex-direction:column;}
+  .cb-controls{padding:12px 20px 0;display:flex;flex-direction:column;gap:8px;}
+  .cb-controls input[type="search"]{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(52,78,65,0.22);background:var(--panel);font:inherit;font-size:15px;color:var(--parchment);}
+  .cb-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .cb-filters select{min-width:0;padding:8px;border-radius:8px;border:1px solid rgba(52,78,65,0.22);background:var(--panel);font:inherit;font-size:13.5px;color:var(--parchment);}
+  .cb-count{padding:10px 20px 4px;font-size:13px;color:var(--muted);min-height:18px;}
+  .cb-list{padding:0 20px 8px;display:flex;flex-direction:column;}
+  .cb-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);}
+  .cb-open{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:10px 0;border:0;background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer;}
+  .cb-open:hover .cb-name{color:var(--brass);text-decoration:underline;}
+  .cb-thumb{flex:none;width:44px;height:44px;border-radius:8px;background:var(--panel-alt);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--brass);}
+  .cb-thumb img{width:100%;height:100%;object-fit:cover;}
+  .cb-thumb svg{width:26px;height:26px;}
+  .cb-text{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .cb-name{font-weight:600;font-size:15px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .cb-meta{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cb-weight{flex:none;font-variant-numeric:tabular-nums;font-size:14px;}
+  .cb-use{flex:none;padding:6px 12px;}
+  .cb-more{align-self:center;margin:12px 0;}
+  .cb-empty{padding:28px 8px;text-align:center;color:var(--muted);font-size:14px;}
+  .cb-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--panel);}
+  @media (max-width:560px){
+    .cb-filters{grid-template-columns:1fr 1fr;}
+    .cb-filters #cbSort{grid-column:1 / -1;}
+  }
   .quick-add-row{display:flex;gap:8px;flex-wrap:wrap;}
   .quick-add-row input{flex:1 1 200px;min-width:0;}
   .quick-add-row button{flex:none;}
@@ -1648,6 +1673,34 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="catalogBrowseModalOverlay" style="display:none;">
+  <div class="modal catalog-browse-modal" role="dialog" aria-labelledby="cbTitle">
+    <div class="modal-header">
+      <h3 id="cbTitle">Add gear</h3>
+      <button class="modal-close" aria-label="Close" id="catalogBrowseModalClose" type="button">&times;</button>
+    </div>
+    <div class="cb-controls">
+      <input type="search" id="cbSearch" placeholder="Search the gear catalog…" aria-label="Search the gear catalog" autocomplete="off">
+      <div class="cb-filters">
+        <select id="cbCategory" aria-label="Category"></select>
+        <select id="cbBrand" aria-label="Brand"></select>
+        <select id="cbSort" aria-label="Sort">
+          <option value="name">Brand A–Z</option>
+          <option value="light">Lightest first</option>
+          <option value="heavy">Heaviest first</option>
+          <option value="new">Newest</option>
+        </select>
+      </div>
+    </div>
+    <div class="cb-count" id="cbCount" aria-live="polite"></div>
+    <div class="cb-list" id="cbList"></div>
+    <div class="cb-footer">
+      <button type="button" class="ghost-btn" id="cbManualBtn">Not listed? Add it yourself</button>
+      <button type="button" class="link-btn" id="cbContributeBtn">Add a product to the catalog</button>
+    </div>
   </div>
 </div>
 
@@ -5468,6 +5521,31 @@
   function gramsLabel(g){ return Math.round(g).toLocaleString('en-US') + ' g'; }
 
   const catalogApi = {
+    // One page of the catalog for the browser: { rows, total }.
+    async browse({ q = '', category = '', brand = '', sort = 'name', offset = 0, limit = 30 }){
+      let req = sb.from('catalog_products')
+        .select('id, name, brand, model, category, weight_g, catalog_photos(storage_path)', { count: 'exact' });
+      if(category) req = req.eq('category', category);
+      if(brand) req = req.eq('brand', brand);
+      // PostgREST's or=() syntax uses , ( ) * as delimiters, so they can't
+      // appear in the search text itself.
+      const term = String(q).replace(/[,()*%\\:"']/g, ' ').trim().replace(/\s+/g, ' ');
+      if(term) req = req.or(['name', 'brand', 'model'].map(c => c + '.ilike.*' + term + '*').join(','));
+      if(sort === 'light') req = req.order('weight_g', { ascending: true, nullsFirst: false });
+      else if(sort === 'heavy') req = req.order('weight_g', { ascending: false, nullsFirst: false });
+      else if(sort === 'new') req = req.order('created_at', { ascending: false });
+      req = req.order('brand', { ascending: true }).order('name', { ascending: true }).range(offset, offset + limit - 1);
+      const { data, error, count } = await req;
+      if(error) throw error;
+      return { rows: data || [], total: count == null ? (data || []).length : count };
+    },
+    // Brand and category counts for the filters (the catalog is small
+    // enough to fetch these two columns whole).
+    async facets(){
+      const { data, error } = await sb.from('catalog_products').select('brand, category').limit(10000);
+      if(error) throw error;
+      return data || [];
+    },
     async search(q){
       const { data, error } = await sb.rpc('search_catalog', { q, max_results: 8 });
       if(error) throw error;
@@ -5978,6 +6056,150 @@
     document.getElementById('catalogDetailModalOverlay').style.display = 'none';
     cdState = null;
     onModalClosed('catalogDetailModalOverlay');
+  }
+
+  // ---- Catalog browser: "+ Add item" starts here ----
+  const CB_PAGE = 30;
+  let cbState = null;     // { presetCategory, rows, total, offset, seq }
+  let cbFacets = null, cbFacetsAt = 0;
+  let cbSearchTimer = 0;
+
+  function openCatalogBrowser(presetCategory){
+    if(!CATALOG_ENABLED){ openGearModal(null, presetCategory || null); return; }
+    cbState = { presetCategory: presetCategory || null, rows: [], total: 0, offset: 0, seq: 0 };
+    document.getElementById('cbSearch').value = '';
+    document.getElementById('cbSort').value = 'name';
+    const cat = document.getElementById('cbCategory');
+    if(!cat.options.length){
+      cat.appendChild(new Option('All categories', ''));
+      CC.CATEGORIES.forEach(c => cat.appendChild(new Option(c, c)));
+    }
+    cat.value = presetCategory && CC.CATEGORIES.includes(presetCategory) ? presetCategory : '';
+    document.getElementById('cbContributeBtn').textContent = cloudUser ? 'Add a product to the catalog' : 'Sign in to add products to the catalog';
+    document.getElementById('catalogBrowseModalOverlay').style.display = 'flex';
+    onModalOpened('catalogBrowseModalOverlay');
+    loadCatalogFacets().then(()=> cbState && renderCatalogFilters());
+    renderCatalogFilters();
+    loadCatalogPage(true);
+  }
+  function closeCatalogBrowser(){
+    document.getElementById('catalogBrowseModalOverlay').style.display = 'none';
+    cbState = null;
+    onModalClosed('catalogBrowseModalOverlay');
+  }
+
+  async function loadCatalogFacets(){
+    if(cbFacets && Date.now() - cbFacetsAt < 5 * 60000) return;
+    try{ cbFacets = await catalogApi.facets(); cbFacetsAt = Date.now(); }catch(e){ cbFacets = cbFacets || []; }
+  }
+
+  // Category options show how many products each has; the brand list
+  // narrows to brands in the chosen category.
+  function renderCatalogFilters(){
+    const rows = cbFacets || [];
+    const catSel = document.getElementById('cbCategory');
+    const counts = {};
+    rows.forEach(r => counts[r.category] = (counts[r.category] || 0) + 1);
+    Array.from(catSel.options).forEach(o => {
+      o.textContent = o.value ? o.value + (rows.length ? ' (' + (counts[o.value] || 0) + ')' : '') : 'All categories';
+    });
+    const brandSel = document.getElementById('cbBrand');
+    const keep = brandSel.value;
+    const inCat = rows.filter(r => !catSel.value || r.category === catSel.value);
+    const brandCounts = {};
+    inCat.forEach(r => { if(r.brand) brandCounts[r.brand] = (brandCounts[r.brand] || 0) + 1; });
+    const brands = Object.keys(brandCounts).sort((a,b) => a.localeCompare(b));
+    brandSel.innerHTML = '';
+    brandSel.appendChild(new Option('All brands', ''));
+    brands.forEach(b => brandSel.appendChild(new Option(b + ' (' + brandCounts[b] + ')', b)));
+    brandSel.value = brands.includes(keep) ? keep : '';
+  }
+
+  async function loadCatalogPage(reset){
+    const state = cbState;
+    if(!state) return;
+    if(reset){ state.rows = []; state.offset = 0; state.total = 0; }
+    const seq = ++state.seq;
+    const list = document.getElementById('cbList');
+    const countEl = document.getElementById('cbCount');
+    if(reset){ list.innerHTML = ''; countEl.textContent = 'Loading…'; }
+    const more = list.querySelector('.cb-more');
+    if(more){ more.disabled = true; more.textContent = 'Loading…'; }
+    try{
+      const page = await catalogApi.browse({
+        q: document.getElementById('cbSearch').value,
+        category: document.getElementById('cbCategory').value,
+        brand: document.getElementById('cbBrand').value,
+        sort: document.getElementById('cbSort').value,
+        offset: state.offset, limit: CB_PAGE,
+      });
+      if(cbState !== state || seq !== state.seq) return;   // a newer search took over
+      state.rows = state.rows.concat(page.rows);
+      state.total = page.total;
+      state.offset += page.rows.length;
+      renderCatalogList();
+    }catch(err){
+      if(cbState !== state || seq !== state.seq) return;
+      countEl.textContent = '';
+      list.innerHTML = '<div class="cb-empty"></div>';
+      list.querySelector('.cb-empty').textContent = catalogErrorMessage(err) + ' You can still add the item yourself.';
+    }
+  }
+
+  function renderCatalogList(){
+    const state = cbState;
+    const list = document.getElementById('cbList');
+    const countEl = document.getElementById('cbCount');
+    countEl.textContent = state.total === 1 ? '1 product' : state.total.toLocaleString('en-US') + ' products';
+    list.innerHTML = '';
+    if(!state.rows.length){
+      list.innerHTML = '<div class="cb-empty">Nothing in the catalog matches. Try fewer filters, or add the item yourself below.</div>';
+      return;
+    }
+    state.rows.forEach(p=>{
+      const row = document.createElement('div');
+      row.className = 'cb-row';
+      const photo = (p.catalog_photos || [])[0];
+      row.innerHTML =
+        '<button type="button" class="cb-open">'+
+          '<span class="cb-thumb"></span>'+
+          '<span class="cb-text"><span class="cb-name"></span><span class="cb-meta"></span></span>'+
+          '<span class="cb-weight"></span>'+
+        '</button>'+
+        '<button type="button" class="ghost-btn cb-use">Add</button>';
+      const thumb = row.querySelector('.cb-thumb');
+      if(photo){
+        const img = document.createElement('img');
+        img.src = catalogPhotoUrl(photo.storage_path); img.alt = ''; img.loading = 'lazy';
+        thumb.appendChild(img);
+      } else {
+        thumb.innerHTML = GEAR_ICONS[p.category] || GEAR_ICONS.Other;
+      }
+      row.querySelector('.cb-name').textContent = p.name;
+      row.querySelector('.cb-meta').textContent = [p.brand, p.model, p.category].filter(Boolean).join(' · ');
+      row.querySelector('.cb-weight').textContent = p.weight_g ? gramsLabel(p.weight_g) : '';
+      row.querySelector('.cb-open').setAttribute('aria-label', 'Details for ' + [p.brand, p.name, p.model].filter(Boolean).join(' '));
+      row.querySelector('.cb-use').setAttribute('aria-label', 'Add ' + [p.brand, p.name].filter(Boolean).join(' ') + ' to your gear');
+      row.querySelector('.cb-open').addEventListener('click', ()=> openCatalogDetail(p.id, { onUse: useCatalogProductFromBrowser }));
+      row.querySelector('.cb-use').addEventListener('click', ()=> useCatalogProductFromBrowser(p.id));
+      list.appendChild(row);
+    });
+    if(state.rows.length < state.total){
+      const more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'ghost-btn cb-more';
+      more.textContent = 'Show more (' + (state.total - state.rows.length) + ' left)';
+      more.addEventListener('click', ()=> loadCatalogPage(false));
+      list.appendChild(more);
+    }
+  }
+
+  // From the browser (or a product page opened from it) into a new gear
+  // item, filled in from the catalog.
+  function useCatalogProductFromBrowser(id){
+    const preset = cbState ? cbState.presetCategory : null;
+    const go = ()=>{ openGearModal(null, preset); pickCatalogProduct(id); };
+    if(cbState){ closeCatalogBrowser(); afterModalCleanup(go); } else go();
   }
 
   async function loadCatalogDetail(){
@@ -6712,6 +6934,7 @@
     catalogProductModalOverlay: closeCatalogProductModal,
     catalogDetailModalOverlay: closeCatalogDetail,
     catalogBulkModalOverlay: closeCatalogBulkModal,
+    catalogBrowseModalOverlay: closeCatalogBrowser,
   };
   let openModalOrder = [];      // most-recently-opened last
   let expectingCleanupPop = false;  // a history.back() we triggered ourselves, to drop a closed modal's entry
@@ -6882,7 +7105,7 @@
   });
 
   // ---- Gear Room wiring ----
-  document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openGearModal(null, null));
+  document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openCatalogBrowser(null));
   document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
   document.querySelectorAll('#gearViewToggle button').forEach(b=> b.addEventListener('click', ()=> setGearView(b.dataset.gearview)));
   setGearView(gearView);
@@ -6908,7 +7131,7 @@
       btn.textContent = showingTable ? 'View as table' : 'View as chart';
     });
   });
-  document.getElementById('addGearBtn').addEventListener('click', ()=> openGearModal(null, currentGearCategory));
+  document.getElementById('addGearBtn').addEventListener('click', ()=> openCatalogBrowser(currentGearCategory === 'ALL' ? null : currentGearCategory));
   document.getElementById('backToGarageBtn').addEventListener('click', showGarage);
   document.getElementById('gearModalClose').addEventListener('click', closeGearModal);
   document.getElementById('gearCancelBtn').addEventListener('click', closeGearModal);
@@ -7134,6 +7357,28 @@
   document.getElementById('cdReviewDeleteBtn').addEventListener('click', deleteMyReview);
   document.querySelectorAll('#cdStars input').forEach(input=>{
     input.addEventListener('change', ()=> setReviewStars(Number(input.value)));
+  });
+
+  // ---- Catalog browser wiring ----
+  document.getElementById('catalogBrowseModalClose').addEventListener('click', closeCatalogBrowser);
+  document.getElementById('catalogBrowseModalOverlay').addEventListener('click', e=>{ if(e.target.id === 'catalogBrowseModalOverlay') closeCatalogBrowser(); });
+  document.getElementById('cbSearch').addEventListener('input', ()=>{
+    clearTimeout(cbSearchTimer);
+    cbSearchTimer = setTimeout(()=> loadCatalogPage(true), 250);
+  });
+  document.getElementById('cbCategory').addEventListener('change', ()=>{ renderCatalogFilters(); loadCatalogPage(true); });
+  document.getElementById('cbBrand').addEventListener('change', ()=> loadCatalogPage(true));
+  document.getElementById('cbSort').addEventListener('change', ()=> loadCatalogPage(true));
+  document.getElementById('cbManualBtn').addEventListener('click', ()=>{
+    const preset = cbState ? cbState.presetCategory : null;
+    closeCatalogBrowser();
+    afterModalCleanup(()=> openGearModal(null, preset));
+  });
+  document.getElementById('cbContributeBtn').addEventListener('click', ()=>{
+    if(!cloudUser){ openCloudSignInModal(); return; }
+    const q = document.getElementById('cbSearch').value.trim();
+    openCatalogProductModal({ mode: 'create', seed: { name: q, category: document.getElementById('cbCategory').value || 'Other' },
+      onSaved: p => useCatalogProductFromBrowser(p.id), onPickExisting: id => useCatalogProductFromBrowser(id) });
   });
 
   // ---- Catalog link lookup + bulk add wiring ----
