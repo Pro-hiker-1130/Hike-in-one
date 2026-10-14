@@ -16,13 +16,10 @@ pin down to "Skipped" with a reason.
 
 - Merrell Moab 3 (Footwear): listed per-pair weights disagree by about 25% (Merrell vs REI).
 - Durston Kakwa 55: no reliable listed weight or size found.
-- Zpacks Arc Haul Ultra 60: variant/size not named for the 592 g listing.
 - Granite Gear Crown3 60: weights depend on lid/size and disagree (1125-1290 g).
 - Big Agnes Tiger Wall UL2: retailer weights disagree (765 vs 992 g minimum).
 - Durston X-Mid Pro 2: Pro 2 vs Pro 2+ and floor/stake configs unclear (555-1017 g).
 - Tarptent Double Rainbow Li: 2025 redesign; weight unclear (596-765 g).
-- Gossamer Gear The One: listed weights disagree (503-630 g).
-- Zpacks Plex Solo: multiple variants (Classic/Pro); weights unclear.
 - MSR FreeLite 2: V3/U24 version unclear.
 - Deuter Aircontact Lite 50+10: sources disagree (1640 vs 1750 g) and no size named.
 - Forclaz MT900 Hooded Down Jacket: several versions (660/800 fill) with different weights.
