@@ -325,3 +325,43 @@ test('sync: a newer cloud copy with no trips keeps this device\'s trips and uplo
   assert.equal(fake.db.user_data[0].trips.length, 1, 'trips uploaded again');
   assert.equal(fake.db.user_data[0].tracks.length, 1);
 });
+
+test('trip colors: pick a swatch or any color, used on the map and the trip card; Auto goes back', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  const editEiger = async ()=>{
+    await page.click('.nav-tab[data-page="trips"]');
+    await page.click('.trip-card:has-text("Eiger")');
+    await page.click('#tripEditBtn');
+    await page.waitForSelector('#tripModalOverlay', { state: 'visible' });
+  };
+  const save = async ()=>{
+    await page.click('#tripForm button[type="submit"]');
+    await page.waitForSelector('#tripModalOverlay', { state: 'hidden' });
+  };
+  const cardStroke = ()=> page.$eval('.trip-card-timeline:has-text("Eiger") .trip-card-profile path:last-child', p => p.getAttribute('stroke'));
+  const mapLines = color => page.$$eval('#map path.leaflet-interactive', (ps, c) => ps.filter(p => (p.getAttribute('stroke') || '').toLowerCase() === c).length, color);
+
+  await editEiger();
+  assert.equal(await page.getAttribute('#tripColorPicker .is-auto', 'aria-checked'), 'true', 'new and untouched trips are automatic');
+  await page.click('#tripColorPicker [aria-label="Color 4"]');
+  await save();
+  await page.click('#backToTripsBtn');
+  assert.equal(await cardStroke(), '#1F6FA8');
+  await page.click('.nav-tab[data-page="map"]');
+  await page.waitForTimeout(200);
+  assert.ok(await mapLines('#1f6fa8') >= 1, 'the trip\'s track is drawn in its color');
+
+  await editEiger();
+  await page.locator('#tripColorPicker input[type="color"]').fill('#ff8800');
+  await save();
+  await page.click('#backToTripsBtn');
+  assert.equal(await cardStroke(), '#ff8800');
+
+  await editEiger();
+  await page.click('#tripColorPicker .is-auto');
+  await save();
+  await page.click('#backToTripsBtn');
+  assert.notEqual(await cardStroke(), '#ff8800');
+  assert.deepEqual(errors, []);
+});

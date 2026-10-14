@@ -940,6 +940,18 @@
   .settings-note{margin:0;font-size:14px;color:var(--muted);line-height:1.45;}
   .settings-account-email{margin:0;font-weight:600;}
   .settings-error{color:var(--danger);}
+  .trip-color-picker{display:flex;flex-wrap:wrap;gap:8px;}
+  .trip-color-swatch{
+    position:relative;width:36px;height:36px;border-radius:50%;border:2px solid var(--panel);padding:0;cursor:pointer;
+    box-shadow:0 0 0 1px var(--line);font:inherit;font-size:11px;font-weight:600;color:var(--parchment);
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .trip-color-swatch[aria-checked="true"]{box-shadow:0 0 0 2px var(--parchment);}
+  .trip-color-swatch.is-auto{width:auto;padding:0 12px;border-radius:18px;background:var(--panel-alt);}
+  .trip-color-custom{background:conic-gradient(#C4501C,#8A6A00,#2F8F83,#1F6FA8,#6A4C93,#A3366B,#C4501C);color:#FFFFFF;}
+  .trip-color-custom span{font-size:18px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.5);}
+  .trip-color-custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;}
+  .trip-color-custom:focus-within{outline:2px solid var(--brass);outline-offset:2px;}
   .trips-problem{margin:12px 24px 0;padding:10px 14px;border-radius:10px;background:#FBE9E7;color:var(--danger);font-size:14px;flex:none;}
   @media (max-width:760px){ .trips-problem{margin:12px 12px 0;} }
   .settings-card .clear-btn{width:auto;font-size:14px;padding:10px 16px;border-radius:8px;}
@@ -1764,6 +1776,10 @@
           <label for="tripDate">Date</label>
           <input type="date" id="tripDate">
         </div>
+      </div>
+      <div class="form-field">
+        <label id="tripColorLabel">Color on the map</label>
+        <div class="trip-color-picker" id="tripColorPicker" role="radiogroup" aria-labelledby="tripColorLabel"></div>
       </div>
       <div class="form-field">
         <label>Add tracks</label>
@@ -3143,6 +3159,15 @@
   function findTrackTrip(trackId){
     return trips.find(tr => (tr.trackIds||[]).includes(trackId)) || null;
   }
+  // A color the user picked for a trip, if it's a valid #rrggbb (the value
+  // ends up in style attributes, so nothing else gets through).
+  function tripOwnColor(trip){
+    return trip && typeof trip.color === 'string' && /^#[0-9a-f]{6}$/i.test(trip.color) ? trip.color : null;
+  }
+  function tripColor(trip, trackColors){
+    const tks = tripTracks(trip);
+    return tripOwnColor(trip) || (tks.length ? trackColors[tks[0].id] : null);
+  }
   function computeTrackColors(){
     const groupKey = {};
     tracks.forEach(t=>{
@@ -3156,7 +3181,10 @@
       if(!seen.has(k)){ seen.add(k); order.push(k); }
     });
     const keyColor = {};
-    order.forEach((k,i)=> keyColor[k] = COLORS[i % COLORS.length]);
+    order.forEach((k,i)=>{
+      const own = k.startsWith('trip:') ? tripOwnColor(trips.find(tr => 'trip:'+tr.id === k)) : null;
+      keyColor[k] = own || COLORS[i % COLORS.length];
+    });
     const result = {};
     tracks.forEach(t=> result[t.id] = keyColor[groupKey[t.id]]);
     return result;
@@ -3707,7 +3735,7 @@
       const dist = tripDistanceKm(trip);
       const gearList = tripGearItemsList(trip);
       const weight = tripGearWeight(trip);
-      const dotColor = tks.length ? trackColors[tks[0].id] : null;
+      const dotColor = tripColor(trip, trackColors);
       const displayDate = tripDisplayDate(trip);
       const climb = tks.reduce((sum,t)=>sum+(t.elevationGainM||0), 0);
       const card = document.createElement('div');
@@ -3798,7 +3826,7 @@
       section.appendChild(grid);
       g.trips.forEach(trip=>{ try{
         const tks = tripTracks(trip);
-        const color = tks.length ? trackColors[tks[0].id] : 'var(--fern)';
+        const color = tripColor(trip, trackColors) || 'var(--fern)';
         const dist = tripDistanceKm(trip);
         const climb = tks.reduce((sum,t)=>sum+(t.elevationGainM||0), 0);
         const gearList = tripGearItemsList(trip);
@@ -4207,6 +4235,8 @@
     tripStatusTouched = !!(trip && (trip.status === 'planned' || trip.status === 'completed'));
     setTripStatusToggle(trip ? tripStatus(trip) : 'planned');
     renderTripTrackPicker(new Set(trip ? (trip.trackIds || []) : []));
+    tripFormColor = tripOwnColor(trip);
+    renderTripColorPicker();
 
     const delBtn = document.getElementById('tripDeleteBtn');
     delBtn.style.display = trip ? 'inline-block' : 'none';
@@ -4216,6 +4246,42 @@
     document.getElementById('tripModalOverlay').style.display = 'flex';
     document.getElementById('tripName').focus();
     onModalOpened('tripModalOverlay');
+  }
+
+  // ---- Trip color picker: Auto (the app picks), a swatch, or any color ----
+  let tripFormColor = null;   // null = automatic
+  function renderTripColorPicker(){
+    const box = document.getElementById('tripColorPicker');
+    box.innerHTML = '';
+    const custom = tripFormColor && !COLORS.some(c => c.toLowerCase() === tripFormColor.toLowerCase());
+    const add = (value, label, bg) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'trip-color-swatch' + (value === null ? ' is-auto' : '');
+      b.setAttribute('role', 'radio');
+      const on = value === null ? tripFormColor === null : !!tripFormColor && tripFormColor.toLowerCase() === value.toLowerCase();
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.setAttribute('aria-label', label);
+      b.title = label;
+      if(bg) b.style.background = bg;
+      if(value === null) b.textContent = 'Auto';
+      b.addEventListener('click', ()=>{ tripFormColor = value; renderTripColorPicker(); });
+      box.appendChild(b);
+    };
+    add(null, 'Automatic color');
+    COLORS.forEach((c, i) => add(c, 'Color ' + (i + 1), c));
+    // Any other color: the native picker, showing the chosen one.
+    const wrap = document.createElement('label');
+    wrap.className = 'trip-color-swatch trip-color-custom';
+    wrap.title = 'Pick any color';
+    wrap.setAttribute('aria-checked', custom ? 'true' : 'false');
+    if(custom) wrap.style.background = tripFormColor;
+    wrap.innerHTML = '<input type="color" aria-label="Pick any color"><span aria-hidden="true">+</span>';
+    const input = wrap.querySelector('input');
+    input.value = tripFormColor || COLORS[0];
+    input.addEventListener('input', ()=>{ tripFormColor = input.value; wrap.style.background = input.value; wrap.setAttribute('aria-checked', 'true');
+      box.querySelectorAll('[role="radio"]').forEach(r => r.setAttribute('aria-checked', 'false')); });
+    box.appendChild(wrap);
   }
 
   function closeTripModal(){
@@ -4283,9 +4349,14 @@
 
     if(id){
       const trip = trips.find(t=>t.id===id);
-      if(trip){ trip.name = name; trip.notes = notes; trip.trackIds = trackIds; trip.date = date; trip.status = status; }
+      if(trip){
+        trip.name = name; trip.notes = notes; trip.trackIds = trackIds; trip.date = date; trip.status = status;
+        if(tripFormColor) trip.color = tripFormColor; else delete trip.color;
+      }
     } else {
-      trips.push({id: 'trip_'+Math.random().toString(36).slice(2,10), name, notes, trackIds, gearIds: [], photoIds: [], date, status, createdAt: Date.now()});
+      const trip = {id: 'trip_'+Math.random().toString(36).slice(2,10), name, notes, trackIds, gearIds: [], photoIds: [], date, status, createdAt: Date.now()};
+      if(tripFormColor) trip.color = tripFormColor;
+      trips.push(trip);
     }
     await saveTrips();
     closeTripModal();
