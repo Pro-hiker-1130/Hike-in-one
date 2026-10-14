@@ -47,3 +47,9 @@ pin down to "Skipped" with a reason.
 - Klymit Static V: weight and R-value inconsistent across sources.
 - Salomon Soft Flask 500 ml: 33 vs 38 g, variant unclear.
 - Montane Fireball Hoodie: several different Fireball models, no single product.
+- Osprey Talon 33: listed weights disagree (1091-1261 g).
+- Gregory Zulu 65: no weight found in search results.
+- La Sportiva TX4: models and per-shoe/per-pair listings mixed (370-800 g).
+- Therm-a-Rest ProLite: no current weight found.
+- Platypus SoftBottle 1L: listed weights range 24-35 g.
+- Black Diamond Trail Ergo Cork: pair weights differ by variant (492 vs 512 g).
