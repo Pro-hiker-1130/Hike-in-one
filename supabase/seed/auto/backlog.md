@@ -40,3 +40,10 @@ pin down to "Skipped" with a reason.
 - Darn Tough Hiker Micro Crew Midweight socks: only one source (Packstack) gives a weight.
 - Adventure Medical Kits Mountain Series Hiker: manufacturer ~200 g vs independent measurement ~283 g.
 - Sea to Summit Ultra-Sil Pack Liner 50L: listed weights disagree (74 vs 95 g).
+- Scarpa Zodiac Plus GTX: no confirmed men's pair weight found.
+- Salomon Quest 4 GTX: listed pair weights conflict (900-1310 g).
+- Trangia 27: weight depends on the set variant (690-880 g).
+- Sea to Summit X-Mug: listed weights disagree (60 vs 78 g).
+- Klymit Static V: weight and R-value inconsistent across sources.
+- Salomon Soft Flask 500 ml: 33 vs 38 g, variant unclear.
+- Montane Fireball Hoodie: several different Fireball models, no single product.
