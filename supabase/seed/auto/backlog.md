@@ -6,21 +6,6 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
-- Osprey Exos Pro 55 (Backpack)
-- Durston Kakwa 55 (Backpack)
-- Zpacks Arc Haul Ultra 60 (Backpack)
-- Gregory Focal 48 (Backpack)
-- Osprey Aether 65 (Backpack)
-- Granite Gear Crown3 60 (Backpack)
-- Six Moon Designs Swift X (Backpack)
-- Big Agnes Tiger Wall UL2 (Shelter)
-- Nemo Hornet OSMO 2P (Shelter)
-- Durston X-Mid Pro 2 (Shelter)
-- Tarptent Double Rainbow Li (Shelter)
-- Six Moon Designs Lunar Solo (Shelter)
-- Gossamer Gear The One (Shelter)
-- Zpacks Plex Solo (Shelter)
-- MSR FreeLite 2 (Shelter)
 - Hilleberg Niak (Shelter)
 - Therm-a-Rest NeoAir UberLite (Sleep system)
 - Nemo Tensor Trail (Sleep system)
@@ -74,3 +59,12 @@ pin down to "Skipped" with a reason.
 ## Skipped
 
 - Merrell Moab 3 (Footwear): listed per-pair weights disagree by about 25% (Merrell vs REI).
+- Durston Kakwa 55: no reliable listed weight or size found.
+- Zpacks Arc Haul Ultra 60: variant/size not named for the 592 g listing.
+- Granite Gear Crown3 60: weights depend on lid/size and disagree (1125-1290 g).
+- Big Agnes Tiger Wall UL2: retailer weights disagree (765 vs 992 g minimum).
+- Durston X-Mid Pro 2: Pro 2 vs Pro 2+ and floor/stake configs unclear (555-1017 g).
+- Tarptent Double Rainbow Li: 2025 redesign; weight unclear (596-765 g).
+- Gossamer Gear The One: listed weights disagree (503-630 g).
+- Zpacks Plex Solo: multiple variants (Classic/Pro); weights unclear.
+- MSR FreeLite 2: V3/U24 version unclear.
