@@ -6,32 +6,7 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
-- Hilleberg Niak (Shelter)
-- Therm-a-Rest NeoAir UberLite (Sleep system)
-- Nemo Tensor Trail (Sleep system)
-- Feathered Friends Swallow UL 20 (Sleep system)
-- Katabatic Gear Flex 22 (Sleep system)
-- Therm-a-Rest Vesper 20 quilt (Sleep system)
-- Nemo Fillo Elite pillow (Sleep system)
-- MSR WindBurner (Cooking)
-- Jetboil Stash (Cooking)
-- MSR Guardian purifier (Water)
-- Platypus GravityWorks 4L (Water)
-- CNOC Vecto 2L (Water)
-- Garmin inReach Messenger Plus (Navigation)
-- Mountain Hardwear Ghost Whisperer/2 Hoody (Clothing)
-- Arc'teryx Atom Hoody (Clothing)
-- Enlightened Equipment Torrid Jacket (Clothing)
-- Patagonia R1 Air Full-Zip Hoody (Clothing)
-- Zpacks Vertice Rain Jacket (Clothing)
-- Darn Tough Hiker Micro Crew Midweight socks (Clothing)
-- BearVault BV450 (Safety)
-- Ursack Major (Safety)
-- Adventure Medical Kits Mountain Series Hiker (Safety)
-- Gossamer Gear LT5 trekking poles (Other)
 - Sea to Summit Pack Liner 50L (Other)
-- CuloClean portable bidet (Hygiene)
-- Sea to Summit Wilderness Wash (Hygiene)
 
 - Forclaz MT900 Ultralight Down Jacket (Clothing)
 - Forclaz MT500 Hiking Pole (Other)
@@ -59,3 +34,9 @@ pin down to "Skipped" with a reason.
 - Sea to Summit Spark SpIII: retailer specs conflict (665 vs 560 g) and the bag is discontinued.
 - Katadyn Hiker Pro: listed weights disagree (233 vs 310 g).
 - Altra Lone Peak 9: no verified per-pair weight found.
+- Nemo Tensor Trail: only one retailer gives a weight (13.9 oz minimum), no second source.
+- Mountain Hardwear Ghost Whisperer/2 Hoody: listed weights range 226-303 g.
+- Enlightened Equipment Torrid Jacket: weight depends on size and fabric (7D vs 10D); no single variant sourced.
+- Darn Tough Hiker Micro Crew Midweight socks: only one source (Packstack) gives a weight.
+- Adventure Medical Kits Mountain Series Hiker: manufacturer ~200 g vs independent measurement ~283 g.
+- Sea to Summit Ultra-Sil Pack Liner 50L: listed weights disagree (74 vs 95 g).
