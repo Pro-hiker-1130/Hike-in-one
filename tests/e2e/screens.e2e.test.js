@@ -77,7 +77,9 @@ async function launch(t, viewport = { width: 1280, height: 900 }, fake = null){
   const browser = await playwright.chromium.launch(Object.assign({ args: ['--no-sandbox'] },
     process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}));
   t.after(()=> browser.close());
-  const ctx = await browser.newContext({ viewport, serviceWorkers: 'block' });
+  // viewport.touch: a touch phone (taps, not mouse clicks).
+  const { touch, ...size } = viewport;
+  const ctx = await browser.newContext({ viewport: size, serviceWorkers: 'block', hasTouch: !!touch, isMobile: !!touch });
   if(process.env.HIKE_LIBS_DIR){
     await ctx.route(/cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net/, route=>{
       const key = Object.keys(LIBS).find(k => route.request().url().includes(k));
@@ -363,5 +365,46 @@ test('trip colors: pick a swatch or any color, used on the map and the trip card
   await save();
   await page.click('#backToTripsBtn');
   assert.notEqual(await cardStroke(), '#ff8800');
+  assert.deepEqual(errors, []);
+});
+
+test('phone map: drag the panel down for a bigger map, tap to cycle sizes, remembered after reload', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t, { width: 390, height: 844 });
+  const mapH = ()=> page.$eval('#map', el => Math.round(el.getBoundingClientRect().height));
+  const sheetH = ()=> page.$eval('#mapSheet', el => Math.round(el.getBoundingClientRect().height));
+  const before = await mapH();
+  const box = await page.locator('#mapSheetHandle').boundingBox();
+  // Drag the handle almost to the bottom: the sheet settles on its smallest size.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + 500, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(500);   // the click a drag produces is ignored for a moment
+  assert.equal(await sheetH(), 28, 'only the handle is left');
+  assert.ok(await mapH() > before + 250, 'the map took the space');
+  // Leaflet was told about its new size.
+  assert.ok(await page.evaluate(()=> Math.abs(document.querySelector('#map .leaflet-pane').closest('#map').clientHeight - document.getElementById('map').clientHeight) < 2));
+
+  await page.click('#mapSheetHandle');
+  assert.equal(await sheetH(), 150, 'a tap opens it to the overview stats');
+  await page.click('#mapSheetHandle');
+  assert.ok(await sheetH() > 300, 'next tap: half');
+
+  await page.click('#mapSheetHandle');
+  const tall = await sheetH();
+  await page.reload();
+  await page.waitForSelector('.nav-tab');
+  assert.equal(await sheetH(), tall, 'size remembered');
+  assert.deepEqual(errors, []);
+});
+
+test('phone map: tapping the panel handle only resizes it, it never presses what slides under the finger', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t, { width: 390, height: 844, touch: true });
+  const view = ()=> page.textContent('.sidebar .view-toggle:not(#basemapToggle) button.active');
+  for(let i = 0; i < 4; i++){
+    await page.tap('#mapSheetHandle');
+    await page.waitForTimeout(150);
+    assert.equal(await view(), 'Tracks', 'tap ' + (i + 1) + ' left the map view alone');
+  }
   assert.deepEqual(errors, []);
 });

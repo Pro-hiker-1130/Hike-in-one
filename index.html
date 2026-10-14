@@ -89,6 +89,7 @@
     overflow-y:auto;
   }
   .sidebar::-webkit-scrollbar{width:8px;}
+  .sheet-handle{display:none;}
   .sidebar::-webkit-scrollbar-thumb{background:var(--panel-alt);border-radius:4px;}
 
   .brand{padding:22px 20px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;}
@@ -849,7 +850,16 @@
     .page-container{margin-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));}
     .global-toast{bottom:calc(var(--tabbar-h) + 14px + env(safe-area-inset-bottom));}
     .app .map-area{order:-1;flex:1 1 55%;min-height:0;}
-    .app .sidebar{flex:0 1 45%;max-height:none;border-bottom:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-14px;position:relative;z-index:500;box-shadow:0 -6px 20px rgba(52,78,65,0.1);}
+    .app .sidebar{flex:0 0 var(--sheet-h, 45%);max-height:none;border-bottom:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-14px;position:relative;z-index:500;box-shadow:0 -6px 20px rgba(52,78,65,0.1);}
+    .app .sidebar.is-dragging{user-select:none;}
+    .sheet-handle{
+      display:flex;position:sticky;top:0;z-index:2;flex:none;width:100%;height:28px;padding:0;border:0;
+      align-items:center;justify-content:center;background:var(--panel);cursor:grab;touch-action:none;
+      border-radius:16px 16px 0 0;
+    }
+    .sheet-handle:active{cursor:grabbing;}
+    .sheet-grip{width:44px;height:5px;border-radius:3px;background:rgba(52,78,65,0.3);}
+    .sheet-handle:focus-visible{outline:2px solid var(--brass);outline-offset:-4px;}
   }
 
   /* ==== Step 2: map overview, trips timeline, gear list, settings ==== */
@@ -1007,7 +1017,10 @@
 
 <div class="page-container">
 <div class="app page active" id="pageMap">
-  <div class="sidebar">
+  <div class="sidebar" id="mapSheet">
+    <button type="button" class="sheet-handle" id="mapSheetHandle" aria-label="Resize the map panel" aria-controls="mapSheet">
+      <span class="sheet-grip" aria-hidden="true"></span>
+    </button>
     <div class="brand">
       <svg width="26" height="26" viewBox="0 0 200 200">
         <circle cx="100" cy="100" r="97" fill="#0E1B33" stroke="#E2764F" stroke-width="4"/>
@@ -6727,6 +6740,83 @@
     }
     applyRouteFromPopstate(e.state);
   });
+
+  // ---- Map panel on phones: a sheet you drag (or tap) to give the map more room ----
+  (function(){
+    const sheet = document.getElementById('mapSheet');
+    const handle = document.getElementById('mapSheetHandle');
+    const area = document.getElementById('pageMap');
+    const phone = window.matchMedia('(max-width:760px)');
+    // Heights the sheet settles on: just the handle (map nearly full
+    // screen), the overview stats, half, and most of the screen.
+    function stops(){
+      const h = area.clientHeight;
+      return [28, 150, Math.round(h * 0.45), Math.round(h * 0.8)];
+    }
+    let current = null;   // px; null = the CSS default (45%)
+    try{ const saved = Number(localStorage.getItem('hio-map-sheet')); if(saved > 0) current = saved; }catch(e){}
+    let raf = 0;
+    function apply(px, settle){
+      const h = area.clientHeight;
+      if(px != null) px = Math.max(28, Math.min(px, h - 80));
+      current = px;
+      sheet.style.setProperty('--sheet-h', px == null ? '' : px + 'px');
+      if(px == null) sheet.style.removeProperty('--sheet-h');
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(()=> map.invalidateSize({ pan: false }));
+      if(settle){
+        try{ localStorage.setItem('hio-map-sheet', String(px)); }catch(e){}
+        handle.setAttribute('aria-label', px <= 40 ? 'Show the map panel' : 'Resize the map panel');
+      }
+    }
+    function nearestStop(px){
+      return stops().reduce((best, s) => Math.abs(s - px) < Math.abs(best - px) ? s : best);
+    }
+    function currentHeight(){ return sheet.getBoundingClientRect().height; }
+
+    let drag = null;
+    handle.addEventListener('pointerdown', e=>{
+      if(!phone.matches) return;
+      drag = { y: e.clientY, start: currentHeight(), moved: false };
+      handle.setPointerCapture(e.pointerId);
+      sheet.classList.add('is-dragging');
+    });
+    handle.addEventListener('pointermove', e=>{
+      if(!drag) return;
+      const dy = drag.y - e.clientY;
+      if(Math.abs(dy) > 4) drag.moved = true;
+      if(drag.moved) apply(drag.start + dy, false);
+    });
+    // A tap is handled on its click, not on pointerup: resizing earlier
+    // moves other controls under the finger, and the click that follows a
+    // touch would then land on them (e.g. the Heatmap button).
+    let ignoreClickUntil = 0;
+    function endDrag(){
+      if(!drag) return;
+      const d = drag; drag = null;
+      sheet.classList.remove('is-dragging');
+      if(d.moved){
+        apply(nearestStop(currentHeight()), true);
+        ignoreClickUntil = Date.now() + 400;
+      }
+    }
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+    // Tap / Enter: next size up, wrapping round to the smallest.
+    function stepSheet(dir){
+      const st = stops();
+      const at = st.indexOf(nearestStop(currentHeight()));
+      const next = dir > 0 ? (at + 1) % st.length : Math.max(0, at - 1);
+      apply(st[next], true);
+    }
+    handle.addEventListener('click', ()=>{ if(Date.now() >= ignoreClickUntil) stepSheet(1); });
+    handle.addEventListener('keydown', e=>{
+      if(e.key === 'ArrowUp'){ e.preventDefault(); stepSheet(1); }
+      if(e.key === 'ArrowDown'){ e.preventDefault(); stepSheet(-1); }
+    });
+    if(current != null) apply(current, false);
+    phone.addEventListener('change', ()=> map.invalidateSize());
+  })();
 
   // ---- Page navigation ----
   document.querySelectorAll('.nav-tab').forEach(tab=>{
