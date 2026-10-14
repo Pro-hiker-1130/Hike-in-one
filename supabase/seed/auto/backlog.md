@@ -53,3 +53,6 @@ pin down to "Skipped" with a reason.
 - Therm-a-Rest ProLite: no current weight found.
 - Platypus SoftBottle 1L: listed weights range 24-35 g.
 - Black Diamond Trail Ergo Cork: pair weights differ by variant (492 vs 512 g).
+- Arc'teryx Proton Hoody: only one retailer lists the standard model; Proton variants weigh 343-540 g.
+- Arc'teryx Norvan Shell Jacket: listed weights disagree (170-215 g).
+- Arc'teryx Gamma Lightweight Hoody: original vs revised version (300-545 g).
