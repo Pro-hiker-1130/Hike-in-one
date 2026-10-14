@@ -1,0 +1,5 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Zpacks', 'Arc Haul Ultra 60L', 'Short torso, standard straps, Small', 'Backpack', 619, '{"volume_l":60}', 'Frame pack in Ultra fabric. Listed weight on the brand page is for the lightest configuration (619 g); larger sizes list up to about 650 g or more.', 'https://zpacks.com/products/arc-haul-ultra-60l-backpack', 'seed'),
+('Gossamer Gear', 'The One', null, 'Shelter', 630, '{"capacity_persons":1}', 'Single-wall one-person trekking-pole tent. Brand lists 630 g total with 6 stakes, stuff sack and guy lines (the shelter alone is 558 g).', 'https://gossamergear.com/products/the-one', 'seed'),
+('Zpacks', 'Plex Solo Classic', 'Lite floor', 'Shelter', 348, '{"capacity_persons":1}', 'Ultralight one-person trekking-pole tent. Brand lists 348 g with the lite floor (378 g with the standard floor).', 'https://zpacks.com/products/plex-solo-tent', 'seed')
+on conflict (normalized_key) do nothing;

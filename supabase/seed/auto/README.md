@@ -13,8 +13,12 @@ their weekly usage limit.
 
 - At most **20 products** and at most **30 web searches** per run, and at
   most **5 products from one category**.
-- No page fetching. Use web search results only. Stop as soon as you hit
-  either limit.
+- Scheduled daily runs: no page fetching. Use web search results only. Stop
+  as soon as you hit either limit.
+- Manual sessions started by the owner may fetch manufacturer or retailer
+  product pages to confirm a weight (prefer the brand's own page). Keep
+  fetches to what is needed, and use them first for products in the
+  "Skipped" list.
 - If you see a usage-limit or rate-limit message, stop. Commit whatever is
   finished and validated, then end.
 

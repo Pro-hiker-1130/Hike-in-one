@@ -6,71 +6,45 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
-- Osprey Exos Pro 55 (Backpack)
-- Durston Kakwa 55 (Backpack)
-- Zpacks Arc Haul Ultra 60 (Backpack)
-- Gregory Focal 48 (Backpack)
-- Osprey Aether 65 (Backpack)
-- Granite Gear Crown3 60 (Backpack)
-- Six Moon Designs Swift X (Backpack)
-- Big Agnes Tiger Wall UL2 (Shelter)
-- Nemo Hornet OSMO 2P (Shelter)
-- Durston X-Mid Pro 2 (Shelter)
-- Tarptent Double Rainbow Li (Shelter)
-- Six Moon Designs Lunar Solo (Shelter)
-- Gossamer Gear The One (Shelter)
-- Zpacks Plex Solo (Shelter)
-- MSR FreeLite 2 (Shelter)
-- Hilleberg Niak (Shelter)
-- Therm-a-Rest NeoAir UberLite (Sleep system)
-- Nemo Tensor Trail (Sleep system)
-- Exped Ultra 3R (Sleep system)
-- Sea to Summit Spark SpIII (Sleep system)
-- Feathered Friends Swallow UL 20 (Sleep system)
-- Katabatic Gear Flex 22 (Sleep system)
-- Therm-a-Rest Vesper 20 quilt (Sleep system)
-- Nemo Fillo Elite pillow (Sleep system)
-- MSR WindBurner (Cooking)
-- Jetboil Stash (Cooking)
-- Soto Amicus (Cooking)
-- Snow Peak Trek 700 titanium pot (Cooking)
-- Optimus Crux Lite (Cooking)
-- Sawyer Micro Squeeze (Water)
-- LifeStraw Peak Squeeze 1L (Water)
-- MSR Guardian purifier (Water)
-- Katadyn Hiker Pro (Water)
-- Platypus GravityWorks 4L (Water)
-- CNOC Vecto 2L (Water)
-- Petzl Bindi (Electronics)
-- Nitecore NB20000 (Electronics)
-- Garmin inReach Messenger Plus (Navigation)
-- Suunto MC-2 compass (Navigation)
-- Silva Ranger 2.0 compass (Navigation)
-- Altra Lone Peak 9 (Footwear)
-- La Sportiva Bushido III (Footwear)
-- Salomon Speedcross 6 (Footwear)
-- Topo Athletic Ultraventure 4 (Footwear)
-- Brooks Cascadia 18 (Footwear)
-- Lowa Renegade GTX Mid (Footwear)
-- Hoka Kaha 2 GTX (Footwear)
-- Montbell Plasma 1000 Down Jacket (Clothing)
-- Mountain Hardwear Ghost Whisperer/2 Hoody (Clothing)
-- Patagonia Micro Puff Hoody (Clothing)
-- Arc'teryx Atom Hoody (Clothing)
-- Enlightened Equipment Torrid Jacket (Clothing)
-- Patagonia R1 Air Full-Zip Hoody (Clothing)
-- Rab Microlight Alpine Jacket (Clothing)
-- Zpacks Vertice Rain Jacket (Clothing)
-- Darn Tough Hiker Micro Crew Midweight socks (Clothing)
-- BearVault BV450 (Safety)
-- Ursack Major (Safety)
-- Adventure Medical Kits Mountain Series Hiker (Safety)
-- Leki Makalu FX Carbon (Other)
-- Gossamer Gear LT5 trekking poles (Other)
 - Sea to Summit Pack Liner 50L (Other)
-- CuloClean portable bidet (Hygiene)
-- Sea to Summit Wilderness Wash (Hygiene)
+
+- Forclaz MT900 Ultralight Down Jacket (Clothing)
+- Forclaz MT500 Hiking Pole (Other)
+- Jack Wolfskin Wolftrail 28 (Backpack)
 
 ## Skipped
 
 - Merrell Moab 3 (Footwear): listed per-pair weights disagree by about 25% (Merrell vs REI).
+- Granite Gear Crown3 60: weights depend on lid/size and disagree (1125-1290 g).
+- Big Agnes Tiger Wall UL2: retailer weights disagree (765 vs 992 g minimum).
+- MSR FreeLite 2: V3/U24 version unclear.
+- Deuter Aircontact Lite 50+10: sources disagree (1640 vs 1750 g) and no size named.
+- Forclaz MT900 Hooded Down Jacket: several versions (660/800 fill) with different weights.
+- Forclaz MT500 Hiking Pole: only one source, pair weight is derived from the per-pole figure.
+- Forclaz MT100 boots: no men's pair weight found.
+- Tatonka Bison 75: only an old third-party weight (3.3 kg) found.
+- Fjällräven Keb Trousers: only one discontinued listing (REI) found.
+- Silva Ranger 2.0 compass: listed weights conflict (86 vs 132-136 g).
+- Sea to Summit Spark SpIII: retailer specs conflict (665 vs 560 g) and the bag is discontinued.
+- Katadyn Hiker Pro: listed weights disagree (233 vs 310 g).
+- Altra Lone Peak 9: no verified per-pair weight found.
+- Nemo Tensor Trail: only one retailer gives a weight (13.9 oz minimum), no second source.
+- Mountain Hardwear Ghost Whisperer/2 Hoody: listed weights range 226-303 g.
+- Enlightened Equipment Torrid Jacket: weight depends on size and fabric (7D vs 10D); no single variant sourced.
+- Darn Tough Hiker Micro Crew Midweight socks: only one source (Packstack) gives a weight.
+- Adventure Medical Kits Mountain Series Hiker: manufacturer ~200 g vs independent measurement ~283 g.
+- Sea to Summit Ultra-Sil Pack Liner 50L: listed weights disagree (74 vs 95 g).
+- Scarpa Zodiac Plus GTX: no confirmed men's pair weight found.
+- Sea to Summit X-Mug: listed weights disagree (60 vs 78 g).
+- Klymit Static V: weight and R-value inconsistent across sources.
+- Salomon Soft Flask 500 ml: 33 vs 38 g, variant unclear.
+- Montane Fireball Hoodie: several different Fireball models, no single product.
+- Osprey Talon 33: listed weights disagree (1091-1261 g).
+- Gregory Zulu 65: no weight found in search results.
+- La Sportiva TX4: models and per-shoe/per-pair listings mixed (370-800 g).
+- Therm-a-Rest ProLite: no current weight found.
+- Platypus SoftBottle 1L: listed weights range 24-35 g.
+- Black Diamond Trail Ergo Cork: pair weights differ by variant (492 vs 512 g).
+- Arc'teryx Proton Hoody: only one retailer lists the standard model; Proton variants weigh 343-540 g.
+- Arc'teryx Norvan Shell Jacket: listed weights disagree (170-215 g).
+- Arc'teryx Gamma Lightweight Hoody: original vs revised version (300-545 g).

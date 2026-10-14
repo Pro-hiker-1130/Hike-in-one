@@ -1,0 +1,8 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Osprey', 'Exos Pro 55', 'Men''s S/M', 'Backpack', 940, '{"volume_l":55}', 'Lightweight frame pack for lighter loads. Listed weight is the pack with its removable lid.', 'https://k2.com.au/products/osprey-exos-pro-55-litre-mens-hiking-pack', 'seed'),
+('Gregory', 'Focal 48', 'Men''s M', 'Backpack', 1180, '{"volume_l":48}', 'Ultralight-oriented 48 L backpacking pack. Listed weight is for the medium size, 2026 version.', 'https://www.sportsshoes.com/product/gre97/focal-48-backpack-(m)---aw26', 'seed'),
+('Osprey', 'Aether 65', 'Men''s S/M', 'Backpack', 2230, '{"volume_l":65}', 'Heavy-duty suspended-frame pack for multi-day trips. Listed weight is the small/medium size.', 'https://www.wildfiresports.com.au/osprey-aether-65-mens-pack', 'seed'),
+('Six Moon Designs', 'Swift X', 'Standard', 'Backpack', 1100, '{}', 'Lightweight pack sold with a stay and hip belt. Listed weight is the standard configuration with the flight vest not included.', 'https://sixmoondesigns.com/products/swift-x', 'seed'),
+('Nemo', 'Hornet OSMO 2P', null, 'Shelter', 1134, '{"capacity_persons":2}', 'Freestanding ultralight two-person tent. Listed weight is the packaged weight with stakes and stuff sacks.', 'https://www.rei.com/product/215777/nemo-hornet-osmo-ultralight-2p-tent', 'seed'),
+('Six Moon Designs', 'Lunar Solo', null, 'Shelter', 740, '{"capacity_persons":1}', 'Single-wall trekking-pole tent for one person. Listed weight excludes stakes and the trekking pole.', 'https://www.greenbelly.co/pages/six-moon-designs-lunar-solo-review', 'seed')
+on conflict (normalized_key) do nothing;
