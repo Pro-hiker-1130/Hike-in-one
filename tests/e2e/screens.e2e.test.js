@@ -408,3 +408,19 @@ test('phone map: tapping the panel handle only resizes it, it never presses what
   }
   assert.deepEqual(errors, []);
 });
+
+test('Escape closes the dialog on top, one at a time', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.click('#addTripBtn');
+  await page.waitForSelector('#tripModalOverlay', { state: 'visible' });
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('#tripModalOverlay', { state: 'hidden' });
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#addGearBtnGarage');
+  await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('#gearModalOverlay', { state: 'hidden' });
+  assert.ok(await page.isVisible('#pageGear'), 'still on the Gear Room');
+  assert.deepEqual(errors, []);
+});

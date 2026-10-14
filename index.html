@@ -301,14 +301,14 @@
   .ele-profile:focus-visible{outline:2px solid var(--brass);outline-offset:3px;}
   .ele-plot{position:relative;height:84px;border-bottom:1px solid var(--line);cursor:crosshair;touch-action:pan-y;}
   .ele-plot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
-  .ele-area{fill:var(--brass);fill-opacity:0.12;stroke:none;}
-  .ele-line{fill:none;stroke:var(--brass);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;}
+  .ele-area{fill:var(--ele-color, var(--brass));fill-opacity:0.14;stroke:none;}
+  .ele-line{fill:none;stroke:var(--ele-color, var(--brass));stroke-width:2;stroke-linejoin:round;stroke-linecap:round;}
   .ele-axis{position:absolute;left:0;width:42px;text-align:right;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
   .ele-axis-max{top:-4px;}
   .ele-axis-min{top:74px;}
   .ele-axis-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;}
   .ele-cursor{position:absolute;top:0;bottom:0;width:1px;margin-left:-0.5px;background:rgba(243,237,225,0.35);pointer-events:none;}
-  .ele-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--brass);box-shadow:0 0 0 2px var(--panel);pointer-events:none;}
+  .ele-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--ele-color, var(--brass));box-shadow:0 0 0 2px var(--panel);pointer-events:none;}
   .wear{margin-top:2px;}
   .wear-meter{height:4px;border-radius:2px;background:rgba(243,237,225,0.1);overflow:hidden;}
   .wear-fill{display:block;height:100%;border-radius:2px;}
@@ -950,6 +950,16 @@
   .settings-note{margin:0;font-size:14px;color:var(--muted);line-height:1.45;}
   .settings-account-email{margin:0;font-weight:600;}
   .settings-error{color:var(--danger);}
+  .quick-add-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .quick-add-row input{flex:1 1 200px;min-width:0;}
+  .quick-add-row button{flex:none;}
+  @media (max-width:560px){
+    .quick-add-row input{flex-basis:100%;}
+    .quick-add-row button{flex:1;}
+    #tripDetailView .gear-stats-row .stat-card{flex:1 1 calc(33.3% - 6px);padding:8px 10px;}
+    #tripDetailView .gear-stats-row .stat-num{font-size:21px;}
+    #tripDetailView .gear-stats-row .stat-label{font-size:10.5px;}
+  }
   .trip-color-picker{display:flex;flex-wrap:wrap;gap:8px;}
   .trip-color-swatch{
     position:relative;width:36px;height:36px;border-radius:50%;border:2px solid var(--panel);padding:0;cursor:pointer;
@@ -1445,8 +1455,8 @@
       </div>
       <div class="form-field">
         <label for="gearUrlInput">Quick add: product link or barcode</label>
-        <div style="display:flex;gap:8px;">
-          <input type="url" id="gearUrlInput" placeholder="Paste a product URL…" style="flex:1;">
+        <div class="quick-add-row">
+          <input type="url" id="gearUrlInput" placeholder="Paste a product URL…">
           <button type="button" class="ghost-btn" id="gearUrlFetchBtn">Fetch</button>
           <button type="button" class="ghost-btn" id="gearBarcodeBtn">Scan barcode</button>
         </div>
@@ -4041,7 +4051,11 @@
           c.textContent = 'Added before elevation tracking — re-add this GPX to see its profile.';
           block.appendChild(c);
         }
-        if(t.profile && t.profile.length > 1) block.appendChild(buildElevationProfile(t));
+        if(t.profile && t.profile.length > 1){
+          const prof = buildElevationProfile(t);
+          prof.style.setProperty('--ele-color', trackColors[t.id]);
+          block.appendChild(prof);
+        }
         trackList.appendChild(block);
       });
     }
@@ -5081,6 +5095,14 @@
     return g >= 1000 ? (g/1000).toFixed(g % 1000 === 0 ? 0 : 1) + ' kg' : g + ' g';
   }
 
+  // "€2,280"; mixed currencies or an unknown code fall back to "2,280 XYZ".
+  function formatMoney(amount, currency){
+    try{
+      if(/^[A-Z]{3}$/.test(currency)) return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
+    }catch(e){}
+    return Math.round(amount).toLocaleString('en-US') + ' ' + currency;
+  }
+
   function renderGearStats(){
     const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
     const count = owned.reduce((s,g)=>s+(g.quantity||1),0);
@@ -5092,7 +5114,7 @@
     document.getElementById('gearStatCount').textContent = count;
     document.getElementById('gearStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
     const currencyLabel = currencies.size === 1 ? [...currencies][0] : (currencies.size > 1 ? 'mixed' : 'EUR');
-    document.getElementById('gearStatValue').textContent = value ? value.toFixed(0) + ' ' + currencyLabel : '0';
+    document.getElementById('gearStatValue').textContent = value ? formatMoney(value, currencyLabel) : '0';
   }
 
   function renderGearGrid(){
@@ -6723,6 +6745,17 @@
       history.back();
     }
   }
+
+  // Escape closes the dialog on top, like its × button. (The lightbox and
+  // the catalog search box handle Escape themselves.)
+  document.addEventListener('keydown', e=>{
+    if(e.key !== 'Escape' || e.defaultPrevented || !openModalOrder.length) return;
+    const top = openModalOrder[openModalOrder.length-1];
+    if(top === 'photoLightboxOverlay') return;
+    if(top === 'importModalOverlay' && importRun) return;   // don't lose a scan in progress
+    e.preventDefault();
+    MODAL_CLOSE_FNS[top]();
+  });
 
   window.addEventListener('popstate', (e)=>{
     if(expectingCleanupPop){
