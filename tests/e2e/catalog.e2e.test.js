@@ -442,7 +442,7 @@ test('catalog: "Look it up" from a link and bulk "Add products from links"', { s
     assert.equal(await val(page, 'gearWeight'), '354');
     await page.click('#catalogLinkView');
     await page.waitForSelector('#cdBody', { state: 'visible' });
-    assert.match(await page.innerText('#cdFacts'), /Specs from\s+brand\.example\.com/);
+    assert.match(await page.innerText('#cdFacts'), /Source\s+Added by a hiker\s*specs from brand\.example\.com/);
     await page.click('#catalogDetailModalClose');
     await page.click('#gearCancelBtn');
     await page.waitForSelector('#gearModalOverlay', { state: 'hidden' });
@@ -504,7 +504,8 @@ test('catalog browser: "+ Add item" lists the catalog, filters by category and b
   for(let i = 0; i < 40; i++){
     seed.products.push(i % 2
       ? { id: 'dddddddd-0000-4000-8000-' + String(i).padStart(12, '0'), name: 'Pocket Stove ' + i, brand: 'MSR', category: 'Cooking', weight_g: 70 + i }
-      : { id: 'dddddddd-0000-4000-8000-' + String(i).padStart(12, '0'), name: 'Trail Tent ' + i, brand: 'Nemo', category: 'Shelter', weight_g: 900 + i * 10 });
+      : { id: 'dddddddd-0000-4000-8000-' + String(i).padStart(12, '0'), name: 'Trail Tent ' + i, brand: 'Nemo', category: 'Shelter', weight_g: 900 + i * 10, origin: 'seed',
+          source_url: 'https://nemoequipment.example/tent-' + i });
   }
   const fake = createFakeSupabase({ userId: null, seed });
   const { page, errors } = await launch(t, { signedIn: false, fake });
@@ -524,6 +525,24 @@ test('catalog browser: "+ Add item" lists the catalog, filters by category and b
   assert.deepEqual(brands, ['All brands', 'Big Agnes (1)', 'Nemo (20)']);
   await page.selectOption('#cbBrand', 'Big Agnes');
   await page.waitForFunction(()=> /^1 product$/.test(document.getElementById('cbCount').textContent));
+
+  // Source: the 20 Nemo tents are researched, the rest added by hikers.
+  await page.selectOption('#cbBrand', '');
+  await page.selectOption('#cbCategory', '');
+  await page.waitForFunction(()=> /Researched \(20\)/.test(document.getElementById('cbSource').textContent));
+  await page.selectOption('#cbSource', 'researched');
+  await page.waitForFunction(()=> /^20 products$/.test(document.getElementById('cbCount').textContent));
+  assert.equal(await page.locator('#cbList .cb-source.is-researched').count(), 20);
+  await page.click('#cbList .cb-row:first-child .cb-open');
+  await page.waitForSelector('#cdBody', { state: 'visible' });
+  assert.match(await page.innerText('#cdFacts'), /Source\s+Researched\s*from nemoequipment\.example/);
+  await page.click('#catalogDetailModalClose');
+  await page.waitForSelector('#catalogDetailModalOverlay', { state: 'hidden' });
+  await page.selectOption('#cbSource', 'hikers');
+  await page.waitForFunction(()=> /^22 products$/.test(document.getElementById('cbCount').textContent));
+  assert.equal(await page.locator('#cbList .cb-source.is-researched').count(), 0);
+  assert.equal(await page.locator('#cbList .cb-source.is-hiker').count(), 22);
+  await page.selectOption('#cbSource', '');
 
   // Search across everything, lightest first.
   await page.selectOption('#cbCategory', '');

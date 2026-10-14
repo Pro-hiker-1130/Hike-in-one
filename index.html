@@ -953,7 +953,7 @@
   .catalog-browse-modal{max-width:640px;display:flex;flex-direction:column;}
   .cb-controls{padding:12px 20px 0;display:flex;flex-direction:column;gap:8px;}
   .cb-controls input[type="search"]{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(52,78,65,0.22);background:var(--panel);font:inherit;font-size:15px;color:var(--parchment);}
-  .cb-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .cb-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
   .cb-filters select{min-width:0;padding:8px;border-radius:8px;border:1px solid rgba(52,78,65,0.22);background:var(--panel);font:inherit;font-size:13.5px;color:var(--parchment);}
   .cb-count{padding:10px 20px 4px;font-size:13px;color:var(--muted);min-height:18px;}
   .cb-list{padding:0 20px 8px;display:flex;flex-direction:column;}
@@ -973,8 +973,10 @@
   .cb-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--panel);}
   @media (max-width:560px){
     .cb-filters{grid-template-columns:1fr 1fr;}
-    .cb-filters #cbSort{grid-column:1 / -1;}
   }
+  .cb-source{display:inline-block;margin-right:6px;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;vertical-align:1px;}
+  .cb-source.is-researched{background:var(--sage-soft);color:var(--brass);}
+  .cb-source.is-hiker{background:#F3E9D9;color:#6E4C29;}
   .quick-add-row{display:flex;gap:8px;flex-wrap:wrap;}
   .quick-add-row input{flex:1 1 200px;min-width:0;}
   .quick-add-row button{flex:none;}
@@ -1687,6 +1689,11 @@
       <div class="cb-filters">
         <select id="cbCategory" aria-label="Category"></select>
         <select id="cbBrand" aria-label="Brand"></select>
+        <select id="cbSource" aria-label="Source">
+          <option value="">All sources</option>
+          <option value="researched">Researched</option>
+          <option value="hikers">Added by hikers</option>
+        </select>
         <select id="cbSort" aria-label="Sort">
           <option value="name">Brand A–Z</option>
           <option value="light">Lightest first</option>
@@ -5522,11 +5529,13 @@
 
   const catalogApi = {
     // One page of the catalog for the browser: { rows, total }.
-    async browse({ q = '', category = '', brand = '', sort = 'name', offset = 0, limit = 30 }){
+    async browse({ q = '', category = '', brand = '', source = '', sort = 'name', offset = 0, limit = 30 }){
       let req = sb.from('catalog_products')
-        .select('id, name, brand, model, category, weight_g, catalog_photos(storage_path)', { count: 'exact' });
+        .select('id, name, brand, model, category, weight_g, origin, catalog_photos(storage_path)', { count: 'exact' });
       if(category) req = req.eq('category', category);
       if(brand) req = req.eq('brand', brand);
+      if(source === 'researched') req = req.eq('origin', 'seed');
+      if(source === 'hikers') req = req.neq('origin', 'seed');
       // PostgREST's or=() syntax uses , ( ) * as delimiters, so they can't
       // appear in the search text itself.
       const term = String(q).replace(/[,()*%\\:"']/g, ' ').trim().replace(/\s+/g, ' ');
@@ -5542,7 +5551,7 @@
     // Brand and category counts for the filters (the catalog is small
     // enough to fetch these two columns whole).
     async facets(){
-      const { data, error } = await sb.from('catalog_products').select('brand, category').limit(10000);
+      const { data, error } = await sb.from('catalog_products').select('brand, category, origin').limit(10000);
       if(error) throw error;
       return data || [];
     },
@@ -6058,6 +6067,15 @@
     onModalClosed('catalogDetailModalOverlay');
   }
 
+  // Where a catalog product's details came from: researched from brand and
+  // shop pages (the starter catalog and the catalog bot), or added by a
+  // hiker in the app (typed in, or filled from a product link).
+  function catalogSource(p){
+    return p && p.origin === 'seed'
+      ? { key: 'researched', label: 'Researched', title: 'Weight and specs researched from brand and shop pages' }
+      : { key: 'hiker', label: 'Added by a hiker', title: 'Added in the app by someone who uses it' };
+  }
+
   // ---- Catalog browser: "+ Add item" starts here ----
   const CB_PAGE = 30;
   let cbState = null;     // { presetCategory, rows, total, offset, seq }
@@ -6069,6 +6087,7 @@
     cbState = { presetCategory: presetCategory || null, rows: [], total: 0, offset: 0, seq: 0 };
     document.getElementById('cbSearch').value = '';
     document.getElementById('cbSort').value = 'name';
+    document.getElementById('cbSource').value = '';
     const cat = document.getElementById('cbCategory');
     if(!cat.options.length){
       cat.appendChild(new Option('All categories', ''));
@@ -6103,6 +6122,11 @@
     Array.from(catSel.options).forEach(o => {
       o.textContent = o.value ? o.value + (rows.length ? ' (' + (counts[o.value] || 0) + ')' : '') : 'All categories';
     });
+    const researched = rows.filter(r => r.origin === 'seed').length;
+    Array.from(document.getElementById('cbSource').options).forEach(o => {
+      const n = o.value === 'researched' ? researched : o.value === 'hikers' ? rows.length - researched : null;
+      o.textContent = (o.value === 'researched' ? 'Researched' : o.value === 'hikers' ? 'Added by hikers' : 'All sources') + (n != null && rows.length ? ' (' + n + ')' : '');
+    });
     const brandSel = document.getElementById('cbBrand');
     const keep = brandSel.value;
     const inCat = rows.filter(r => !catSel.value || r.category === catSel.value);
@@ -6130,6 +6154,7 @@
         q: document.getElementById('cbSearch').value,
         category: document.getElementById('cbCategory').value,
         brand: document.getElementById('cbBrand').value,
+        source: document.getElementById('cbSource').value,
         sort: document.getElementById('cbSort').value,
         offset: state.offset, limit: CB_PAGE,
       });
@@ -6176,7 +6201,14 @@
         thumb.innerHTML = GEAR_ICONS[p.category] || GEAR_ICONS.Other;
       }
       row.querySelector('.cb-name').textContent = p.name;
-      row.querySelector('.cb-meta').textContent = [p.brand, p.model, p.category].filter(Boolean).join(' · ');
+      const src = catalogSource(p);
+      const badge = document.createElement('span');
+      badge.className = 'cb-source is-' + src.key;
+      badge.textContent = src.key === 'researched' ? 'Researched' : 'Hiker';
+      badge.title = src.title;
+      const meta = row.querySelector('.cb-meta');
+      meta.appendChild(badge);
+      meta.appendChild(document.createTextNode([p.brand, p.model, p.category].filter(Boolean).join(' · ')));
       row.querySelector('.cb-weight').textContent = p.weight_g ? gramsLabel(p.weight_g) : '';
       row.querySelector('.cb-open').setAttribute('aria-label', 'Details for ' + [p.brand, p.name, p.model].filter(Boolean).join(' '));
       row.querySelector('.cb-use').setAttribute('aria-label', 'Add ' + [p.brand, p.name].filter(Boolean).join(' ') + ' to your gear');
@@ -6279,9 +6311,15 @@
     }
     document.getElementById('cdFacts').innerHTML = facts.map(([k, v]) => '<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
     document.getElementById('cdDescription').textContent = p.description || '';
-    if(p.source_url && /^https?:\/\//i.test(p.source_url)){
-      facts.push(['Specs from', '<a target="_blank" rel="noopener noreferrer nofollow" href="'+escapeHtml(p.source_url)+'">'+escapeHtml(hostOf(p.source_url))+'</a>' +
-        (p.origin === 'seed' ? ' <span class="cd-origin">(starter catalog — sizes and versions vary, check before relying on it)</span>' : '')]);
+    {
+      const src = catalogSource(p);
+      const link = p.source_url && /^https?:\/\//i.test(p.source_url)
+        ? '<a target="_blank" rel="noopener noreferrer nofollow" href="'+escapeHtml(p.source_url)+'">'+escapeHtml(hostOf(p.source_url))+'</a>' : '';
+      const text = src.key === 'researched'
+        ? '<span class="cb-source is-researched">Researched</span>' + (link ? 'from ' + link : 'from brand and shop pages') +
+          ' <span class="cd-origin">— sizes and versions vary, check before relying on it</span>'
+        : '<span class="cb-source is-hiker">Added by a hiker</span>' + (link ? 'specs from ' + link : '');
+      facts.push(['Source', text]);
       document.getElementById('cdFacts').innerHTML = facts.map(([k, v]) => '<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
     }
     document.getElementById('cdMeta').textContent = 'Added ' + String(p.created_at).slice(0, 10) +
@@ -7369,6 +7407,7 @@
   document.getElementById('cbCategory').addEventListener('change', ()=>{ renderCatalogFilters(); loadCatalogPage(true); });
   document.getElementById('cbBrand').addEventListener('change', ()=> loadCatalogPage(true));
   document.getElementById('cbSort').addEventListener('change', ()=> loadCatalogPage(true));
+  document.getElementById('cbSource').addEventListener('change', ()=> loadCatalogPage(true));
   document.getElementById('cbManualBtn').addEventListener('click', ()=>{
     const preset = cbState ? cbState.presetCategory : null;
     closeCatalogBrowser();

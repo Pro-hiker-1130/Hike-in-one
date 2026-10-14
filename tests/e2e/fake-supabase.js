@@ -51,6 +51,8 @@ function createFakeSupabase({ userId = null, seed = {}, lookups = {}, userDataDe
         if(['select', 'order', 'limit', 'offset', 'or', 'on_conflict', 'columns'].includes(k)) continue;
         const m = /^eq\.(.*)$/.exec(v);
         if(m && String(r[k]) !== m[1]) return false;
+        const n = /^neq\.(.*)$/.exec(v);
+        if(n && String(r[k]) === n[1]) return false;
       }
       return true;
     });
