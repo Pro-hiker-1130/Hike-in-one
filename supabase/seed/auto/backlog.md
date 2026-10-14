@@ -19,7 +19,6 @@ pin down to "Skipped" with a reason.
 - Jetboil Stash (Cooking)
 - Soto Amicus (Cooking)
 - Snow Peak Trek 700 titanium pot (Cooking)
-- Optimus Crux Lite (Cooking)
 - Sawyer Micro Squeeze (Water)
 - LifeStraw Peak Squeeze 1L (Water)
 - MSR Guardian purifier (Water)
@@ -36,7 +35,6 @@ pin down to "Skipped" with a reason.
 - Salomon Speedcross 6 (Footwear)
 - Topo Athletic Ultraventure 4 (Footwear)
 - Brooks Cascadia 18 (Footwear)
-- Lowa Renegade GTX Mid (Footwear)
 - Hoka Kaha 2 GTX (Footwear)
 - Montbell Plasma 1000 Down Jacket (Clothing)
 - Mountain Hardwear Ghost Whisperer/2 Hoody (Clothing)
@@ -56,6 +54,15 @@ pin down to "Skipped" with a reason.
 - CuloClean portable bidet (Hygiene)
 - Sea to Summit Wilderness Wash (Hygiene)
 
+- Forclaz MT900 Ultralight Down Jacket (Clothing)
+- Forclaz MT500 Hiking Pole (Other)
+- Quechua MH100 2-person tent (Shelter)
+- Fjällräven Keb Trousers (Clothing)
+- Hanwag Banks GTX (Footwear)
+- Vaude Brenta 30 (Backpack)
+- Tatonka Bison 75 (Backpack)
+- Jack Wolfskin Wolftrail 28 (Backpack)
+
 ## Skipped
 
 - Merrell Moab 3 (Footwear): listed per-pair weights disagree by about 25% (Merrell vs REI).
@@ -68,3 +75,7 @@ pin down to "Skipped" with a reason.
 - Gossamer Gear The One: listed weights disagree (503-630 g).
 - Zpacks Plex Solo: multiple variants (Classic/Pro); weights unclear.
 - MSR FreeLite 2: V3/U24 version unclear.
+- Deuter Aircontact Lite 50+10: sources disagree (1640 vs 1750 g) and no size named.
+- Forclaz MT900 Hooded Down Jacket: several versions (660/800 fill) with different weights.
+- Forclaz MT500 Hiking Pole: only one source, pair weight is derived from the per-pole figure.
+- Forclaz MT100 boots: no men's pair weight found.
