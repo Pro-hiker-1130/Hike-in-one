@@ -9,46 +9,25 @@ pin down to "Skipped" with a reason.
 - Hilleberg Niak (Shelter)
 - Therm-a-Rest NeoAir UberLite (Sleep system)
 - Nemo Tensor Trail (Sleep system)
-- Exped Ultra 3R (Sleep system)
-- Sea to Summit Spark SpIII (Sleep system)
 - Feathered Friends Swallow UL 20 (Sleep system)
 - Katabatic Gear Flex 22 (Sleep system)
 - Therm-a-Rest Vesper 20 quilt (Sleep system)
 - Nemo Fillo Elite pillow (Sleep system)
 - MSR WindBurner (Cooking)
 - Jetboil Stash (Cooking)
-- Soto Amicus (Cooking)
-- Snow Peak Trek 700 titanium pot (Cooking)
-- Sawyer Micro Squeeze (Water)
-- LifeStraw Peak Squeeze 1L (Water)
 - MSR Guardian purifier (Water)
-- Katadyn Hiker Pro (Water)
 - Platypus GravityWorks 4L (Water)
 - CNOC Vecto 2L (Water)
-- Petzl Bindi (Electronics)
-- Nitecore NB20000 (Electronics)
 - Garmin inReach Messenger Plus (Navigation)
-- Suunto MC-2 compass (Navigation)
-- Silva Ranger 2.0 compass (Navigation)
-- Altra Lone Peak 9 (Footwear)
-- La Sportiva Bushido III (Footwear)
-- Salomon Speedcross 6 (Footwear)
-- Topo Athletic Ultraventure 4 (Footwear)
-- Brooks Cascadia 18 (Footwear)
-- Hoka Kaha 2 GTX (Footwear)
-- Montbell Plasma 1000 Down Jacket (Clothing)
 - Mountain Hardwear Ghost Whisperer/2 Hoody (Clothing)
-- Patagonia Micro Puff Hoody (Clothing)
 - Arc'teryx Atom Hoody (Clothing)
 - Enlightened Equipment Torrid Jacket (Clothing)
 - Patagonia R1 Air Full-Zip Hoody (Clothing)
-- Rab Microlight Alpine Jacket (Clothing)
 - Zpacks Vertice Rain Jacket (Clothing)
 - Darn Tough Hiker Micro Crew Midweight socks (Clothing)
 - BearVault BV450 (Safety)
 - Ursack Major (Safety)
 - Adventure Medical Kits Mountain Series Hiker (Safety)
-- Leki Makalu FX Carbon (Other)
 - Gossamer Gear LT5 trekking poles (Other)
 - Sea to Summit Pack Liner 50L (Other)
 - CuloClean portable bidet (Hygiene)
@@ -56,11 +35,6 @@ pin down to "Skipped" with a reason.
 
 - Forclaz MT900 Ultralight Down Jacket (Clothing)
 - Forclaz MT500 Hiking Pole (Other)
-- Quechua MH100 2-person tent (Shelter)
-- Fjällräven Keb Trousers (Clothing)
-- Hanwag Banks GTX (Footwear)
-- Vaude Brenta 30 (Backpack)
-- Tatonka Bison 75 (Backpack)
 - Jack Wolfskin Wolftrail 28 (Backpack)
 
 ## Skipped
@@ -79,3 +53,9 @@ pin down to "Skipped" with a reason.
 - Forclaz MT900 Hooded Down Jacket: several versions (660/800 fill) with different weights.
 - Forclaz MT500 Hiking Pole: only one source, pair weight is derived from the per-pole figure.
 - Forclaz MT100 boots: no men's pair weight found.
+- Tatonka Bison 75: only an old third-party weight (3.3 kg) found.
+- Fjällräven Keb Trousers: only one discontinued listing (REI) found.
+- Silva Ranger 2.0 compass: listed weights conflict (86 vs 132-136 g).
+- Sea to Summit Spark SpIII: retailer specs conflict (665 vs 560 g) and the bag is discontinued.
+- Katadyn Hiker Pro: listed weights disagree (233 vs 310 g).
+- Altra Lone Peak 9: no verified per-pair weight found.
