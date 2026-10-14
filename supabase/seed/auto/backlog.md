@@ -15,11 +15,8 @@ pin down to "Skipped" with a reason.
 ## Skipped
 
 - Merrell Moab 3 (Footwear): listed per-pair weights disagree by about 25% (Merrell vs REI).
-- Durston Kakwa 55: no reliable listed weight or size found.
 - Granite Gear Crown3 60: weights depend on lid/size and disagree (1125-1290 g).
 - Big Agnes Tiger Wall UL2: retailer weights disagree (765 vs 992 g minimum).
-- Durston X-Mid Pro 2: Pro 2 vs Pro 2+ and floor/stake configs unclear (555-1017 g).
-- Tarptent Double Rainbow Li: 2025 redesign; weight unclear (596-765 g).
 - MSR FreeLite 2: V3/U24 version unclear.
 - Deuter Aircontact Lite 50+10: sources disagree (1640 vs 1750 g) and no size named.
 - Forclaz MT900 Hooded Down Jacket: several versions (660/800 fill) with different weights.
@@ -38,8 +35,6 @@ pin down to "Skipped" with a reason.
 - Adventure Medical Kits Mountain Series Hiker: manufacturer ~200 g vs independent measurement ~283 g.
 - Sea to Summit Ultra-Sil Pack Liner 50L: listed weights disagree (74 vs 95 g).
 - Scarpa Zodiac Plus GTX: no confirmed men's pair weight found.
-- Salomon Quest 4 GTX: listed pair weights conflict (900-1310 g).
-- Trangia 27: weight depends on the set variant (690-880 g).
 - Sea to Summit X-Mug: listed weights disagree (60 vs 78 g).
 - Klymit Static V: weight and R-value inconsistent across sources.
 - Salomon Soft Flask 500 ml: 33 vs 38 g, variant unclear.
