@@ -11,7 +11,8 @@ push. There is no human review, so **when in doubt, leave it out**.
 The owner runs this on a Claude Pro plan and wants it to stay well under
 their weekly usage limit.
 
-- At most **10 products** and at most **15 web searches** per run.
+- At most **20 products** and at most **30 web searches** per run, and at
+  most **5 products from one category**.
 - Scheduled daily runs: no page fetching. Use web search results only. Stop
   as soon as you hit either limit.
 - Manual sessions started by the owner may fetch manufacturer or retailer
@@ -36,16 +37,23 @@ their weekly usage limit.
      `curl -s "https://agdtujbsojhujffvhqcb.supabase.co/rest/v1/catalog_products?select=brand,name,model&limit=5000" -H "apikey: <key>"`.
    - If that fails (the network may block it), continue with the repo list
      only.
-3. **Pick candidates.** Take the first products from `backlog.md` that
-   aren't already in the catalog under any spelling. Skip candidates that
-   are in the catalog with a different size, color or year.
+3. **Pick candidates.**
+   - Count the catalog's products per category (from step 2) and work on
+     the categories with the **fewest** products first, at most 5 per
+     category.
+   - Take candidates from `backlog.md` ("Candidates") first, then from
+     `candidates.md`, in list order within each category.
+   - Skip anything already in the catalog under any spelling, or there
+     with a different size, color or year, and anything in the "Skipped"
+     list of `backlog.md`.
+   - `candidates.md` is maintained by the owner: **never edit it**.
 4. **Research each one** with web search, one search per product where
    possible. Record a product only if you have:
-   - the **listed** weight from the brand or a retailer, for a named size
-     or variant, which goes in the `model` column (e.g. `Men's M`,
-     `Regular`, `2025`);
-   - sources that agree within about 15%. If they don't, or the
-     version/size is unclear, skip the product;
+   - the **listed** weight for a named size or variant, which goes in the
+     `model` column (e.g. `Men's M`, `Regular`, `2025`). The **brand's own
+     product or spec page is enough on its own**. Without it, you need two
+     retailers that agree within about 15%. If the version or size is
+     unclear, skip the product;
    - a `source_url`: the page the weight came from (a real URL from the
      search results).
 5. **Write** `supabase/seed/auto/<YYYY-MM-DD>.sql` (today's UTC date) in
@@ -81,11 +89,13 @@ their weekly usage limit.
    PostgreSQL isn't available, check the SQL very carefully by eye
    instead.
 7. **Update `backlog.md`.**
-   - Remove the products you added.
-   - Move the ones you skipped to the "Skipped" list, with a short reason,
-     so they aren't retried.
-   - If fewer than 20 candidates are left, use at most 2 of your searches
-     to add popular current hiking gear that isn't in the catalog.
+   - Remove the products you added from its "Candidates" list, if they
+     were there.
+   - Add the ones you skipped (from either list) to the "Skipped" list,
+     with a short reason, so they aren't retried.
+   - If fewer than 20 candidates are left across both lists, use at most
+     2 of your searches to add popular current hiking gear that isn't in
+     the catalog to `backlog.md` ("Candidates").
 8. **Commit and push.**
    - `git add supabase/seed/auto && git commit -m "Catalog bot: <N> products (<date>)"`
    - `git push -u origin catalog-bot`, retrying on network errors.

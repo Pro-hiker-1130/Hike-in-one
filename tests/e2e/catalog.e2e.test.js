@@ -91,9 +91,13 @@ async function launch(t, { signedIn, blockCatalogCore = false, fake }){
   return { page, errors };
 }
 
+// "+ Add item" opens the catalog browser; its "add it yourself" button
+// leads to the empty gear form these tests start from.
 async function openAddGear(page){
   await page.click('.nav-tab[data-page="gear"]');
   await page.click('#addGearBtnGarage');
+  await page.waitForSelector('#catalogBrowseModalOverlay', { state: 'visible' });
+  await page.click('#cbManualBtn');
   await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
 }
 const val = (page, id) => page.inputValue('#' + id);
@@ -384,7 +388,11 @@ test('catalog when signed out: browse and read, contributing asks to sign in', {
 test('without the catalog (script blocked / offline): gear room still works', { skip: !playwright && 'playwright not installed' }, async t=>{
   const fake = createFakeSupabase({ userId: null, seed: seedCatalog() });
   const { page, errors } = await launch(t, { signedIn: false, blockCatalogCore: true, fake });
-  await openAddGear(page);
+  // No catalog: "+ Add item" goes straight to the form.
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#addGearBtnGarage');
+  await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
+  assert.ok(!(await page.isVisible('#catalogBrowseModalOverlay')));
   assert.ok(!(await page.isVisible('#catalogField')), 'catalog search hidden');
   await page.fill('#gearName', 'Spork');
   await page.click('#gearForm button[type="submit"]');
@@ -434,7 +442,7 @@ test('catalog: "Look it up" from a link and bulk "Add products from links"', { s
     assert.equal(await val(page, 'gearWeight'), '354');
     await page.click('#catalogLinkView');
     await page.waitForSelector('#cdBody', { state: 'visible' });
-    assert.match(await page.innerText('#cdFacts'), /Specs from\s+brand\.example\.com/);
+    assert.match(await page.innerText('#cdFacts'), /Source\s+Added by a hiker\s*specs from brand\.example\.com/);
     await page.click('#catalogDetailModalClose');
     await page.click('#gearCancelBtn');
     await page.waitForSelector('#gearModalOverlay', { state: 'hidden' });
@@ -488,4 +496,83 @@ test('catalog: bulk add asks signed-out users to sign in', { skip: !playwright &
   await page.click('#catalogBulkBtn');
   await page.waitForSelector('#cloudSignInModalOverlay', { state: 'visible' });
   assert.ok(!(await page.isVisible('#catalogBulkModalOverlay')));
+});
+
+test('catalog browser: "+ Add item" lists the catalog, filters by category and brand, searches, pages, adds', { skip: !playwright && 'playwright not installed' }, async t=>{
+  const seed = seedCatalog();
+  // Enough products for paging and filters: 40 extra tents and stoves.
+  for(let i = 0; i < 40; i++){
+    seed.products.push(i % 2
+      ? { id: 'dddddddd-0000-4000-8000-' + String(i).padStart(12, '0'), name: 'Pocket Stove ' + i, brand: 'MSR', category: 'Cooking', weight_g: 70 + i }
+      : { id: 'dddddddd-0000-4000-8000-' + String(i).padStart(12, '0'), name: 'Trail Tent ' + i, brand: 'Nemo', category: 'Shelter', weight_g: 900 + i * 10, origin: 'seed',
+          source_url: 'https://nemoequipment.example/tent-' + i });
+  }
+  const fake = createFakeSupabase({ userId: null, seed });
+  const { page, errors } = await launch(t, { signedIn: false, fake });
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#addGearBtnGarage');
+  await page.waitForSelector('#catalogBrowseModalOverlay', { state: 'visible' });
+  await page.waitForFunction(()=> /42 products/.test(document.getElementById('cbCount').textContent));
+  assert.equal(await page.locator('#cbList .cb-row').count(), 30, 'first page');
+  await page.click('#cbList .cb-more');
+  await page.waitForFunction(()=> document.querySelectorAll('#cbList .cb-row').length === 42);
+
+  // Category filter, with counts; the brand list follows the category.
+  await page.waitForFunction(()=> /Cooking \(20\)/.test(document.getElementById('cbCategory').textContent));
+  await page.selectOption('#cbCategory', 'Shelter');
+  await page.waitForFunction(()=> /21 products/.test(document.getElementById('cbCount').textContent));
+  const brands = await page.$$eval('#cbBrand option', os => os.map(o => o.textContent));
+  assert.deepEqual(brands, ['All brands', 'Big Agnes (1)', 'Nemo (20)']);
+  await page.selectOption('#cbBrand', 'Big Agnes');
+  await page.waitForFunction(()=> /^1 product$/.test(document.getElementById('cbCount').textContent));
+
+  // Source: the 20 Nemo tents are researched, the rest added by hikers.
+  await page.selectOption('#cbBrand', '');
+  await page.selectOption('#cbCategory', '');
+  await page.waitForFunction(()=> /Researched \(20\)/.test(document.getElementById('cbSource').textContent));
+  await page.selectOption('#cbSource', 'researched');
+  await page.waitForFunction(()=> /^20 products$/.test(document.getElementById('cbCount').textContent));
+  assert.equal(await page.locator('#cbList .cb-source.is-researched').count(), 20);
+  await page.click('#cbList .cb-row:first-child .cb-open');
+  await page.waitForSelector('#cdBody', { state: 'visible' });
+  assert.match(await page.innerText('#cdFacts'), /Source\s+Researched\s*from nemoequipment\.example/);
+  await page.click('#catalogDetailModalClose');
+  await page.waitForSelector('#catalogDetailModalOverlay', { state: 'hidden' });
+  await page.selectOption('#cbSource', 'hikers');
+  await page.waitForFunction(()=> /^22 products$/.test(document.getElementById('cbCount').textContent));
+  assert.equal(await page.locator('#cbList .cb-source.is-researched').count(), 0);
+  assert.equal(await page.locator('#cbList .cb-source.is-hiker').count(), 22);
+  await page.selectOption('#cbSource', '');
+
+  // Search across everything, lightest first.
+  await page.selectOption('#cbCategory', '');
+  await page.selectOption('#cbBrand', '');
+  await page.fill('#cbSearch', 'stove');
+  await page.selectOption('#cbSort', 'light');
+  await page.waitForFunction(()=> /20 products/.test(document.getElementById('cbCount').textContent));
+  assert.equal(await page.textContent('#cbList .cb-row:first-child .cb-name'), 'Pocket Stove 1');
+  assert.equal(await page.textContent('#cbList .cb-row:first-child .cb-weight'), '71 g');
+
+  // Add → a new gear item filled in from the catalog.
+  await page.click('#cbList .cb-row:first-child .cb-use');
+  await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
+  await page.waitForFunction(()=> document.getElementById('gearName').value === 'Pocket Stove 1');
+  assert.equal(await val(page, 'gearBrand'), 'MSR');
+  assert.equal(await val(page, 'gearCategory'), 'Cooking');
+  assert.equal(await val(page, 'gearWeight'), '71');
+  assert.ok(!(await page.isVisible('#catalogBrowseModalOverlay')));
+
+  // From a product's page: "Use this product" does the same.
+  await page.click('#gearCancelBtn');
+  await page.waitForSelector('#gearModalOverlay', { state: 'hidden' });
+  await page.click('#addGearBtnGarage');
+  await page.waitForSelector('#catalogBrowseModalOverlay', { state: 'visible' });
+  await page.fill('#cbSearch', 'exos');
+  await page.waitForFunction(()=> /^1 product$/.test(document.getElementById('cbCount').textContent));
+  await page.click('#cbList .cb-open');
+  await page.waitForSelector('#cdBody', { state: 'visible' });
+  await page.click('#cdUseBtn');
+  await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
+  await page.waitForFunction(()=> document.getElementById('gearName').value === 'Exos 58');
+  assert.deepEqual(errors, []);
 });

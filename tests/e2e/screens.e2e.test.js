@@ -77,7 +77,9 @@ async function launch(t, viewport = { width: 1280, height: 900 }, fake = null){
   const browser = await playwright.chromium.launch(Object.assign({ args: ['--no-sandbox'] },
     process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}));
   t.after(()=> browser.close());
-  const ctx = await browser.newContext({ viewport, serviceWorkers: 'block' });
+  // viewport.touch: a touch phone (taps, not mouse clicks).
+  const { touch, ...size } = viewport;
+  const ctx = await browser.newContext({ viewport: size, serviceWorkers: 'block', hasTouch: !!touch, isMobile: !!touch });
   if(process.env.HIKE_LIBS_DIR){
     await ctx.route(/cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net/, route=>{
       const key = Object.keys(LIBS).find(k => route.request().url().includes(k));
@@ -324,4 +326,110 @@ test('sync: a newer cloud copy with no trips keeps this device\'s trips and uplo
   assert.equal(await text(page, '#tripCompletedGrid .trip-card-name'), 'Local trip');
   assert.equal(fake.db.user_data[0].trips.length, 1, 'trips uploaded again');
   assert.equal(fake.db.user_data[0].tracks.length, 1);
+});
+
+test('trip colors: pick a swatch or any color, used on the map and the trip card; Auto goes back', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  const editEiger = async ()=>{
+    await page.click('.nav-tab[data-page="trips"]');
+    await page.click('.trip-card:has-text("Eiger")');
+    await page.click('#tripEditBtn');
+    await page.waitForSelector('#tripModalOverlay', { state: 'visible' });
+  };
+  const save = async ()=>{
+    await page.click('#tripForm button[type="submit"]');
+    await page.waitForSelector('#tripModalOverlay', { state: 'hidden' });
+  };
+  const cardStroke = ()=> page.$eval('.trip-card-timeline:has-text("Eiger") .trip-card-profile path:last-child', p => p.getAttribute('stroke'));
+  const mapLines = color => page.$$eval('#map path.leaflet-interactive', (ps, c) => ps.filter(p => (p.getAttribute('stroke') || '').toLowerCase() === c).length, color);
+
+  await editEiger();
+  assert.equal(await page.getAttribute('#tripColorPicker .is-auto', 'aria-checked'), 'true', 'new and untouched trips are automatic');
+  await page.click('#tripColorPicker [aria-label="Color 4"]');
+  await save();
+  await page.click('#backToTripsBtn');
+  assert.equal(await cardStroke(), '#1F6FA8');
+  await page.click('.nav-tab[data-page="map"]');
+  await page.waitForTimeout(200);
+  assert.ok(await mapLines('#1f6fa8') >= 1, 'the trip\'s track is drawn in its color');
+
+  await editEiger();
+  await page.locator('#tripColorPicker input[type="color"]').fill('#ff8800');
+  await save();
+  await page.click('#backToTripsBtn');
+  assert.equal(await cardStroke(), '#ff8800');
+
+  await editEiger();
+  await page.click('#tripColorPicker .is-auto');
+  await save();
+  await page.click('#backToTripsBtn');
+  assert.notEqual(await cardStroke(), '#ff8800');
+  assert.deepEqual(errors, []);
+});
+
+test('phone map: drag the panel down for a bigger map, tap to cycle sizes, remembered after reload', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t, { width: 390, height: 844 });
+  const mapH = ()=> page.$eval('#map', el => Math.round(el.getBoundingClientRect().height));
+  const sheetH = ()=> page.$eval('#mapSheet', el => Math.round(el.getBoundingClientRect().height));
+  const before = await mapH();
+  const box = await page.locator('#mapSheetHandle').boundingBox();
+  // Drag the handle almost to the bottom: the sheet settles on its smallest size.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + 500, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(500);   // the click a drag produces is ignored for a moment
+  assert.equal(await sheetH(), 28, 'only the handle is left');
+  assert.ok(await mapH() > before + 250, 'the map took the space');
+  // Leaflet was told about its new size.
+  assert.ok(await page.evaluate(()=> Math.abs(document.querySelector('#map .leaflet-pane').closest('#map').clientHeight - document.getElementById('map').clientHeight) < 2));
+
+  await page.click('#mapSheetHandle');
+  assert.equal(await sheetH(), 150, 'a tap opens it to the overview stats');
+  await page.click('#mapSheetHandle');
+  assert.ok(await sheetH() > 300, 'next tap: half');
+
+  await page.click('#mapSheetHandle');
+  const tall = await sheetH();
+  await page.reload();
+  await page.waitForSelector('.nav-tab');
+  assert.equal(await sheetH(), tall, 'size remembered');
+  assert.deepEqual(errors, []);
+});
+
+test('phone map: tapping the panel handle only resizes it, it never presses what slides under the finger', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t, { width: 390, height: 844, touch: true });
+  const view = ()=> page.textContent('.sidebar .view-toggle:not(#basemapToggle) button.active');
+  for(let i = 0; i < 4; i++){
+    await page.tap('#mapSheetHandle');
+    await page.waitForTimeout(150);
+    assert.equal(await view(), 'Tracks', 'tap ' + (i + 1) + ' left the map view alone');
+  }
+  assert.deepEqual(errors, []);
+});
+
+test('Escape closes the dialog on top, one at a time', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.click('#addTripBtn');
+  await page.waitForSelector('#tripModalOverlay', { state: 'visible' });
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('#tripModalOverlay', { state: 'hidden' });
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#addGearBtnGarage');
+  await page.waitForSelector('#catalogBrowseModalOverlay', { state: 'visible' });
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('#catalogBrowseModalOverlay', { state: 'hidden' });
+  await page.click('#addLoadoutBtn');
+  await page.waitForSelector('#loadoutModalOverlay', { state: 'visible' });
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('#loadoutModalOverlay', { state: 'hidden' });
+  await page.click('#viewAllGearBtn');
+  await page.click('#gearGrid .gear-card [data-action="edit"]');
+  await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('#gearModalOverlay', { state: 'hidden' });
+  assert.ok(await page.isVisible('#pageGear'), 'still on the Gear Room');
+  assert.deepEqual(errors, []);
 });

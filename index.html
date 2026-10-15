@@ -89,6 +89,7 @@
     overflow-y:auto;
   }
   .sidebar::-webkit-scrollbar{width:8px;}
+  .sheet-handle{display:none;}
   .sidebar::-webkit-scrollbar-thumb{background:var(--panel-alt);border-radius:4px;}
 
   .brand{padding:22px 20px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;}
@@ -300,14 +301,14 @@
   .ele-profile:focus-visible{outline:2px solid var(--brass);outline-offset:3px;}
   .ele-plot{position:relative;height:84px;border-bottom:1px solid var(--line);cursor:crosshair;touch-action:pan-y;}
   .ele-plot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
-  .ele-area{fill:var(--brass);fill-opacity:0.12;stroke:none;}
-  .ele-line{fill:none;stroke:var(--brass);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;}
+  .ele-area{fill:var(--ele-color, var(--brass));fill-opacity:0.14;stroke:none;}
+  .ele-line{fill:none;stroke:var(--ele-color, var(--brass));stroke-width:2;stroke-linejoin:round;stroke-linecap:round;}
   .ele-axis{position:absolute;left:0;width:42px;text-align:right;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
   .ele-axis-max{top:-4px;}
   .ele-axis-min{top:74px;}
   .ele-axis-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;}
   .ele-cursor{position:absolute;top:0;bottom:0;width:1px;margin-left:-0.5px;background:rgba(243,237,225,0.35);pointer-events:none;}
-  .ele-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--brass);box-shadow:0 0 0 2px var(--panel);pointer-events:none;}
+  .ele-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--ele-color, var(--brass));box-shadow:0 0 0 2px var(--panel);pointer-events:none;}
   .wear{margin-top:2px;}
   .wear-meter{height:4px;border-radius:2px;background:rgba(243,237,225,0.1);overflow:hidden;}
   .wear-fill{display:block;height:100%;border-radius:2px;}
@@ -849,7 +850,16 @@
     .page-container{margin-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));}
     .global-toast{bottom:calc(var(--tabbar-h) + 14px + env(safe-area-inset-bottom));}
     .app .map-area{order:-1;flex:1 1 55%;min-height:0;}
-    .app .sidebar{flex:0 1 45%;max-height:none;border-bottom:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-14px;position:relative;z-index:500;box-shadow:0 -6px 20px rgba(52,78,65,0.1);}
+    .app .sidebar{flex:0 0 var(--sheet-h, 45%);max-height:none;border-bottom:none;border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-14px;position:relative;z-index:500;box-shadow:0 -6px 20px rgba(52,78,65,0.1);}
+    .app .sidebar.is-dragging{user-select:none;}
+    .sheet-handle{
+      display:flex;position:sticky;top:0;z-index:2;flex:none;width:100%;height:28px;padding:0;border:0;
+      align-items:center;justify-content:center;background:var(--panel);cursor:grab;touch-action:none;
+      border-radius:16px 16px 0 0;
+    }
+    .sheet-handle:active{cursor:grabbing;}
+    .sheet-grip{width:44px;height:5px;border-radius:3px;background:rgba(52,78,65,0.3);}
+    .sheet-handle:focus-visible{outline:2px solid var(--brass);outline-offset:-4px;}
   }
 
   /* ==== Step 2: map overview, trips timeline, gear list, settings ==== */
@@ -940,6 +950,55 @@
   .settings-note{margin:0;font-size:14px;color:var(--muted);line-height:1.45;}
   .settings-account-email{margin:0;font-weight:600;}
   .settings-error{color:var(--danger);}
+  .catalog-browse-modal{max-width:640px;display:flex;flex-direction:column;}
+  .cb-controls{padding:12px 20px 0;display:flex;flex-direction:column;gap:8px;}
+  .cb-controls input[type="search"]{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(52,78,65,0.22);background:var(--panel);font:inherit;font-size:15px;color:var(--parchment);}
+  .cb-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+  .cb-filters select{min-width:0;padding:8px;border-radius:8px;border:1px solid rgba(52,78,65,0.22);background:var(--panel);font:inherit;font-size:13.5px;color:var(--parchment);}
+  .cb-count{padding:10px 20px 4px;font-size:13px;color:var(--muted);min-height:18px;}
+  .cb-list{padding:0 20px 8px;display:flex;flex-direction:column;}
+  .cb-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);}
+  .cb-open{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:10px 0;border:0;background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer;}
+  .cb-open:hover .cb-name{color:var(--brass);text-decoration:underline;}
+  .cb-thumb{flex:none;width:44px;height:44px;border-radius:8px;background:var(--panel-alt);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--brass);}
+  .cb-thumb img{width:100%;height:100%;object-fit:cover;}
+  .cb-thumb svg{width:26px;height:26px;}
+  .cb-text{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .cb-name{font-weight:600;font-size:15px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .cb-meta{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cb-weight{flex:none;font-variant-numeric:tabular-nums;font-size:14px;}
+  .cb-use{flex:none;padding:6px 12px;}
+  .cb-more{align-self:center;margin:12px 0;}
+  .cb-empty{padding:28px 8px;text-align:center;color:var(--muted);font-size:14px;}
+  .cb-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--panel);}
+  @media (max-width:560px){
+    .cb-filters{grid-template-columns:1fr 1fr;}
+  }
+  .cb-source{display:inline-block;margin-right:6px;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;vertical-align:1px;}
+  .cb-source.is-researched{background:var(--sage-soft);color:var(--brass);}
+  .cb-source.is-hiker{background:#F3E9D9;color:#6E4C29;}
+  .quick-add-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .quick-add-row input{flex:1 1 200px;min-width:0;}
+  .quick-add-row button{flex:none;}
+  @media (max-width:560px){
+    .quick-add-row input{flex-basis:100%;}
+    .quick-add-row button{flex:1;}
+    #tripDetailView .gear-stats-row .stat-card{flex:1 1 calc(33.3% - 6px);padding:8px 10px;}
+    #tripDetailView .gear-stats-row .stat-num{font-size:21px;}
+    #tripDetailView .gear-stats-row .stat-label{font-size:10.5px;}
+  }
+  .trip-color-picker{display:flex;flex-wrap:wrap;gap:8px;}
+  .trip-color-swatch{
+    position:relative;width:36px;height:36px;border-radius:50%;border:2px solid var(--panel);padding:0;cursor:pointer;
+    box-shadow:0 0 0 1px var(--line);font:inherit;font-size:11px;font-weight:600;color:var(--parchment);
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .trip-color-swatch[aria-checked="true"]{box-shadow:0 0 0 2px var(--parchment);}
+  .trip-color-swatch.is-auto{width:auto;padding:0 12px;border-radius:18px;background:var(--panel-alt);}
+  .trip-color-custom{background:conic-gradient(#C4501C,#8A6A00,#2F8F83,#1F6FA8,#6A4C93,#A3366B,#C4501C);color:#FFFFFF;}
+  .trip-color-custom span{font-size:18px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.5);}
+  .trip-color-custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;}
+  .trip-color-custom:focus-within{outline:2px solid var(--brass);outline-offset:2px;}
   .trips-problem{margin:12px 24px 0;padding:10px 14px;border-radius:10px;background:#FBE9E7;color:var(--danger);font-size:14px;flex:none;}
   @media (max-width:760px){ .trips-problem{margin:12px 12px 0;} }
   .settings-card .clear-btn{width:auto;font-size:14px;padding:10px 16px;border-radius:8px;}
@@ -995,7 +1054,10 @@
 
 <div class="page-container">
 <div class="app page active" id="pageMap">
-  <div class="sidebar">
+  <div class="sidebar" id="mapSheet">
+    <button type="button" class="sheet-handle" id="mapSheetHandle" aria-label="Resize the map panel" aria-controls="mapSheet">
+      <span class="sheet-grip" aria-hidden="true"></span>
+    </button>
     <div class="brand">
       <svg width="26" height="26" viewBox="0 0 200 200">
         <circle cx="100" cy="100" r="97" fill="#0E1B33" stroke="#E2764F" stroke-width="4"/>
@@ -1420,8 +1482,8 @@
       </div>
       <div class="form-field">
         <label for="gearUrlInput">Quick add: product link or barcode</label>
-        <div style="display:flex;gap:8px;">
-          <input type="url" id="gearUrlInput" placeholder="Paste a product URL…" style="flex:1;">
+        <div class="quick-add-row">
+          <input type="url" id="gearUrlInput" placeholder="Paste a product URL…">
           <button type="button" class="ghost-btn" id="gearUrlFetchBtn">Fetch</button>
           <button type="button" class="ghost-btn" id="gearBarcodeBtn">Scan barcode</button>
         </div>
@@ -1616,6 +1678,39 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="catalogBrowseModalOverlay" style="display:none;">
+  <div class="modal catalog-browse-modal" role="dialog" aria-labelledby="cbTitle">
+    <div class="modal-header">
+      <h3 id="cbTitle">Add gear</h3>
+      <button class="modal-close" aria-label="Close" id="catalogBrowseModalClose" type="button">&times;</button>
+    </div>
+    <div class="cb-controls">
+      <input type="search" id="cbSearch" placeholder="Search the gear catalog…" aria-label="Search the gear catalog" autocomplete="off">
+      <div class="cb-filters">
+        <select id="cbCategory" aria-label="Category"></select>
+        <select id="cbBrand" aria-label="Brand"></select>
+        <select id="cbSource" aria-label="Source">
+          <option value="">All sources</option>
+          <option value="researched">Researched</option>
+          <option value="hikers">Added by hikers</option>
+        </select>
+        <select id="cbSort" aria-label="Sort">
+          <option value="name">Brand A–Z</option>
+          <option value="light">Lightest first</option>
+          <option value="heavy">Heaviest first</option>
+          <option value="new">Newest</option>
+        </select>
+      </div>
+    </div>
+    <div class="cb-count" id="cbCount" aria-live="polite"></div>
+    <div class="cb-list" id="cbList"></div>
+    <div class="cb-footer">
+      <button type="button" class="ghost-btn" id="cbManualBtn">Not listed? Add it yourself</button>
+      <button type="button" class="link-btn" id="cbContributeBtn">Add a product to the catalog</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="catalogBulkModalOverlay" style="display:none;">
   <div class="modal catalog-bulk-modal">
     <div class="modal-header">
@@ -1764,6 +1859,10 @@
           <label for="tripDate">Date</label>
           <input type="date" id="tripDate">
         </div>
+      </div>
+      <div class="form-field">
+        <label id="tripColorLabel">Color on the map</label>
+        <div class="trip-color-picker" id="tripColorPicker" role="radiogroup" aria-labelledby="tripColorLabel"></div>
       </div>
       <div class="form-field">
         <label>Add tracks</label>
@@ -3143,6 +3242,15 @@
   function findTrackTrip(trackId){
     return trips.find(tr => (tr.trackIds||[]).includes(trackId)) || null;
   }
+  // A color the user picked for a trip, if it's a valid #rrggbb (the value
+  // ends up in style attributes, so nothing else gets through).
+  function tripOwnColor(trip){
+    return trip && typeof trip.color === 'string' && /^#[0-9a-f]{6}$/i.test(trip.color) ? trip.color : null;
+  }
+  function tripColor(trip, trackColors){
+    const tks = tripTracks(trip);
+    return tripOwnColor(trip) || (tks.length ? trackColors[tks[0].id] : null);
+  }
   function computeTrackColors(){
     const groupKey = {};
     tracks.forEach(t=>{
@@ -3156,7 +3264,10 @@
       if(!seen.has(k)){ seen.add(k); order.push(k); }
     });
     const keyColor = {};
-    order.forEach((k,i)=> keyColor[k] = COLORS[i % COLORS.length]);
+    order.forEach((k,i)=>{
+      const own = k.startsWith('trip:') ? tripOwnColor(trips.find(tr => 'trip:'+tr.id === k)) : null;
+      keyColor[k] = own || COLORS[i % COLORS.length];
+    });
     const result = {};
     tracks.forEach(t=> result[t.id] = keyColor[groupKey[t.id]]);
     return result;
@@ -3707,7 +3818,7 @@
       const dist = tripDistanceKm(trip);
       const gearList = tripGearItemsList(trip);
       const weight = tripGearWeight(trip);
-      const dotColor = tks.length ? trackColors[tks[0].id] : null;
+      const dotColor = tripColor(trip, trackColors);
       const displayDate = tripDisplayDate(trip);
       const climb = tks.reduce((sum,t)=>sum+(t.elevationGainM||0), 0);
       const card = document.createElement('div');
@@ -3798,7 +3909,7 @@
       section.appendChild(grid);
       g.trips.forEach(trip=>{ try{
         const tks = tripTracks(trip);
-        const color = tks.length ? trackColors[tks[0].id] : 'var(--fern)';
+        const color = tripColor(trip, trackColors) || 'var(--fern)';
         const dist = tripDistanceKm(trip);
         const climb = tks.reduce((sum,t)=>sum+(t.elevationGainM||0), 0);
         const gearList = tripGearItemsList(trip);
@@ -4000,7 +4111,11 @@
           c.textContent = 'Added before elevation tracking — re-add this GPX to see its profile.';
           block.appendChild(c);
         }
-        if(t.profile && t.profile.length > 1) block.appendChild(buildElevationProfile(t));
+        if(t.profile && t.profile.length > 1){
+          const prof = buildElevationProfile(t);
+          prof.style.setProperty('--ele-color', trackColors[t.id]);
+          block.appendChild(prof);
+        }
         trackList.appendChild(block);
       });
     }
@@ -4207,6 +4322,8 @@
     tripStatusTouched = !!(trip && (trip.status === 'planned' || trip.status === 'completed'));
     setTripStatusToggle(trip ? tripStatus(trip) : 'planned');
     renderTripTrackPicker(new Set(trip ? (trip.trackIds || []) : []));
+    tripFormColor = tripOwnColor(trip);
+    renderTripColorPicker();
 
     const delBtn = document.getElementById('tripDeleteBtn');
     delBtn.style.display = trip ? 'inline-block' : 'none';
@@ -4216,6 +4333,42 @@
     document.getElementById('tripModalOverlay').style.display = 'flex';
     document.getElementById('tripName').focus();
     onModalOpened('tripModalOverlay');
+  }
+
+  // ---- Trip color picker: Auto (the app picks), a swatch, or any color ----
+  let tripFormColor = null;   // null = automatic
+  function renderTripColorPicker(){
+    const box = document.getElementById('tripColorPicker');
+    box.innerHTML = '';
+    const custom = tripFormColor && !COLORS.some(c => c.toLowerCase() === tripFormColor.toLowerCase());
+    const add = (value, label, bg) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'trip-color-swatch' + (value === null ? ' is-auto' : '');
+      b.setAttribute('role', 'radio');
+      const on = value === null ? tripFormColor === null : !!tripFormColor && tripFormColor.toLowerCase() === value.toLowerCase();
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.setAttribute('aria-label', label);
+      b.title = label;
+      if(bg) b.style.background = bg;
+      if(value === null) b.textContent = 'Auto';
+      b.addEventListener('click', ()=>{ tripFormColor = value; renderTripColorPicker(); });
+      box.appendChild(b);
+    };
+    add(null, 'Automatic color');
+    COLORS.forEach((c, i) => add(c, 'Color ' + (i + 1), c));
+    // Any other color: the native picker, showing the chosen one.
+    const wrap = document.createElement('label');
+    wrap.className = 'trip-color-swatch trip-color-custom';
+    wrap.title = 'Pick any color';
+    wrap.setAttribute('aria-checked', custom ? 'true' : 'false');
+    if(custom) wrap.style.background = tripFormColor;
+    wrap.innerHTML = '<input type="color" aria-label="Pick any color"><span aria-hidden="true">+</span>';
+    const input = wrap.querySelector('input');
+    input.value = tripFormColor || COLORS[0];
+    input.addEventListener('input', ()=>{ tripFormColor = input.value; wrap.style.background = input.value; wrap.setAttribute('aria-checked', 'true');
+      box.querySelectorAll('[role="radio"]').forEach(r => r.setAttribute('aria-checked', 'false')); });
+    box.appendChild(wrap);
   }
 
   function closeTripModal(){
@@ -4283,9 +4436,14 @@
 
     if(id){
       const trip = trips.find(t=>t.id===id);
-      if(trip){ trip.name = name; trip.notes = notes; trip.trackIds = trackIds; trip.date = date; trip.status = status; }
+      if(trip){
+        trip.name = name; trip.notes = notes; trip.trackIds = trackIds; trip.date = date; trip.status = status;
+        if(tripFormColor) trip.color = tripFormColor; else delete trip.color;
+      }
     } else {
-      trips.push({id: 'trip_'+Math.random().toString(36).slice(2,10), name, notes, trackIds, gearIds: [], photoIds: [], date, status, createdAt: Date.now()});
+      const trip = {id: 'trip_'+Math.random().toString(36).slice(2,10), name, notes, trackIds, gearIds: [], photoIds: [], date, status, createdAt: Date.now()};
+      if(tripFormColor) trip.color = tripFormColor;
+      trips.push(trip);
     }
     await saveTrips();
     closeTripModal();
@@ -4997,6 +5155,14 @@
     return g >= 1000 ? (g/1000).toFixed(g % 1000 === 0 ? 0 : 1) + ' kg' : g + ' g';
   }
 
+  // "€2,280"; mixed currencies or an unknown code fall back to "2,280 XYZ".
+  function formatMoney(amount, currency){
+    try{
+      if(/^[A-Z]{3}$/.test(currency)) return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
+    }catch(e){}
+    return Math.round(amount).toLocaleString('en-US') + ' ' + currency;
+  }
+
   function renderGearStats(){
     const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
     const count = owned.reduce((s,g)=>s+(g.quantity||1),0);
@@ -5008,7 +5174,7 @@
     document.getElementById('gearStatCount').textContent = count;
     document.getElementById('gearStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
     const currencyLabel = currencies.size === 1 ? [...currencies][0] : (currencies.size > 1 ? 'mixed' : 'EUR');
-    document.getElementById('gearStatValue').textContent = value ? value.toFixed(0) + ' ' + currencyLabel : '0';
+    document.getElementById('gearStatValue').textContent = value ? formatMoney(value, currencyLabel) : '0';
   }
 
   function renderGearGrid(){
@@ -5362,6 +5528,33 @@
   function gramsLabel(g){ return Math.round(g).toLocaleString('en-US') + ' g'; }
 
   const catalogApi = {
+    // One page of the catalog for the browser: { rows, total }.
+    async browse({ q = '', category = '', brand = '', source = '', sort = 'name', offset = 0, limit = 30 }){
+      let req = sb.from('catalog_products')
+        .select('id, name, brand, model, category, weight_g, origin, catalog_photos(storage_path)', { count: 'exact' });
+      if(category) req = req.eq('category', category);
+      if(brand) req = req.eq('brand', brand);
+      if(source === 'researched') req = req.eq('origin', 'seed');
+      if(source === 'hikers') req = req.neq('origin', 'seed');
+      // PostgREST's or=() syntax uses , ( ) * as delimiters, so they can't
+      // appear in the search text itself.
+      const term = String(q).replace(/[,()*%\\:"']/g, ' ').trim().replace(/\s+/g, ' ');
+      if(term) req = req.or(['name', 'brand', 'model'].map(c => c + '.ilike.*' + term + '*').join(','));
+      if(sort === 'light') req = req.order('weight_g', { ascending: true, nullsFirst: false });
+      else if(sort === 'heavy') req = req.order('weight_g', { ascending: false, nullsFirst: false });
+      else if(sort === 'new') req = req.order('created_at', { ascending: false });
+      req = req.order('brand', { ascending: true }).order('name', { ascending: true }).range(offset, offset + limit - 1);
+      const { data, error, count } = await req;
+      if(error) throw error;
+      return { rows: data || [], total: count == null ? (data || []).length : count };
+    },
+    // Brand and category counts for the filters (the catalog is small
+    // enough to fetch these two columns whole).
+    async facets(){
+      const { data, error } = await sb.from('catalog_products').select('brand, category, origin').limit(10000);
+      if(error) throw error;
+      return data || [];
+    },
     async search(q){
       const { data, error } = await sb.rpc('search_catalog', { q, max_results: 8 });
       if(error) throw error;
@@ -5874,6 +6067,173 @@
     onModalClosed('catalogDetailModalOverlay');
   }
 
+  // Where a catalog product's details came from: researched from brand and
+  // shop pages (the starter catalog and the catalog bot), or added by a
+  // hiker in the app (typed in, or filled from a product link).
+  function catalogSource(p){
+    return p && p.origin === 'seed'
+      ? { key: 'researched', label: 'Researched', title: 'Weight and specs researched from brand and shop pages' }
+      : { key: 'hiker', label: 'Added by a hiker', title: 'Added in the app by someone who uses it' };
+  }
+
+  // ---- Catalog browser: "+ Add item" starts here ----
+  const CB_PAGE = 30;
+  let cbState = null;     // { presetCategory, rows, total, offset, seq }
+  let cbFacets = null, cbFacetsAt = 0;
+  let cbSearchTimer = 0;
+
+  function openCatalogBrowser(presetCategory){
+    if(!CATALOG_ENABLED){ openGearModal(null, presetCategory || null); return; }
+    cbState = { presetCategory: presetCategory || null, rows: [], total: 0, offset: 0, seq: 0 };
+    document.getElementById('cbSearch').value = '';
+    document.getElementById('cbSort').value = 'name';
+    document.getElementById('cbSource').value = '';
+    const cat = document.getElementById('cbCategory');
+    if(!cat.options.length){
+      cat.appendChild(new Option('All categories', ''));
+      CC.CATEGORIES.forEach(c => cat.appendChild(new Option(c, c)));
+    }
+    cat.value = presetCategory && CC.CATEGORIES.includes(presetCategory) ? presetCategory : '';
+    document.getElementById('cbContributeBtn').textContent = cloudUser ? 'Add a product to the catalog' : 'Sign in to add products to the catalog';
+    document.getElementById('catalogBrowseModalOverlay').style.display = 'flex';
+    onModalOpened('catalogBrowseModalOverlay');
+    loadCatalogFacets().then(()=> cbState && renderCatalogFilters());
+    renderCatalogFilters();
+    loadCatalogPage(true);
+  }
+  function closeCatalogBrowser(){
+    document.getElementById('catalogBrowseModalOverlay').style.display = 'none';
+    cbState = null;
+    onModalClosed('catalogBrowseModalOverlay');
+  }
+
+  async function loadCatalogFacets(){
+    if(cbFacets && Date.now() - cbFacetsAt < 5 * 60000) return;
+    try{ cbFacets = await catalogApi.facets(); cbFacetsAt = Date.now(); }catch(e){ cbFacets = cbFacets || []; }
+  }
+
+  // Category options show how many products each has; the brand list
+  // narrows to brands in the chosen category.
+  function renderCatalogFilters(){
+    const rows = cbFacets || [];
+    const catSel = document.getElementById('cbCategory');
+    const counts = {};
+    rows.forEach(r => counts[r.category] = (counts[r.category] || 0) + 1);
+    Array.from(catSel.options).forEach(o => {
+      o.textContent = o.value ? o.value + (rows.length ? ' (' + (counts[o.value] || 0) + ')' : '') : 'All categories';
+    });
+    const researched = rows.filter(r => r.origin === 'seed').length;
+    Array.from(document.getElementById('cbSource').options).forEach(o => {
+      const n = o.value === 'researched' ? researched : o.value === 'hikers' ? rows.length - researched : null;
+      o.textContent = (o.value === 'researched' ? 'Researched' : o.value === 'hikers' ? 'Added by hikers' : 'All sources') + (n != null && rows.length ? ' (' + n + ')' : '');
+    });
+    const brandSel = document.getElementById('cbBrand');
+    const keep = brandSel.value;
+    const inCat = rows.filter(r => !catSel.value || r.category === catSel.value);
+    const brandCounts = {};
+    inCat.forEach(r => { if(r.brand) brandCounts[r.brand] = (brandCounts[r.brand] || 0) + 1; });
+    const brands = Object.keys(brandCounts).sort((a,b) => a.localeCompare(b));
+    brandSel.innerHTML = '';
+    brandSel.appendChild(new Option('All brands', ''));
+    brands.forEach(b => brandSel.appendChild(new Option(b + ' (' + brandCounts[b] + ')', b)));
+    brandSel.value = brands.includes(keep) ? keep : '';
+  }
+
+  async function loadCatalogPage(reset){
+    const state = cbState;
+    if(!state) return;
+    if(reset){ state.rows = []; state.offset = 0; state.total = 0; }
+    const seq = ++state.seq;
+    const list = document.getElementById('cbList');
+    const countEl = document.getElementById('cbCount');
+    if(reset){ list.innerHTML = ''; countEl.textContent = 'Loading…'; }
+    const more = list.querySelector('.cb-more');
+    if(more){ more.disabled = true; more.textContent = 'Loading…'; }
+    try{
+      const page = await catalogApi.browse({
+        q: document.getElementById('cbSearch').value,
+        category: document.getElementById('cbCategory').value,
+        brand: document.getElementById('cbBrand').value,
+        source: document.getElementById('cbSource').value,
+        sort: document.getElementById('cbSort').value,
+        offset: state.offset, limit: CB_PAGE,
+      });
+      if(cbState !== state || seq !== state.seq) return;   // a newer search took over
+      state.rows = state.rows.concat(page.rows);
+      state.total = page.total;
+      state.offset += page.rows.length;
+      renderCatalogList();
+    }catch(err){
+      if(cbState !== state || seq !== state.seq) return;
+      countEl.textContent = '';
+      list.innerHTML = '<div class="cb-empty"></div>';
+      list.querySelector('.cb-empty').textContent = catalogErrorMessage(err) + ' You can still add the item yourself.';
+    }
+  }
+
+  function renderCatalogList(){
+    const state = cbState;
+    const list = document.getElementById('cbList');
+    const countEl = document.getElementById('cbCount');
+    countEl.textContent = state.total === 1 ? '1 product' : state.total.toLocaleString('en-US') + ' products';
+    list.innerHTML = '';
+    if(!state.rows.length){
+      list.innerHTML = '<div class="cb-empty">Nothing in the catalog matches. Try fewer filters, or add the item yourself below.</div>';
+      return;
+    }
+    state.rows.forEach(p=>{
+      const row = document.createElement('div');
+      row.className = 'cb-row';
+      const photo = (p.catalog_photos || [])[0];
+      row.innerHTML =
+        '<button type="button" class="cb-open">'+
+          '<span class="cb-thumb"></span>'+
+          '<span class="cb-text"><span class="cb-name"></span><span class="cb-meta"></span></span>'+
+          '<span class="cb-weight"></span>'+
+        '</button>'+
+        '<button type="button" class="ghost-btn cb-use">Add</button>';
+      const thumb = row.querySelector('.cb-thumb');
+      if(photo){
+        const img = document.createElement('img');
+        img.src = catalogPhotoUrl(photo.storage_path); img.alt = ''; img.loading = 'lazy';
+        thumb.appendChild(img);
+      } else {
+        thumb.innerHTML = GEAR_ICONS[p.category] || GEAR_ICONS.Other;
+      }
+      row.querySelector('.cb-name').textContent = p.name;
+      const src = catalogSource(p);
+      const badge = document.createElement('span');
+      badge.className = 'cb-source is-' + src.key;
+      badge.textContent = src.key === 'researched' ? 'Researched' : 'Hiker';
+      badge.title = src.title;
+      const meta = row.querySelector('.cb-meta');
+      meta.appendChild(badge);
+      meta.appendChild(document.createTextNode([p.brand, p.model, p.category].filter(Boolean).join(' · ')));
+      row.querySelector('.cb-weight').textContent = p.weight_g ? gramsLabel(p.weight_g) : '';
+      row.querySelector('.cb-open').setAttribute('aria-label', 'Details for ' + [p.brand, p.name, p.model].filter(Boolean).join(' '));
+      row.querySelector('.cb-use').setAttribute('aria-label', 'Add ' + [p.brand, p.name].filter(Boolean).join(' ') + ' to your gear');
+      row.querySelector('.cb-open').addEventListener('click', ()=> openCatalogDetail(p.id, { onUse: useCatalogProductFromBrowser }));
+      row.querySelector('.cb-use').addEventListener('click', ()=> useCatalogProductFromBrowser(p.id));
+      list.appendChild(row);
+    });
+    if(state.rows.length < state.total){
+      const more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'ghost-btn cb-more';
+      more.textContent = 'Show more (' + (state.total - state.rows.length) + ' left)';
+      more.addEventListener('click', ()=> loadCatalogPage(false));
+      list.appendChild(more);
+    }
+  }
+
+  // From the browser (or a product page opened from it) into a new gear
+  // item, filled in from the catalog.
+  function useCatalogProductFromBrowser(id){
+    const preset = cbState ? cbState.presetCategory : null;
+    const go = ()=>{ openGearModal(null, preset); pickCatalogProduct(id); };
+    if(cbState){ closeCatalogBrowser(); afterModalCleanup(go); } else go();
+  }
+
   async function loadCatalogDetail(){
     const state = cdState;
     if(!state) return;
@@ -5951,9 +6311,15 @@
     }
     document.getElementById('cdFacts').innerHTML = facts.map(([k, v]) => '<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
     document.getElementById('cdDescription').textContent = p.description || '';
-    if(p.source_url && /^https?:\/\//i.test(p.source_url)){
-      facts.push(['Specs from', '<a target="_blank" rel="noopener noreferrer nofollow" href="'+escapeHtml(p.source_url)+'">'+escapeHtml(hostOf(p.source_url))+'</a>' +
-        (p.origin === 'seed' ? ' <span class="cd-origin">(starter catalog — sizes and versions vary, check before relying on it)</span>' : '')]);
+    {
+      const src = catalogSource(p);
+      const link = p.source_url && /^https?:\/\//i.test(p.source_url)
+        ? '<a target="_blank" rel="noopener noreferrer nofollow" href="'+escapeHtml(p.source_url)+'">'+escapeHtml(hostOf(p.source_url))+'</a>' : '';
+      const text = src.key === 'researched'
+        ? '<span class="cb-source is-researched">Researched</span>' + (link ? 'from ' + link : 'from brand and shop pages') +
+          ' <span class="cd-origin">— sizes and versions vary, check before relying on it</span>'
+        : '<span class="cb-source is-hiker">Added by a hiker</span>' + (link ? 'specs from ' + link : '');
+      facts.push(['Source', text]);
       document.getElementById('cdFacts').innerHTML = facts.map(([k, v]) => '<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
     }
     document.getElementById('cdMeta').textContent = 'Added ' + String(p.created_at).slice(0, 10) +
@@ -6606,6 +6972,7 @@
     catalogProductModalOverlay: closeCatalogProductModal,
     catalogDetailModalOverlay: closeCatalogDetail,
     catalogBulkModalOverlay: closeCatalogBulkModal,
+    catalogBrowseModalOverlay: closeCatalogBrowser,
   };
   let openModalOrder = [];      // most-recently-opened last
   let expectingCleanupPop = false;  // a history.back() we triggered ourselves, to drop a closed modal's entry
@@ -6640,6 +7007,17 @@
     }
   }
 
+  // Escape closes the dialog on top, like its × button. (The lightbox and
+  // the catalog search box handle Escape themselves.)
+  document.addEventListener('keydown', e=>{
+    if(e.key !== 'Escape' || e.defaultPrevented || !openModalOrder.length) return;
+    const top = openModalOrder[openModalOrder.length-1];
+    if(top === 'photoLightboxOverlay') return;
+    if(top === 'importModalOverlay' && importRun) return;   // don't lose a scan in progress
+    e.preventDefault();
+    MODAL_CLOSE_FNS[top]();
+  });
+
   window.addEventListener('popstate', (e)=>{
     if(expectingCleanupPop){
       expectingCleanupPop = false;
@@ -6656,6 +7034,83 @@
     }
     applyRouteFromPopstate(e.state);
   });
+
+  // ---- Map panel on phones: a sheet you drag (or tap) to give the map more room ----
+  (function(){
+    const sheet = document.getElementById('mapSheet');
+    const handle = document.getElementById('mapSheetHandle');
+    const area = document.getElementById('pageMap');
+    const phone = window.matchMedia('(max-width:760px)');
+    // Heights the sheet settles on: just the handle (map nearly full
+    // screen), the overview stats, half, and most of the screen.
+    function stops(){
+      const h = area.clientHeight;
+      return [28, 150, Math.round(h * 0.45), Math.round(h * 0.8)];
+    }
+    let current = null;   // px; null = the CSS default (45%)
+    try{ const saved = Number(localStorage.getItem('hio-map-sheet')); if(saved > 0) current = saved; }catch(e){}
+    let raf = 0;
+    function apply(px, settle){
+      const h = area.clientHeight;
+      if(px != null) px = Math.max(28, Math.min(px, h - 80));
+      current = px;
+      sheet.style.setProperty('--sheet-h', px == null ? '' : px + 'px');
+      if(px == null) sheet.style.removeProperty('--sheet-h');
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(()=> map.invalidateSize({ pan: false }));
+      if(settle){
+        try{ localStorage.setItem('hio-map-sheet', String(px)); }catch(e){}
+        handle.setAttribute('aria-label', px <= 40 ? 'Show the map panel' : 'Resize the map panel');
+      }
+    }
+    function nearestStop(px){
+      return stops().reduce((best, s) => Math.abs(s - px) < Math.abs(best - px) ? s : best);
+    }
+    function currentHeight(){ return sheet.getBoundingClientRect().height; }
+
+    let drag = null;
+    handle.addEventListener('pointerdown', e=>{
+      if(!phone.matches) return;
+      drag = { y: e.clientY, start: currentHeight(), moved: false };
+      handle.setPointerCapture(e.pointerId);
+      sheet.classList.add('is-dragging');
+    });
+    handle.addEventListener('pointermove', e=>{
+      if(!drag) return;
+      const dy = drag.y - e.clientY;
+      if(Math.abs(dy) > 4) drag.moved = true;
+      if(drag.moved) apply(drag.start + dy, false);
+    });
+    // A tap is handled on its click, not on pointerup: resizing earlier
+    // moves other controls under the finger, and the click that follows a
+    // touch would then land on them (e.g. the Heatmap button).
+    let ignoreClickUntil = 0;
+    function endDrag(){
+      if(!drag) return;
+      const d = drag; drag = null;
+      sheet.classList.remove('is-dragging');
+      if(d.moved){
+        apply(nearestStop(currentHeight()), true);
+        ignoreClickUntil = Date.now() + 400;
+      }
+    }
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+    // Tap / Enter: next size up, wrapping round to the smallest.
+    function stepSheet(dir){
+      const st = stops();
+      const at = st.indexOf(nearestStop(currentHeight()));
+      const next = dir > 0 ? (at + 1) % st.length : Math.max(0, at - 1);
+      apply(st[next], true);
+    }
+    handle.addEventListener('click', ()=>{ if(Date.now() >= ignoreClickUntil) stepSheet(1); });
+    handle.addEventListener('keydown', e=>{
+      if(e.key === 'ArrowUp'){ e.preventDefault(); stepSheet(1); }
+      if(e.key === 'ArrowDown'){ e.preventDefault(); stepSheet(-1); }
+    });
+    if(current != null) apply(current, false);
+    phone.addEventListener('change', ()=> map.invalidateSize());
+  })();
 
   // ---- Page navigation ----
   document.querySelectorAll('.nav-tab').forEach(tab=>{
@@ -6688,7 +7143,7 @@
   });
 
   // ---- Gear Room wiring ----
-  document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openGearModal(null, null));
+  document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openCatalogBrowser(null));
   document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
   document.querySelectorAll('#gearViewToggle button').forEach(b=> b.addEventListener('click', ()=> setGearView(b.dataset.gearview)));
   setGearView(gearView);
@@ -6714,7 +7169,7 @@
       btn.textContent = showingTable ? 'View as table' : 'View as chart';
     });
   });
-  document.getElementById('addGearBtn').addEventListener('click', ()=> openGearModal(null, currentGearCategory));
+  document.getElementById('addGearBtn').addEventListener('click', ()=> openCatalogBrowser(currentGearCategory === 'ALL' ? null : currentGearCategory));
   document.getElementById('backToGarageBtn').addEventListener('click', showGarage);
   document.getElementById('gearModalClose').addEventListener('click', closeGearModal);
   document.getElementById('gearCancelBtn').addEventListener('click', closeGearModal);
@@ -6940,6 +7395,29 @@
   document.getElementById('cdReviewDeleteBtn').addEventListener('click', deleteMyReview);
   document.querySelectorAll('#cdStars input').forEach(input=>{
     input.addEventListener('change', ()=> setReviewStars(Number(input.value)));
+  });
+
+  // ---- Catalog browser wiring ----
+  document.getElementById('catalogBrowseModalClose').addEventListener('click', closeCatalogBrowser);
+  document.getElementById('catalogBrowseModalOverlay').addEventListener('click', e=>{ if(e.target.id === 'catalogBrowseModalOverlay') closeCatalogBrowser(); });
+  document.getElementById('cbSearch').addEventListener('input', ()=>{
+    clearTimeout(cbSearchTimer);
+    cbSearchTimer = setTimeout(()=> loadCatalogPage(true), 250);
+  });
+  document.getElementById('cbCategory').addEventListener('change', ()=>{ renderCatalogFilters(); loadCatalogPage(true); });
+  document.getElementById('cbBrand').addEventListener('change', ()=> loadCatalogPage(true));
+  document.getElementById('cbSort').addEventListener('change', ()=> loadCatalogPage(true));
+  document.getElementById('cbSource').addEventListener('change', ()=> loadCatalogPage(true));
+  document.getElementById('cbManualBtn').addEventListener('click', ()=>{
+    const preset = cbState ? cbState.presetCategory : null;
+    closeCatalogBrowser();
+    afterModalCleanup(()=> openGearModal(null, preset));
+  });
+  document.getElementById('cbContributeBtn').addEventListener('click', ()=>{
+    if(!cloudUser){ openCloudSignInModal(); return; }
+    const q = document.getElementById('cbSearch').value.trim();
+    openCatalogProductModal({ mode: 'create', seed: { name: q, category: document.getElementById('cbCategory').value || 'Other' },
+      onSaved: p => useCatalogProductFromBrowser(p.id), onPickExisting: id => useCatalogProductFromBrowser(id) });
   });
 
   // ---- Catalog link lookup + bulk add wiring ----
