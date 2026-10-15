@@ -46,3 +46,8 @@ pin down to "Skipped" with a reason.
 - Arc'teryx Proton Hoody: only one retailer lists the standard model; Proton variants weigh 343-540 g.
 - Arc'teryx Norvan Shell Jacket: listed weights disagree (170-215 g).
 - Arc'teryx Gamma Lightweight Hoody: original vs revised version (300-545 g).
+- Ursack AllMitey: retailer weights conflict (9.5 oz vs 13 oz).
+- Sea to Summit Pocket Trowel: alloy vs nylon versions list 68-110 g.
+- PackTowl Personal towel: weight depends on size and only one source per size.
+- Humangear GoToob+ 3oz: only one retailer gives a weight.
+- Fox 40 Classic whistle: listed weights disagree (9 vs 20 g).
