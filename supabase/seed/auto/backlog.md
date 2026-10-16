@@ -51,3 +51,7 @@ pin down to "Skipped" with a reason.
 - PackTowl Personal towel: weight depends on size and only one source per size.
 - Humangear GoToob+ 3oz: only one retailer gives a weight.
 - Fox 40 Classic whistle: listed weights disagree (9 vs 20 g).
+- Garcia Backpackers' Cache: listed weights disagree (2.12 lb vs 2.7 lb).
+- Counter Assault bear spray: weight listings mix fill size and loaded canister (10.2 oz vs 15 oz).
+- Garmin Fenix 8: weight depends on bezel/size (70-80 g), variant unclear.
+- Silva Expedition 4: model variants list 34-80 g.
