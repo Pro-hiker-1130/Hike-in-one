@@ -6,7 +6,6 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
-- Sea to Summit Pack Liner 50L (Other)
 
 - Forclaz MT900 Ultralight Down Jacket (Clothing)
 - Jack Wolfskin Wolftrail 28 (Backpack)
@@ -55,3 +54,5 @@ pin down to "Skipped" with a reason.
 - Counter Assault bear spray: weight listings mix fill size and loaded canister (10.2 oz vs 15 oz).
 - Garmin Fenix 8: weight depends on bezel/size (70-80 g), variant unclear.
 - Silva Expedition 4: model variants list 34-80 g.
+- Anker 511 Nano charger: listed weights 30-37 g and model generations (Nano 3/Nano 4) mixed.
+- Gossamer Gear Liteflex umbrella: no product by this name found; similar umbrellas list 178-194 g.
