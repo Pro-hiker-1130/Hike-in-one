@@ -56,3 +56,9 @@ pin down to "Skipped" with a reason.
 - Silva Expedition 4: model variants list 34-80 g.
 - Anker 511 Nano charger: listed weights 30-37 g and model generations (Nano 3/Nano 4) mixed.
 - Gossamer Gear Liteflex umbrella: no product by this name found; similar umbrellas list 178-194 g.
+- Ledlenser MH5: only one retailer listing gives a weight.
+- Esbit Pocket Stove: listed weights conflict (stove alone 88-100 g, kits mix tablets).
+- Keen Targhee IV: weights differ by version (vent, WP shoe, mid boot).
+- Hilleberg Nammatj 2: retailers disagree on minimum vs packed weight (2.3-3.7 kg).
+- Nordisk Telemark 2: several versions (2.0/2.2 LW) with different weights.
+- Cumulus Panyam 450: size not named for the 810 g spec.
