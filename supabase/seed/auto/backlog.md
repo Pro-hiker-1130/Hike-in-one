@@ -8,7 +8,6 @@ pin down to "Skipped" with a reason.
 
 
 - Forclaz MT900 Ultralight Down Jacket (Clothing)
-- Jack Wolfskin Wolftrail 28 (Backpack)
 
 ## Skipped
 
@@ -62,3 +61,6 @@ pin down to "Skipped" with a reason.
 - Hilleberg Nammatj 2: retailers disagree on minimum vs packed weight (2.3-3.7 kg).
 - Nordisk Telemark 2: several versions (2.0/2.2 LW) with different weights.
 - Cumulus Panyam 450: size not named for the 810 g spec.
+- Gossamer Gear The Two: weights differ by what is counted (667 g listed vs 788-803 g full kit).
+- Smartwool Classic Thermal Merino Base Layer Crew: only one source gives a garment weight.
+- Outdoor Research Ferrosi Pants: no current weight found; classic and Convert versions differ.
