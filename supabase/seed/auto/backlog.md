@@ -9,6 +9,14 @@ pin down to "Skipped" with a reason.
 
 - Forclaz MT900 Ultralight Down Jacket (Clothing)
 
+- Exped Ultra 6.5R (Sleep system)
+- Zpacks Nero Ultra 38L (Backpack)
+- Zpacks Arc Haul Ultra 50L (Backpack)
+- Rab Syclon XP 40 (Backpack)
+- Mammut Sertig III Mid GTX (Footwear)
+- Altberg Fremington (Footwear)
+- Lowa Renegade EVO GTX (Footwear)
+
 ## Skipped
 
 - Merrell Moab 3 (Footwear): listed per-pair weights disagree by about 25% (Merrell vs REI).
@@ -64,3 +72,6 @@ pin down to "Skipped" with a reason.
 - Gossamer Gear The Two: weights differ by what is counted (667 g listed vs 788-803 g full kit).
 - Smartwool Classic Thermal Merino Base Layer Crew: only one source gives a garment weight.
 - Outdoor Research Ferrosi Pants: no current weight found; classic and Convert versions differ.
+- Gregory Stout 45: search returned nothing about the pack.
+- Fjällräven Abisko Trekking Tights: old and Pro versions list different weights (300 vs 348 g).
+- Mountain Hardwear Kor AirShell Hoody: listings mix hoody and full-zip versions (4.7-7.5 oz).
