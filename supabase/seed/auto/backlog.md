@@ -12,10 +12,15 @@ pin down to "Skipped" with a reason.
 - Exped Ultra 6.5R (Sleep system)
 - Zpacks Nero Ultra 38L (Backpack)
 - Zpacks Arc Haul Ultra 50L (Backpack)
-- Rab Syclon XP 40 (Backpack)
-- Mammut Sertig III Mid GTX (Footwear)
 - Altberg Fremington (Footwear)
-- Lowa Renegade EVO GTX (Footwear)
+- Osprey Kyte 46 (Backpack)
+- Osprey Rook 65 (Backpack)
+- Deuter Trail 30 (Backpack)
+- Salomon X Ultra 5 GTX (Footwear)
+- Montane Spirit Jacket (Clothing)
+- Rab Cirrus Flex Hoody (Clothing)
+- Nemo Tensor Alpine (Sleep system)
+- Therm-a-Rest Trail Scout (Sleep system)
 
 ## Skipped
 
@@ -75,3 +80,8 @@ pin down to "Skipped" with a reason.
 - Gregory Stout 45: search returned nothing about the pack.
 - Fjällräven Abisko Trekking Tights: old and Pro versions list different weights (300 vs 348 g).
 - Mountain Hardwear Kor AirShell Hoody: listings mix hoody and full-zip versions (4.7-7.5 oz).
+- Zpacks Nero Ultra 38L: Zpacks lists 280 g and 316 g for different builds; version unclear.
+- Zpacks Arc Haul Ultra 50L: size/strap configuration not named for the 584 g listing.
+- Gregory Zulu 40: size not named; listings 1130-1570 g.
+- Altberg Fremington: per-boot and per-pair figures conflict (1050 vs ~1410 g).
+- Exped Ultra 6.5R: weight depends on width/shape (12.5-16 oz); no single variant sourced.
