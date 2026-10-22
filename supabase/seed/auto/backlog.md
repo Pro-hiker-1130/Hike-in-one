@@ -6,11 +6,6 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
-
-- Forclaz MT900 Ultralight Down Jacket (Clothing)
-
-- Rab Cirrus Flex Hoody (Clothing)
-- Therm-a-Rest Trail Scout (Sleep system)
 - Hoka Kaha 3 GTX (Footwear)
 - Saucony Ultra Ridge GTX (Footwear)
 - Timberland White Ledge Mid Waterproof (Footwear)
