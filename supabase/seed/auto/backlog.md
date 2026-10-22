@@ -9,18 +9,13 @@ pin down to "Skipped" with a reason.
 
 - Forclaz MT900 Ultralight Down Jacket (Clothing)
 
-- Exped Ultra 6.5R (Sleep system)
-- Zpacks Nero Ultra 38L (Backpack)
-- Zpacks Arc Haul Ultra 50L (Backpack)
-- Altberg Fremington (Footwear)
-- Osprey Kyte 46 (Backpack)
-- Osprey Rook 65 (Backpack)
-- Deuter Trail 30 (Backpack)
-- Salomon X Ultra 5 GTX (Footwear)
-- Montane Spirit Jacket (Clothing)
 - Rab Cirrus Flex Hoody (Clothing)
-- Nemo Tensor Alpine (Sleep system)
 - Therm-a-Rest Trail Scout (Sleep system)
+- Hoka Kaha 3 GTX (Footwear)
+- Saucony Ultra Ridge GTX (Footwear)
+- Timberland White Ledge Mid Waterproof (Footwear)
+- Columbia Newton Ridge Plus (Footwear)
+- Marmot Crane Creek 2P (Shelter)
 
 ## Skipped
 
@@ -85,3 +80,5 @@ pin down to "Skipped" with a reason.
 - Gregory Zulu 40: size not named; listings 1130-1570 g.
 - Altberg Fremington: per-boot and per-pair figures conflict (1050 vs ~1410 g).
 - Exped Ultra 6.5R: weight depends on width/shape (12.5-16 oz); no single variant sourced.
+- Rab Cirrus Flex Hoody: only one retailer (CampSaver) gives a men's weight.
+- Therm-a-Rest Trail Scout: R-value listed as 3.1 and 3.4; weight from one retailer only.
