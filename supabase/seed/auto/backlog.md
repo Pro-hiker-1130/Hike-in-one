@@ -6,11 +6,6 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
-- Hoka Kaha 3 GTX (Footwear)
-- Saucony Ultra Ridge GTX (Footwear)
-- Timberland White Ledge Mid Waterproof (Footwear)
-- Columbia Newton Ridge Plus (Footwear)
-- Marmot Crane Creek 2P (Shelter)
 
 ## Skipped
 
@@ -77,3 +72,8 @@ pin down to "Skipped" with a reason.
 - Exped Ultra 6.5R: weight depends on width/shape (12.5-16 oz); no single variant sourced.
 - Rab Cirrus Flex Hoody: only one retailer (CampSaver) gives a men's weight.
 - Therm-a-Rest Trail Scout: R-value listed as 3.1 and 3.4; weight from one retailer only.
+- Hoka Kaha 3 GTX: retailers list 567 g and 1134-1185 g per pair.
+- Timberland White Ledge Mid Waterproof: weights disagree (820-1061 g per pair).
+- Columbia Newton Ridge Plus: per-shoe or per-pair unclear, 900-1000 g.
+- Lowe Alpine AirZone Trail 30: two versions at 1120 g and 1250 g, version unclear.
+- Six Moon Designs Fusion 50: discontinued.
