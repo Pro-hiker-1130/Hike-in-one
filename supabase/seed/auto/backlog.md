@@ -77,3 +77,7 @@ pin down to "Skipped" with a reason.
 - Columbia Newton Ridge Plus: per-shoe or per-pair unclear, 900-1000 g.
 - Lowe Alpine AirZone Trail 30: two versions at 1120 g and 1250 g, version unclear.
 - Six Moon Designs Fusion 50: discontinued.
+- Sea to Summit X-Pot 1.4L: listed weights disagree (250-298 g).
+- Six Moon Designs Lunar Duo: weight differs by version and what is included (1300-1600 g).
+- Arc'teryx Gamma Pant: only one source for the weight.
+- Osprey Stratos 36: weights disagree (1310-1550 g) and vary by size.
