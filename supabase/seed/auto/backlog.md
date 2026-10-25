@@ -6,6 +6,9 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
+- Sea to Summit Trek & Travel Pocket Body Wash (Hygiene)
+- Jordan Ultralite Toothbrush (Hygiene)
+- Matador FlatPak Soap Bar Case (Hygiene)
 
 ## Skipped
 
@@ -81,3 +84,4 @@ pin down to "Skipped" with a reason.
 - Six Moon Designs Lunar Duo: weight differs by version and what is included (1300-1600 g).
 - Arc'teryx Gamma Pant: only one source for the weight.
 - Osprey Stratos 36: weights disagree (1310-1550 g) and vary by size.
+- REI Co-op Trail 40: no weight found in search results.
