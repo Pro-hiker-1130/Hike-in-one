@@ -6,9 +6,10 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
-- Sea to Summit Trek & Travel Pocket Body Wash (Hygiene)
-- Jordan Ultralite Toothbrush (Hygiene)
-- Matador FlatPak Soap Bar Case (Hygiene)
+- Real Turmat Chicken Curry (Food)
+- Real Turmat Beef Stew (Food)
+- Lyofood Bigos (Food)
+- Trek'n Eat Chicken Tikka Masala (Food)
 
 ## Skipped
 
