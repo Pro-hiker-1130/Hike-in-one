@@ -6,11 +6,6 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
-- Real Turmat Chicken Curry (Food)
-- Real Turmat Beef Stew (Food)
-- Lyofood Bigos (Food)
-- Trek'n Eat Chicken Tikka Masala (Food)
-
 ## Skipped
 
 - Merrell Moab 3 (Footwear): listed per-pair weights disagree by about 25% (Merrell vs REI).
@@ -86,3 +81,4 @@ pin down to "Skipped" with a reason.
 - Arc'teryx Gamma Pant: only one source for the weight.
 - Osprey Stratos 36: weights disagree (1310-1550 g) and vary by size.
 - REI Co-op Trail 40: no weight found in search results.
+- Real Turmat Chicken Curry: only one retailer lists 132 g, and a Field Meal version lists 166 g.
