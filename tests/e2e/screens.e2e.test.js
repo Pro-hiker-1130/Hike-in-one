@@ -519,3 +519,22 @@ test('backup: download everything, restore it on an empty device; a wrong file i
   assert.equal(await text(page, '#statTrips'), '2');
   assert.deepEqual(second.errors, []);
 });
+
+test('getting started: three steps on a new device, ticked off as they are done, can be hidden', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  // This launch seeds gear, so "Add gear" is already done; imports are not.
+  assert.ok(await page.isVisible('#gettingStarted'));
+  assert.ok(await page.$eval('#gsGear', li => li.classList.contains('is-done')));
+  assert.ok(!(await page.$eval('#gsImport', li => li.classList.contains('is-done'))));
+  await importHikes(page);
+  await page.click('.nav-tab[data-page="map"]');
+  assert.ok(await page.$eval('#gsImport', li => li.classList.contains('is-done')), 'import ticked off');
+  if(await page.isVisible('#gettingStarted')){
+    await page.click('#gsDismiss');
+    assert.ok(!(await page.isVisible('#gettingStarted')));
+    await page.reload();
+    await page.waitForSelector('.nav-tab');
+    assert.ok(!(await page.isVisible('#gettingStarted')), 'stays hidden');
+  }
+  assert.deepEqual(errors, []);
+});

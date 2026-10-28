@@ -172,7 +172,7 @@ async function applyCloudSnapshot(row){
 }
 
 function renderSettingsAccount(){
-  try{ renderDeviceSummary(); }catch(e){ /* data not loaded yet */ }
+  try{ renderDeviceSummary(); renderGettingStarted(); }catch(e){ /* data not loaded yet */ }
   const card = document.getElementById('settingsAccountCard');
   card.hidden = !CLOUD_SYNC_ENABLED;
   if(!CLOUD_SYNC_ENABLED) return;

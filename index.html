@@ -17,11 +17,11 @@
 <nav class="top-nav">
   <div class="top-nav-brand">
     <svg width="20" height="20" viewBox="0 0 200 200">
-      <circle cx="100" cy="100" r="97" fill="#0E1B33" stroke="#E2764F" stroke-width="4"/>
-      <circle cx="100" cy="100" r="94" fill="#1B3E86"/>
-      <path d="M6 150 Q40 118 100 132 Q160 146 194 120 L194 194 L6 194 Z" fill="#1E7A5C"/>
-      <path d="M6 165 Q50 140 100 150 Q150 160 194 138 L194 194 L6 194 Z" fill="#166248"/>
-      <g fill="#E2A377" stroke="#12100C" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+      <circle cx="100" cy="100" r="97" fill="#344E41" stroke="#344E41" stroke-width="4"/>
+      <circle cx="100" cy="100" r="94" fill="#DAD7CD"/>
+      <path d="M6 150 Q40 118 100 132 Q160 146 194 120 L194 194 L6 194 Z" fill="#A3B18A"/>
+      <path d="M6 165 Q50 140 100 150 Q150 160 194 138 L194 194 L6 194 Z" fill="#588157"/>
+      <g fill="#EFEEE8" stroke="#1F2E26" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
         <circle cx="40" cy="107" r="9"/>
         <path d="M34 117 Q40 132 36 152 L48 152 Q45 132 46 117 Z"/>
         <path d="M32 119 Q23 111 20 102 M47 120 Q57 122 61 123"/>
@@ -32,7 +32,7 @@
         <path d="M154 118 Q160 133 155 152 L167 152 Q164 133 166 118 Z"/>
         <path d="M152 120 Q142 122 138 123 M166 119 Q176 108 179 100"/>
       </g>
-      <circle cx="100" cy="100" r="94" fill="none" stroke="#12100C" stroke-width="2" opacity="0.3"/>
+      <circle cx="100" cy="100" r="94" fill="none" stroke="#1F2E26" stroke-width="2" opacity="0.3"/>
     </svg>
     Hike-in-one
   </div>
@@ -53,11 +53,11 @@
     </button>
     <div class="brand">
       <svg width="26" height="26" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="97" fill="#0E1B33" stroke="#E2764F" stroke-width="4"/>
-        <circle cx="100" cy="100" r="94" fill="#1B3E86"/>
-        <path d="M6 150 Q40 118 100 132 Q160 146 194 120 L194 194 L6 194 Z" fill="#1E7A5C"/>
-        <path d="M6 165 Q50 140 100 150 Q150 160 194 138 L194 194 L6 194 Z" fill="#166248"/>
-        <g fill="#E2A377" stroke="#12100C" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+        <circle cx="100" cy="100" r="97" fill="#344E41" stroke="#344E41" stroke-width="4"/>
+        <circle cx="100" cy="100" r="94" fill="#DAD7CD"/>
+        <path d="M6 150 Q40 118 100 132 Q160 146 194 120 L194 194 L6 194 Z" fill="#A3B18A"/>
+        <path d="M6 165 Q50 140 100 150 Q150 160 194 138 L194 194 L6 194 Z" fill="#588157"/>
+        <g fill="#EFEEE8" stroke="#1F2E26" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
           <circle cx="40" cy="107" r="9"/>
           <path d="M34 117 Q40 132 36 152 L48 152 Q45 132 46 117 Z"/>
           <path d="M32 119 Q23 111 20 102 M47 120 Q57 122 61 123"/>
@@ -68,12 +68,24 @@
           <path d="M154 118 Q160 133 155 152 L167 152 Q164 133 166 118 Z"/>
           <path d="M152 120 Q142 122 138 123 M166 119 Q176 108 179 100"/>
         </g>
-        <circle cx="100" cy="100" r="94" fill="none" stroke="#12100C" stroke-width="2" opacity="0.3"/>
+        <circle cx="100" cy="100" r="94" fill="none" stroke="#1F2E26" stroke-width="2" opacity="0.3"/>
       </svg>
       <div class="brand-text">
         <h1>Hike-in-one</h1>
         <p>Your hikes, gear, and trips — all in one place</p>
       </div>
+    </div>
+
+    <div class="section getting-started" id="gettingStarted" hidden>
+      <div class="gs-head">
+        <p class="section-label">Get started</p>
+        <button type="button" class="gs-dismiss" id="gsDismiss" aria-label="Hide the getting-started steps">&times;</button>
+      </div>
+      <ol class="gs-steps">
+        <li id="gsImport"><span class="gs-check" aria-hidden="true"></span><span class="gs-text">Import your hikes from Strava, Garmin or GPX files</span><button type="button" class="ghost-btn gs-go" id="gsImportBtn">Import</button></li>
+        <li id="gsGear"><span class="gs-check" aria-hidden="true"></span><span class="gs-text">Add your gear from the catalog</span><button type="button" class="ghost-btn gs-go" id="gsGearBtn">Add gear</button></li>
+        <li id="gsSync"><span class="gs-check" aria-hidden="true"></span><span class="gs-text">Sign in to keep everything in sync across devices</span><button type="button" class="ghost-btn gs-go" id="gsSyncBtn">Sign in</button></li>
+      </ol>
     </div>
 
     <div class="section">
@@ -411,7 +423,7 @@
     <div class="garage-header">
       <div class="garage-heading">
         <h2>Settings</h2>
-        <p>Your account, location history and stored data</p>
+        <p>Your account, location history, backups and stored data</p>
       </div>
     </div>
 

@@ -171,6 +171,7 @@ function renderStats(){
     googlePoints.length.toLocaleString('en-US')+' location-history point'+(googlePoints.length!==1?'s':'')+' on this device.';
   document.getElementById('clearBtn').disabled = !(tracks.length || googlePoints.length);
   renderDeviceSummary();
+  renderGettingStarted();
 }
 
 // What this device holds and the last error it hit — enough to tell,
@@ -197,4 +198,25 @@ function renderDeviceSummary(){
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---- Getting started: three first steps, ticked off as they're done ----
+function renderGettingStarted(){
+  const box = document.getElementById('gettingStarted');
+  let dismissed = false;
+  try{ dismissed = localStorage.getItem('hio-gs-dismissed') === '1'; }catch(e){}
+  const steps = [
+    ['gsImport', tracks.length > 0],
+    ['gsGear', gearItems.length > 0],
+    ['gsSync', !CLOUD_SYNC_ENABLED || !!cloudUser],
+  ];
+  const allDone = steps.every(([, done]) => done);
+  box.hidden = dismissed || allDone;
+  if(box.hidden) return;
+  steps.forEach(([id, done])=>{
+    const li = document.getElementById(id);
+    li.classList.toggle('is-done', done);
+    li.querySelector('.gs-go').hidden = done;
+  });
+  document.getElementById('gsSync').hidden = !CLOUD_SYNC_ENABLED;
 }

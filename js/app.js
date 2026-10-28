@@ -225,6 +225,7 @@ document.querySelectorAll('.nav-tab').forEach(tab=>{
     document.getElementById('pageSettings').classList.toggle('active', page==='settings');
     if(page === 'settings'){ try{ renderDeviceSummary(); }catch(e){} pushRouteState(); }
     if(page === 'map'){
+      renderGettingStarted();
       setTimeout(()=>{
         map.invalidateSize();
         updateLayers();
@@ -635,6 +636,21 @@ document.querySelectorAll('#basemapToggle button').forEach(btn=>{
     setBasemap(btn.dataset.basemap);
   });
 });
+
+// ---- Getting started wiring ----
+document.getElementById('gsDismiss').addEventListener('click', ()=>{
+  try{ localStorage.setItem('hio-gs-dismissed', '1'); }catch(e){}
+  document.getElementById('gettingStarted').hidden = true;
+});
+document.getElementById('gsImportBtn').addEventListener('click', ()=>{
+  document.querySelector('.nav-tab[data-page="trips"]').click();
+  openImportModal();
+});
+document.getElementById('gsGearBtn').addEventListener('click', ()=>{
+  document.querySelector('.nav-tab[data-page="gear"]').click();
+  openCatalogBrowser(null);
+});
+document.getElementById('gsSyncBtn').addEventListener('click', ()=> openCloudSignInModal());
 
 // ---- Backup wiring (Settings) ----
 let pendingBackup = null;
