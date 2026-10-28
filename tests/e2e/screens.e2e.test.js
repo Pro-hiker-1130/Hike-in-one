@@ -486,3 +486,36 @@ test('packing a trip: gear grouped by category, searchable, "Select all" per cat
   assert.equal(await page.textContent('#tripStatGearCount'), '3');
   assert.deepEqual(errors, []);
 });
+
+test('backup: download everything, restore it on an empty device; a wrong file is refused', { skip: !playwright }, async t=>{
+  const first = await launch(t);
+  await importHikes(first.page);
+  await first.page.click('.nav-tab[data-page="settings"]');
+  const [download] = await Promise.all([first.page.waitForEvent('download'), first.page.click('#backupDownloadBtn')]);
+  assert.match(download.suggestedFilename(), /^hike-in-one-backup-\d{4}-\d{2}-\d{2}\.json$/);
+  const file = await download.path();
+  const saved = JSON.parse(fs.readFileSync(file, 'utf8'));
+  assert.equal(saved.kind, 'hike-in-one-backup');
+  assert.equal(saved.trips.length, 2);
+  assert.equal(saved.gear.length, 5);
+  assert.match(await first.page.textContent('#backupStatus'), /Backup saved: 2 trips, 2 tracks, 5 gear items, 0 loadouts/);
+  assert.deepEqual(first.errors, []);
+
+  // A fresh device: no trips. A wrong file first, then the backup.
+  const second = await launch(t);
+  const page = second.page;
+  await page.click('.nav-tab[data-page="settings"]');
+  await page.setInputFiles('#backupRestoreInput', { name: 'notes.json', mimeType: 'application/json', buffer: Buffer.from('{"hello":1}') });
+  assert.match(await page.textContent('#backupStatus'), /isn't a Hike-in-one backup/);
+  assert.ok(!(await page.isVisible('#backupConfirm')));
+  await page.setInputFiles('#backupRestoreInput', file);
+  await page.waitForSelector('#backupConfirm', { state: 'visible' });
+  assert.match(await page.textContent('#backupConfirmText'), /has 2 trips, 2 tracks, 5 gear items, 0 loadouts\. Restoring replaces everything on this device\./);
+  await page.click('#backupConfirmBtn');
+  await page.waitForFunction(()=> /Restored/.test(document.getElementById('backupStatus').textContent));
+  await page.click('.nav-tab[data-page="trips"]');
+  assert.equal(await page.locator('#tripCompletedGrid .trip-card').count(), 2);
+  await page.click('.nav-tab[data-page="map"]');
+  assert.equal(await text(page, '#statTrips'), '2');
+  assert.deepEqual(second.errors, []);
+});

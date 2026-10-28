@@ -369,3 +369,49 @@ if(CLOUD_SYNC_ENABLED){
   // missing on a fresh, logged-out visit.
   renderNavAccount();
 }
+
+// ---- Backup: everything on this device in one JSON file ----
+const BACKUP_KIND = 'hike-in-one-backup';
+
+async function buildBackup(){
+  return {
+    kind: BACKUP_KIND, version: 1, exportedAt: new Date().toISOString(),
+    gear: gearItems, trips, loadouts, tracks, google_points: googlePoints,
+    basemap: (await storeGet('waypoints-basemap')) || null,
+  };
+}
+
+// Checks a parsed file and returns the lists to restore, or throws with a
+// message a person can act on.
+function readBackup(data){
+  if(!data || data.kind !== BACKUP_KIND) throw new Error('This isn\'t a Hike-in-one backup file.');
+  const list = (k) => {
+    if(data[k] == null) return [];
+    if(!Array.isArray(data[k])) throw new Error('The backup file is damaged (' + k + ').');
+    return data[k];
+  };
+  const out = {
+    gear: list('gear').filter(x => x && typeof x === 'object'),
+    trips: list('trips').filter(x => x && typeof x === 'object'),
+    loadouts: list('loadouts').filter(x => x && typeof x === 'object'),
+    tracks: list('tracks').filter(x => x && typeof x === 'object' && Array.isArray(x.points)),
+    google_points: list('google_points'),
+    basemap: typeof data.basemap === 'string' ? data.basemap : null,
+    exportedAt: data.exportedAt || null,
+  };
+  if(!out.gear.length && !out.trips.length && !out.loadouts.length && !out.tracks.length && !out.google_points.length){
+    throw new Error('This backup is empty, so there is nothing to restore.');
+  }
+  return out;
+}
+
+function backupSummary(b){
+  const n = (k, one, many) => b[k].length + ' ' + (b[k].length === 1 ? one : many);
+  return [n('trips', 'trip', 'trips'), n('tracks', 'track', 'tracks'), n('gear', 'gear item', 'gear items'), n('loadouts', 'loadout', 'loadouts')].join(', ');
+}
+
+async function restoreBackup(b){
+  gearItems = b.gear; trips = b.trips; loadouts = b.loadouts; tracks = b.tracks; googlePoints = b.google_points;
+  await Promise.all([saveGear(), saveTrips(), saveLoadouts(), saveTracks(), saveGoogle(),
+    b.basemap ? storeSet('waypoints-basemap', b.basemap) : Promise.resolve()]);
+}

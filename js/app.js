@@ -636,6 +636,56 @@ document.querySelectorAll('#basemapToggle button').forEach(btn=>{
   });
 });
 
+// ---- Backup wiring (Settings) ----
+let pendingBackup = null;
+function setBackupStatus(msg, isError){
+  const el = document.getElementById('backupStatus');
+  el.textContent = msg; el.className = isError ? 'upload-error' : 'upload-status';
+}
+document.getElementById('backupDownloadBtn').addEventListener('click', async ()=>{
+  const data = await buildBackup();
+  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hike-in-one-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 10000);
+  setBackupStatus('Backup saved: ' + backupSummary(readBackup(data)) + '.');
+});
+document.getElementById('backupRestoreInput').addEventListener('change', async e=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  document.getElementById('backupConfirm').hidden = true;
+  pendingBackup = null;
+  try{
+    pendingBackup = readBackup(JSON.parse(await file.text()));
+  }catch(err){
+    setBackupStatus(err instanceof SyntaxError ? 'That file isn\'t a Hike-in-one backup.' : err.message, true);
+    return;
+  }
+  setBackupStatus('');
+  document.getElementById('backupConfirmText').textContent =
+    'This backup' + (pendingBackup.exportedAt ? ' from ' + friendlyDate(pendingBackup.exportedAt.slice(0, 10)) : '') +
+    ' has ' + backupSummary(pendingBackup) + '. Restoring replaces everything on this device' +
+    (cloudUser ? ' and in your synced account' : '') + '.';
+  document.getElementById('backupConfirm').hidden = false;
+});
+document.getElementById('backupCancelBtn').addEventListener('click', ()=>{
+  pendingBackup = null;
+  document.getElementById('backupConfirm').hidden = true;
+});
+document.getElementById('backupConfirmBtn').addEventListener('click', async ()=>{
+  if(!pendingBackup) return;
+  const b = pendingBackup; pendingBackup = null;
+  document.getElementById('backupConfirm').hidden = true;
+  await restoreBackup(b);
+  try{ refreshEverything(); }catch(err){ noteAppError(err); }
+  try{ showGarage(); }catch(err){ noteAppError(err); }
+  renderTripCards();
+  setBackupStatus('Restored ' + backupSummary(b) + '.');
+});
+
 const CLEAR_LABEL = 'Remove all tracks and location history';
 let clearArmed = false;
 document.getElementById('clearBtn').addEventListener('click', async (e)=>{

@@ -432,6 +432,24 @@
     </section>
 
     <section class="settings-card">
+      <h3>Backup</h3>
+      <p class="settings-note">Save everything on this device — gear, trips, loadouts, tracks and location history — to one file, and bring it back later or on another device. Trip photos aren't included.</p>
+      <div class="settings-actions">
+        <button class="primary-btn" type="button" id="backupDownloadBtn">Download backup</button>
+        <label class="ghost-btn" for="backupRestoreInput" id="backupRestoreLabel">Restore from a backup…</label>
+        <input type="file" id="backupRestoreInput" accept=".json,application/json" hidden>
+      </div>
+      <div class="backup-confirm" id="backupConfirm" hidden>
+        <p class="settings-note" id="backupConfirmText"></p>
+        <div class="settings-actions">
+          <button class="danger-btn" type="button" id="backupConfirmBtn">Replace with this backup</button>
+          <button class="ghost-btn" type="button" id="backupCancelBtn">Cancel</button>
+        </div>
+      </div>
+      <div class="upload-status" id="backupStatus"></div>
+    </section>
+
+    <section class="settings-card">
       <h3>Stored data</h3>
       <p class="settings-note" id="settingsDataSummary"></p>
       <p class="settings-note" id="settingsDeviceSummary"></p>

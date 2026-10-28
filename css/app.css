@@ -1012,3 +1012,6 @@ body{font-size:15px;}
 .gear-check-count{flex:1;font-size:12.5px;color:var(--muted);}
 .gear-check-all{font-size:13px;}
 .trip-gear-row[hidden], .gear-check-head[hidden]{display:none !important;}
+.settings-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.settings-actions label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
+.backup-confirm{align-self:stretch;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:#FBEFE9;}
