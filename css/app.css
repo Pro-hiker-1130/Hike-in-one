@@ -1001,3 +1001,14 @@ body{font-size:15px;}
 .more-details > .form-row, .more-details > .form-field{margin-bottom:12px;}
 #catalogStatus:empty, #gearQuickAddStatus:empty{display:none;}
 .cb-footer-links{display:flex;flex-wrap:wrap;gap:4px 14px;}
+
+/* ---- Gear checklist (packing a trip, building a loadout) ---- */
+.gear-check-search{
+  position:sticky;top:0;z-index:1;display:block;width:calc(100% - 24px);margin:10px 12px 6px;padding:9px 11px;
+  border:1px solid rgba(52,78,65,0.22);border-radius:8px;background:var(--panel);font:inherit;font-size:15px;color:var(--parchment);
+}
+.gear-check-head{display:flex;align-items:baseline;gap:8px;padding:12px 20px 4px;background:var(--panel-alt);border-bottom:1px solid var(--line);}
+.gear-check-cat{font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:var(--parchment);}
+.gear-check-count{flex:1;font-size:12.5px;color:var(--muted);}
+.gear-check-all{font-size:13px;}
+.trip-gear-row[hidden], .gear-check-head[hidden]{display:none !important;}

@@ -460,3 +460,29 @@ test('gear form: optional fields fold under "More details", which shows what is 
   assert.equal(await page.textContent('#gearMoreDetailsHint'), '€12 · New');
   assert.deepEqual(errors, []);
 });
+
+test('packing a trip: gear grouped by category, searchable, "Select all" per category', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  await page.click('.trip-card:has-text("Eiger")');
+  await page.click('#tripGearEditBtn');
+  await page.waitForSelector('#tripGearModalOverlay', { state: 'visible' });
+  const heads = await page.$$eval('#tripGearList .gear-check-cat', els => els.map(e => e.textContent));
+  assert.deepEqual(heads, ['Backpack', 'Shelter', 'Sleep system'], 'Gear Room order; wishlist items left out');
+  // Select all in Sleep system.
+  await page.click('#tripGearList .gear-check-head:has-text("Sleep system") .gear-check-all');
+  assert.equal(await page.textContent('#tripGearList .gear-check-head:has-text("Sleep system") .gear-check-count'), '2 of 2');
+  assert.equal(await page.textContent('#tripGearList .gear-check-head:has-text("Sleep system") .gear-check-all'), 'Clear');
+  assert.match(await page.textContent('#tripGearWeightSummary'), /2 items · 1\.0 kg/);
+  // Search narrows the list; headings without matches hide.
+  await page.fill('#tripGearList .gear-check-search', 'exos');
+  assert.equal(await page.locator('#tripGearList .trip-gear-row:visible').count(), 1);
+  assert.equal(await page.locator('#tripGearList .gear-check-head:visible').count(), 1);
+  await page.check('#tripGearList .trip-gear-row:visible input');
+  await page.fill('#tripGearList .gear-check-search', '');
+  assert.equal(await page.locator('#tripGearList .trip-gear-row:visible').count(), 4);
+  await page.click('#tripGearSaveBtn');
+  await page.waitForSelector('#tripGearModalOverlay', { state: 'hidden' });
+  assert.equal(await page.textContent('#tripStatGearCount'), '3');
+  assert.deepEqual(errors, []);
+});

@@ -16,30 +16,83 @@ function updateTripGearWeightSummary(){
     : 'No gear selected';
 }
 
+// A checklist of your gear for packing a trip or building a loadout:
+// grouped by category (Gear Room order), with a search box and a
+// "Select all" per category. onChange runs after any tick changes.
+function renderGearChecklist(container, checkedIds, onChange){
+  container.innerHTML = '';
+  const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
+  if(!owned.length){
+    container.innerHTML = '<div class="trip-gear-empty">No gear in your inventory yet — add some in the Gear Room first.</div>';
+    return;
+  }
+  const changed = ()=>{ refreshGroups(); if(onChange) onChange(); };
+  const search = document.createElement('input');
+  search.type = 'search';
+  search.className = 'gear-check-search';
+  search.placeholder = 'Search your gear…';
+  search.setAttribute('aria-label', 'Search your gear');
+  container.appendChild(search);
+
+  const groups = GEAR_CATEGORIES.map(cat => ({
+    cat,
+    items: owned.filter(g => (GEAR_CATEGORIES.includes(g.category) ? g.category : 'Other') === cat)
+      .sort((a,b)=> a.name.localeCompare(b.name)),
+  })).filter(gr => gr.items.length);
+
+  groups.forEach(gr=>{
+    const head = document.createElement('div');
+    head.className = 'gear-check-head';
+    head.innerHTML = '<span class="gear-check-cat"></span><span class="gear-check-count"></span>' +
+      '<button type="button" class="link-btn gear-check-all"></button>';
+    head.querySelector('.gear-check-cat').textContent = gr.cat;
+    container.appendChild(head);
+    gr.head = head;
+    gr.rows = gr.items.map(g=>{
+      const row = document.createElement('label');
+      row.className = 'trip-gear-row';
+      row.dataset.search = (g.name + ' ' + (g.brand || '') + ' ' + (g.model || '')).toLowerCase();
+      row.innerHTML =
+        '<input type="checkbox" data-id="'+g.id+'"'+(checkedIds.has(g.id)?' checked':'')+'>'+
+        '<span class="trip-gear-row-name">'+escapeHtml(g.name)+(g.brand ? '<span class="trip-gear-row-cat">'+escapeHtml(g.brand)+'</span>' : '')+'</span>'+
+        '<span class="trip-gear-row-weight">'+formatWeight(g.weightGrams)+'</span>';
+      row.querySelector('input').addEventListener('change', changed);
+      container.appendChild(row);
+      return row;
+    });
+    head.querySelector('.gear-check-all').addEventListener('click', ()=>{
+      const visible = gr.rows.filter(r => !r.hidden).map(r => r.querySelector('input'));
+      const all = visible.every(cb => cb.checked);
+      visible.forEach(cb => cb.checked = !all);
+      changed();
+    });
+  });
+
+  function refreshGroups(){
+    groups.forEach(gr=>{
+      const boxes = gr.rows.map(r => r.querySelector('input'));
+      const visible = gr.rows.filter(r => !r.hidden);
+      gr.head.hidden = !visible.length;
+      gr.head.querySelector('.gear-check-count').textContent = boxes.filter(cb => cb.checked).length + ' of ' + boxes.length;
+      const allOn = visible.length && visible.every(r => r.querySelector('input').checked);
+      gr.head.querySelector('.gear-check-all').textContent = allOn ? 'Clear' : 'Select all';
+    });
+  }
+  search.addEventListener('input', ()=>{
+    const q = search.value.trim().toLowerCase();
+    groups.forEach(gr => gr.rows.forEach(r => r.hidden = !!q && !r.dataset.search.includes(q)));
+    refreshGroups();
+  });
+  refreshGroups();
+}
+
 function openGearPickerModal(tripId){
   const trip = trips.find(x=>x.id===tripId);
   if(!trip) return;
   gearPickerTripId = tripId;
   document.getElementById('tripGearModalTitle').textContent = 'Gear for "'+trip.name+'"';
 
-  const list = document.getElementById('tripGearList');
-  list.innerHTML = '';
-  const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
-  if(!owned.length){
-    list.innerHTML = '<div class="trip-gear-empty">No gear in your inventory yet — add some in the Gear Room first.</div>';
-  } else {
-    const linked = new Set(trip.gearIds || []);
-    owned.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(g=>{
-      const row = document.createElement('label');
-      row.className = 'trip-gear-row';
-      row.innerHTML =
-        '<input type="checkbox" data-id="'+g.id+'"'+(linked.has(g.id)?' checked':'')+'>'+
-        '<span class="trip-gear-row-name">'+escapeHtml(g.name)+'<span class="trip-gear-row-cat">'+escapeHtml(g.category||'')+'</span></span>'+
-        '<span class="trip-gear-row-weight">'+formatWeight(g.weightGrams)+'</span>';
-      row.querySelector('input').addEventListener('change', updateTripGearWeightSummary);
-      list.appendChild(row);
-    });
-  }
+  renderGearChecklist(document.getElementById('tripGearList'), new Set(trip.gearIds || []), updateTripGearWeightSummary);
   updateTripGearWeightSummary();
   document.getElementById('tripGearModalOverlay').style.display = 'flex';
   onModalOpened('tripGearModalOverlay');

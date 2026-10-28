@@ -100,22 +100,7 @@ function renderLoadoutDetail(){
 }
 
 function renderLoadoutItemPicker(checkedIds){
-  const picker = document.getElementById('loadoutItemPicker');
-  picker.innerHTML = '';
-  const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
-  if(!owned.length){
-    picker.innerHTML = '<div class="trip-gear-empty">No gear in your inventory yet — add some in the Gear Room first.</div>';
-    return;
-  }
-  owned.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(g=>{
-    const row = document.createElement('label');
-    row.className = 'trip-gear-row';
-    row.innerHTML =
-      '<input type="checkbox" data-id="'+g.id+'"'+(checkedIds.has(g.id)?' checked':'')+'>'+
-      '<span class="trip-gear-row-name">'+escapeHtml(g.name)+'<span class="trip-gear-row-cat">'+escapeHtml(g.category||'')+'</span></span>'+
-      '<span class="trip-gear-row-weight">'+formatWeight(g.weightGrams)+'</span>';
-    picker.appendChild(row);
-  });
+  renderGearChecklist(document.getElementById('loadoutItemPicker'), checkedIds, null);
 }
 
 function openLoadoutModal(id){
