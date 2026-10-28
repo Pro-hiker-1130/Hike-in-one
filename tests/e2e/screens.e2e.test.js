@@ -433,3 +433,30 @@ test('Escape closes the dialog on top, one at a time', { skip: !playwright }, as
   assert.ok(await page.isVisible('#pageGear'), 'still on the Gear Room');
   assert.deepEqual(errors, []);
 });
+
+test('gear form: optional fields fold under "More details", which shows what is filled in', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t, { width: 390, height: 844 });
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#addGearBtnGarage');
+  await page.click('#cbManualBtn');
+  await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
+  assert.ok(!(await page.$eval('#gearMoreDetails', d => d.open)), 'closed for a new item');
+  assert.ok(!(await page.isVisible('#gearPrice')));
+  assert.ok(await page.isVisible('#gearWeight'), 'the essentials stay visible');
+  await page.fill('#gearName', 'Spork');
+  await page.click('#gearMoreDetails summary');
+  await page.fill('#gearPrice', '12');
+  await page.selectOption('#gearCondition', 'New');
+  assert.equal(await page.textContent('#gearMoreDetailsHint'), '€12 · New');
+  await page.click('#gearForm button[type="submit"]');
+  await page.waitForSelector('#gearModalOverlay', { state: 'hidden' });
+
+  // Editing an item that has details: open, with the summary.
+  await page.click('#viewAllGearBtn');
+  await page.click('#gearGrid .gear-card:has-text("Spork") [data-action="edit"]');
+  await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
+  assert.ok(await page.$eval('#gearMoreDetails', d => d.open), 'open when the item has details');
+  assert.equal(await page.inputValue('#gearPrice'), '12');
+  assert.equal(await page.textContent('#gearMoreDetailsHint'), '€12 · New');
+  assert.deepEqual(errors, []);
+});

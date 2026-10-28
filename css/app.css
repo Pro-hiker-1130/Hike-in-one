@@ -986,3 +986,18 @@ body{font-size:15px;}
   .gear-view-head{padding-left:12px;padding-right:12px;}
   .settings-card{margin:12px 12px 0;}
 }
+
+/* ---- Gear form: optional fields under "More details" ---- */
+.more-details{border-top:1px solid var(--line);padding-top:4px;}
+.more-details > summary{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:10px 0;cursor:pointer;
+  list-style:none;font-weight:600;color:var(--parchment);
+}
+.more-details > summary::-webkit-details-marker{display:none;}
+.more-details > summary::before{content:'';width:8px;height:8px;border-right:2px solid var(--brass);border-bottom:2px solid var(--brass);transform:rotate(-45deg);margin-right:4px;transition:transform .15s ease;align-self:center;}
+.more-details[open] > summary::before{transform:rotate(45deg);}
+.more-details-hint{font-weight:400;font-size:13px;color:var(--muted);flex:1 1 200px;min-width:0;}
+.more-details[open] > summary{margin-bottom:6px;}
+.more-details > .form-row, .more-details > .form-field{margin-bottom:12px;}
+#catalogStatus:empty, #gearQuickAddStatus:empty{display:none;}
+.cb-footer-links{display:flex;flex-wrap:wrap;gap:4px 14px;}

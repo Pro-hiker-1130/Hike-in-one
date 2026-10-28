@@ -146,8 +146,7 @@
         <p id="gearRoomIntro">Your gear, where it lives — click a shelf, hook or bench to see what's on it</p>
       </div>
       <div style="display:flex;gap:8px;">
-        <button class="ghost-btn" id="catalogBulkBtn" hidden title="Add several products to the shared catalog from their web pages">Add to catalog</button>
-        <button class="ghost-btn" id="viewAllGearBtn">View all items</button>
+        <button class="ghost-btn" id="viewAllGearBtn">All items</button>
         <button class="primary-btn" id="addGearBtnGarage">+ Add item</button>
       </div>
     </div>
@@ -529,6 +528,8 @@
           </select>
         </div>
       </div>
+      <details class="more-details" id="gearMoreDetails">
+        <summary><span class="more-details-title">More details</span> <span class="more-details-hint" id="gearMoreDetailsHint">price, purchase date, condition, links, tags, notes</span></summary>
       <div class="form-row">
         <div class="form-field">
           <label for="gearPrice">Price</label>
@@ -591,6 +592,7 @@
         <label for="gearNotes">Notes</label>
         <textarea id="gearNotes" maxlength="500"></textarea>
       </div>
+      </details>
       <div class="modal-actions">
         <button type="button" class="danger-btn" id="gearDeleteBtn" style="display:none;">Delete</button>
         <div style="display:flex;gap:8px;margin-left:auto;">
@@ -699,7 +701,10 @@
     <div class="cb-list" id="cbList"></div>
     <div class="cb-footer">
       <button type="button" class="ghost-btn" id="cbManualBtn">Not listed? Add it yourself</button>
-      <button type="button" class="link-btn" id="cbContributeBtn">Add a product to the catalog</button>
+      <span class="cb-footer-links">
+        <button type="button" class="link-btn" id="cbContributeBtn">Add a product to the catalog</button>
+        <button type="button" class="link-btn" id="catalogBulkBtn" title="Add several products to the shared catalog from their web pages">Add products from links</button>
+      </span>
     </div>
   </div>
 </div>

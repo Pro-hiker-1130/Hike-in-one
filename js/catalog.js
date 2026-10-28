@@ -157,6 +157,7 @@ function setGearFormValues(values){
     // A select silently keeps its old value for an unknown option.
     if(el.tagName === 'SELECT' && el.value !== String(v == null ? '' : v)) el.value = f === 'category' ? 'Other' : '';
   }
+  syncGearMoreDetails(false);
 }
 function editingGearItem(){
   const id = document.getElementById('gearId').value;

@@ -244,6 +244,8 @@ document.querySelectorAll('.nav-tab').forEach(tab=>{
 });
 
 // ---- Gear Room wiring ----
+document.getElementById('gearForm').addEventListener('input', ()=> syncGearMoreDetails(false));
+document.getElementById('gearForm').addEventListener('change', ()=> syncGearMoreDetails(false));
 document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openCatalogBrowser(null));
 document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
 document.querySelectorAll('#gearViewToggle button').forEach(b=> b.addEventListener('click', ()=> setGearView(b.dataset.gearview)));

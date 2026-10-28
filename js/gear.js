@@ -604,6 +604,8 @@ function openGearModal(id, presetCategory){
   document.getElementById('gearTags').value = g ? (g.tags || []).join(', ') : '';
   document.getElementById('gearNotes').value = g ? (g.notes || '') : '';
 
+  syncGearMoreDetails(true);
+
   const delBtn = document.getElementById('gearDeleteBtn');
   delBtn.style.display = g ? 'inline-block' : 'none';
   delBtn.textContent = 'Delete';
@@ -617,6 +619,30 @@ function openGearModal(id, presetCategory){
   document.getElementById('gearModalOverlay').style.display = 'flex';
   document.getElementById(!g && CATALOG_ENABLED ? 'catalogSearchInput' : 'gearName').focus();
   onModalOpened('gearModalOverlay');
+}
+
+// The optional fields sit under "More details". Its heading lists what is
+// filled in (so nothing is hidden by surprise), and it opens by itself
+// when an item being edited already has some of them.
+function gearMoreDetailsSummary(){
+  const v = id => document.getElementById(id).value.trim();
+  const parts = [];
+  if(v('gearPrice')) parts.push(formatMoney(Number(v('gearPrice')), v('gearCurrency')));
+  if(v('gearPurchaseDate')) parts.push('bought ' + friendlyDate(v('gearPurchaseDate'), false));
+  if(v('gearCondition')) parts.push(v('gearCondition'));
+  if(v('gearWaterproof')) parts.push(v('gearWaterproof') === 'yes' ? 'waterproof' : 'not waterproof');
+  if(v('gearTempRating')) parts.push(v('gearTempRating'));
+  if(v('gearLifespanKm')) parts.push(v('gearLifespanKm') + ' km lifespan');
+  if(v('gearProductUrl') || v('gearImageUrl')) parts.push('links');
+  if(v('gearTags')) parts.push('tags');
+  if(v('gearNotes')) parts.push('notes');
+  return parts;
+}
+function syncGearMoreDetails(setOpen){
+  const parts = gearMoreDetailsSummary();
+  document.getElementById('gearMoreDetailsHint').textContent = parts.length
+    ? parts.join(' · ') : 'price, purchase date, condition, links, tags, notes';
+  if(setOpen) document.getElementById('gearMoreDetails').open = parts.length > 0;
 }
 
 function closeGearModal(){
