@@ -82,3 +82,6 @@ pin down to "Skipped" with a reason.
 - Osprey Stratos 36: weights disagree (1310-1550 g) and vary by size.
 - REI Co-op Trail 40: no weight found in search results.
 - Real Turmat Chicken Curry: only one retailer lists 132 g, and a Field Meal version lists 166 g.
+- Counter Assault bear spray 10.2 oz: 290 g is the contents only, and REI lists 15 oz.
+- SOL Deluxe Map Compass: no weight published.
+- SOL Emergency Blanket: listed weights disagree (about 71 g vs 83 g).

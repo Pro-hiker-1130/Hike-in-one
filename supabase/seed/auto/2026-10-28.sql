@@ -1,0 +1,5 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('SteriPEN', 'Ultra', null, 'Water', 140, '{"filter_type":"UV purifier"}', 'Rechargeable UV water purifier. Listed weight is 4.94 oz (140 g); the lighter UltraLight is a different model.', 'https://www.halfwayanywhere.com/gear/review/review-steripen-ultra-uv-water-purifier/', 'seed'),
+('Adventure Medical Kits', 'Ultralight/Watertight .3', null, 'Safety', 73, '{}', 'Minimal waterproof first aid kit. Listed weight is 2.56 oz (73 g); one retailer lists 2.32 oz (66 g).', 'https://www.garagegrowngear.com/collections/adventure-medical-kits/products/ultralight-watertight-3-medical-kit-by-adventure-medical-kits', 'seed'),
+('Coghlan''s', 'Four Function Whistle', null, 'Safety', 45, '{}', 'Plastic whistle with a compass, thermometer and magnifier. Listed weight is 1.6 oz (45 g); one retailer lists 50 g.', 'https://www.campmor.com/products/coghlans-four-function-whistle', 'seed')
+on conflict (normalized_key) do nothing;
