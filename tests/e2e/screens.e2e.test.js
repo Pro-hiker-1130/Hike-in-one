@@ -21,7 +21,7 @@ const SESSION_KEY = 'sb-agdtujbsojhujffvhqcb-auth-token';
 const ME = 'aaaaaaaa-0000-4000-8000-000000000001';
 
 function serveRepo(){
-  const types = { '.html': 'text/html', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png' };
+  const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png' };
   const server = http.createServer((req, res)=>{
     const rel = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/+/, '') || 'index.html';
     const file = path.join(ROOT, rel);
