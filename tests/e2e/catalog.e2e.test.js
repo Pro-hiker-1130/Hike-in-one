@@ -26,7 +26,7 @@ const EXOS_ID = 'cccccccc-0000-4000-8000-000000000001';
 const SPUR_ID = 'cccccccc-0000-4000-8000-000000000002';
 
 function serveRepo(){
-  const types = { '.html': 'text/html', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png' };
+  const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png' };
   const server = http.createServer((req, res)=>{
     const rel = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/+/, '') || 'index.html';
     const file = path.join(ROOT, rel);
@@ -158,6 +158,8 @@ test('catalog: search, pre-fill, link, overrides, refresh, contribute, review, p
 
   await t.test('personal details + measured weight stay on the item, catalog untouched', async ()=>{
     await page.fill('#gearWeight', '1212');
+    // Purchase date, condition and notes live under "More details".
+    if(!(await page.$eval('#gearMoreDetails', d => d.open))) await page.click('#gearMoreDetails summary');
     await page.fill('#gearPurchaseDate', '2024-05-01');
     await page.selectOption('#gearCondition', 'Good');
     await page.fill('#gearNotes', 'Cut the brain off');
@@ -450,6 +452,7 @@ test('catalog: "Look it up" from a link and bulk "Add products from links"', { s
 
   await t.test('bulk: look up several links, review, fix, add', async ()=>{
     await page.click('.nav-tab[data-page="gear"]');
+    await page.click('#addGearBtnGarage');
     await page.click('#catalogBulkBtn');
     await page.waitForSelector('#catalogBulkModalOverlay', { state: 'visible' });
     await page.click('#bulkLookupBtn');
@@ -493,6 +496,7 @@ test('catalog: bulk add asks signed-out users to sign in', { skip: !playwright &
   const fake = createFakeSupabase({ userId: null, seed: seedCatalog() });
   const { page } = await launch(t, { signedIn: false, fake });
   await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#addGearBtnGarage');
   await page.click('#catalogBulkBtn');
   await page.waitForSelector('#cloudSignInModalOverlay', { state: 'visible' });
   assert.ok(!(await page.isVisible('#catalogBulkModalOverlay')));
