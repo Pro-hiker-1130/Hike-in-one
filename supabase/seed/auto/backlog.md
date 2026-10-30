@@ -85,3 +85,5 @@ pin down to "Skipped" with a reason.
 - Counter Assault bear spray 10.2 oz: 290 g is the contents only, and REI lists 15 oz.
 - SOL Deluxe Map Compass: no weight published.
 - SOL Emergency Blanket: listed weights disagree (about 71 g vs 83 g).
+- Huppy Toothpaste Tablets 62 ct: listed weights disagree (41-64 g) on tin versus refill.
+- Pika Outdoors Summit Suds: sizes differ and the 1 oz / 3 oz weights are unclear.
