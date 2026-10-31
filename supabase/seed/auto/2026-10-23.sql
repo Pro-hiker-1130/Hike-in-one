@@ -1,0 +1,5 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Saucony', 'Ultra Ridge GTX', 'Men''s US 9', 'Footwear', 714, '{"waterproof":true}', 'Waterproof trail and hiking shoe. Weight per pair, from the official 12.6 oz (357 g) per shoe in men''s US 9.', 'https://www.roadtrailrun.com/2023/01/saucony-ultra-ridge-gtx-multi-tester.html', 'seed'),
+('Marmot', 'Crane Creek 2P', null, 'Shelter', 2400, '{"capacity_persons":2,"packed_size":"49 x 18 cm"}', 'Two-person freestanding dome tent. Listed weight is the total with fly, poles, stakes and bag; retailers list 2380-2450 g.', 'https://www.bergzeit.de/p/marmot-crane-creek-2p-zelt/5063315/', 'seed'),
+('Granite Gear', 'Blaze 60', 'Regular', 'Backpack', 1360, '{"volume_l":60}', 'Frame pack with removable lid. Listed weight is about 3 lb for the Regular torso; one retailer lists 1300 g.', 'https://www.gearx.com/granite-gear-blaze-60-backpack', 'seed')
+on conflict (normalized_key) do nothing;
