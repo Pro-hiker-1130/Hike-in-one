@@ -87,3 +87,4 @@ pin down to "Skipped" with a reason.
 - SOL Emergency Blanket: listed weights disagree (about 71 g vs 83 g).
 - Huppy Toothpaste Tablets 62 ct: listed weights disagree (41-64 g) on tin versus refill.
 - Pika Outdoors Summit Suds: sizes differ and the 1 oz / 3 oz weights are unclear.
+- GU Energy Original Gel: the 32 g figure comes only from one retailer's listings.
