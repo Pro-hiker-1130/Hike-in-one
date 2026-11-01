@@ -88,3 +88,5 @@ pin down to "Skipped" with a reason.
 - Huppy Toothpaste Tablets 62 ct: listed weights disagree (41-64 g) on tin versus refill.
 - Pika Outdoors Summit Suds: sizes differ and the 1 oz / 3 oz weights are unclear.
 - GU Energy Original Gel: the 32 g figure comes only from one retailer's listings.
+- Lifesystems Mountain SPF50+ 50 ml: retailers list 60-70 g, no clear single weight.
+- Sea to Summit DryLite / Pocket Towel: no published weight found.
