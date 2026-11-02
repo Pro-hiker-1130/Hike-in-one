@@ -90,3 +90,5 @@ pin down to "Skipped" with a reason.
 - GU Energy Original Gel: the 32 g figure comes only from one retailer's listings.
 - Lifesystems Mountain SPF50+ 50 ml: retailers list 60-70 g, no clear single weight.
 - Sea to Summit DryLite / Pocket Towel: no published weight found.
+- Cascade Mountain Tech Carbon Fiber Quick Lock poles: several models with different weights (11-16 oz per pair).
+- Black Diamond Distance Gaiter: weight differs by size and by the UL version (28-75 g).
