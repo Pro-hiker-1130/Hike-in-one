@@ -281,3 +281,11 @@ document.getElementById('rpSaveBtn').addEventListener('click', saveRoutePlan);
 document.getElementById('rpDeleteBtn').addEventListener('click', deleteRoutePlan);
 document.getElementById('rpDownloadBtn').addEventListener('click', downloadRoutePlan);
 document.getElementById('tripPlanRouteBtn').addEventListener('click', ()=> openRoutePlanner(currentTripId, null));
+// Ctrl+Z / Cmd+Z undoes the last point while the planner is open (but
+// not while typing in the name field, where it undoes the typing).
+document.addEventListener('keydown', e=>{
+  if(!rp || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.key.toLowerCase() !== 'z') return;
+  if(e.target.closest && e.target.closest('input, textarea, select')) return;
+  e.preventDefault();
+  rpUndo();
+});

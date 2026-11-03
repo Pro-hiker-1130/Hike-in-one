@@ -186,6 +186,9 @@ async function loadSharedRoute(fit){
   });
   if(fit && all.length){
     const b = L.latLngBounds(all);
+    // A view right away so the line draws now; fit again once the dialog
+    // has its final size.
+    if(b.isValid()) srMap.fitBounds(b, { padding: [30, 30], animate: false });
     setTimeout(()=>{ srMap.invalidateSize(); if(b.isValid()) srMap.fitBounds(b, { padding: [30, 30] }); }, 60);
   }
 }

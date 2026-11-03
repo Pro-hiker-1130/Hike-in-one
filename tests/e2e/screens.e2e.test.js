@@ -846,9 +846,17 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.click('#rpModeToggle [data-mode="trail"]');
   await tap(600, 400);
   await page.waitForFunction(()=> /No trail found for one part/.test(document.getElementById('rpError').textContent));
+  assert.ok(await page.$('.rp-map-wrap #rpUndoBtn'), 'Undo sits on the map');
   await page.click('#rpUndoBtn');
   await page.waitForFunction(()=> document.getElementById('rpError').textContent === '');
   assert.equal(await page.locator('#rpMap .rp-wp').count(), 3);
+  // Ctrl+Z undoes too.
+  failRouting = false;
+  await page.click('#rpModeToggle [data-mode="line"]');
+  await tap(600, 400);
+  await page.waitForFunction(()=> document.querySelectorAll('#rpMap .rp-wp').length === 4);
+  await page.keyboard.press('Control+z');
+  await page.waitForFunction(()=> document.querySelectorAll('#rpMap .rp-wp').length === 3);
 
   // Download it, then save it to the trip.
   await page.fill('#rpName', 'Haute Route day 1');
