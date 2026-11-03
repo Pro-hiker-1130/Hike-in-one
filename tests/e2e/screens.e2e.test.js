@@ -222,6 +222,29 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
   assert.deepEqual(errors, []);
 });
 
+test('trips: a planned route splits into days of about the chosen distance', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    tracks.push({ id: 't_route', name: 'Hut to hut', planned: true, distanceKm: 32, elevationGainM: 500, elevationLossM: 300,
+      minEleM: 1000, maxEleM: 1500, points: [[46, 7.5], [46.3, 7.5]], profile: [[0, 1000], [10, 1500], [20, 1200], [32, 1200]] });
+    trips.push({ id: 'trip_days', name: 'Three huts', trackIds: ['t_route'], gearIds: [], status: 'planned', date: '2030-07-05', createdAt: 1 });
+    await saveTrips();
+    showTripDetail('trip_days');
+  });
+  assert.ok(await page.isVisible('#tripDaysSection'));
+  assert.match(await text(page, '#tripDaysList'), /Set a daily distance/);
+  await page.fill('#tripDailyKm', '15');
+  const rows = await page.$$eval('#tripDaysList .trip-day-row', els => els.map(e => e.textContent));
+  assert.equal(rows.length, 2, '32 km at 15 a day: the 2 km left over joins day 2');
+  assert.match(rows[0], /^Day 1 · Fri 5 Jul 2030km 0\.0–15\.0 · ↑ 500 m ↓ 150 m · about /);
+  assert.match(rows[1], /^Day 2 · Sat 6 Jul 2030km 15\.0–32\.0/);
+  assert.equal(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_days').dailyKm), 15);
+  await page.fill('#tripDailyKm', '');
+  assert.equal(await page.evaluate(()=> 'dailyKm' in trips.find(tr => tr.id === 'trip_days')), false);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

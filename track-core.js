@@ -358,10 +358,32 @@
     };
   }
 
+  // Splits a [km, ele] profile into days of about `dailyKm` each. A last
+  // stretch shorter than a quarter day joins the day before. Each day has
+  // its km range and its climb and descent (same 4 m noise filter as the
+  // track stats).
+  function splitDays(profile, dailyKm){
+    if(!Array.isArray(profile) || profile.length < 2 || !(dailyKm > 0)) return [];
+    const start = profile[0][0], end = profile[profile.length-1][0];
+    const bounds = [start];
+    for(let km = start + dailyKm; km < end - 1e-9; km += dailyKm) bounds.push(km);
+    if(bounds.length > 1 && end - bounds[bounds.length-1] < dailyKm / 4) bounds.pop();
+    bounds.push(end);
+    const days = [];
+    for(let d = 0; d + 1 < bounds.length; d++){
+      const a = bounds[d], b = bounds[d+1];
+      const eles = [profileEleAt(profile, a)]
+        .concat(profile.filter(p => p[0] > a && p[0] < b).map(p => p[1]), [profileEleAt(profile, b)]);
+      const st = elevationStats(eles) || { gain: 0, loss: 0 };
+      days.push({ fromKm: Math.round(a*10)/10, toKm: Math.round(b*10)/10, distanceKm: b - a, upM: st.gain, downM: st.loss });
+    }
+    return days;
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays,
   };
 });

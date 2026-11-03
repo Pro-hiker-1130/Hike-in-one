@@ -114,6 +114,7 @@ function renderTripDetail(){
   document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
 
   renderTripDaylight(trip, tks);
+  renderTripDays(trip, tks);
 
   refreshTripLoadoutSelect();
   document.getElementById('tripLoadoutSelect').value = trip.loadoutId || '';
@@ -169,6 +170,55 @@ function renderTripDetail(){
   renderTripGear(trip);
 
   renderTripPhotoGrid(trip);
+}
+
+// ---- Multi-day plan ----
+// A planned route split into days of about trip.dailyKm each, with each
+// day's distance, climb and a walking-time estimate. Planned tracks with a
+// profile are taken end to end, in the trip's order.
+function tripPlannedProfile(tks){
+  const out = [];
+  tks.filter(t => t.planned && t.profile && t.profile.length > 1).forEach(t=>{
+    const offset = out.length ? out[out.length-1][0] : 0;
+    t.profile.forEach(([km, ele]) => out.push([offset + km - t.profile[0][0], ele]));
+  });
+  return out;
+}
+
+function renderTripDays(trip, tks){
+  const profile = tripPlannedProfile(tks);
+  const section = document.getElementById('tripDaysSection');
+  section.hidden = profile.length < 2;
+  if(section.hidden) return;
+  const input = document.getElementById('tripDailyKm');
+  if(document.activeElement !== input) input.value = trip.dailyKm || '';
+  const list = document.getElementById('tripDaysList');
+  list.innerHTML = '';
+  if(!(trip.dailyKm > 0)){
+    list.innerHTML = '<div class="trip-gear-empty">Set a daily distance to split the route into days.</div>';
+    return;
+  }
+  const date0 = tripDisplayDate(trip);
+  const day0 = date0 && isoDay(String(date0).slice(0,10));
+  TrackCore.splitDays(profile, trip.dailyKm).forEach((d, i)=>{
+    const row = document.createElement('div');
+    row.className = 'trip-track-row trip-day-row';
+    const when = day0 ? ' · ' + friendlyDate(new Date(day0.getTime() + i*86400000).toISOString().slice(0,10)) : '';
+    row.innerHTML = '<span class="trip-track-row-name"></span><span class="trip-track-row-meta"></span>';
+    row.firstChild.textContent = 'Day ' + (i+1) + when;
+    row.lastChild.textContent = 'km ' + d.fromKm.toFixed(1) + '–' + d.toKm.toFixed(1) +
+      ' · ↑ ' + d.upM + ' m ↓ ' + d.downM + ' m · about ' + formatDuration(TrackCore.estimateHikingSec(d.distanceKm, d.upM));
+    list.appendChild(row);
+  });
+}
+
+function setTripDailyKm(){
+  const trip = trips.find(t => t.id === currentTripId);
+  if(!trip) return;
+  const v = Number(document.getElementById('tripDailyKm').value);
+  if(v > 0) trip.dailyKm = Math.min(200, v); else delete trip.dailyKm;
+  saveTrips();
+  renderTripDays(trip, tripTracks(trip));
 }
 
 // ---- Trip gear, with a packing mode ----

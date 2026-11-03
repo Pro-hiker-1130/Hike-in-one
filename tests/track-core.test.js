@@ -205,3 +205,16 @@ test('terrainSummary finds the steepest climb and descent, the top and time abov
   assert.equal(T.terrainSummary([[0, 100]]), null);
   assert.equal(T.terrainSummary([[0, 100], [0.1, 120]]), null, 'too short to judge');
 });
+
+test('splitDays cuts a route into days and folds a short last stretch into the day before', () => {
+  const profile = [[0, 1000], [10, 1500], [20, 1200], [32, 1200]];
+  const days = T.splitDays(profile, 15);
+  assert.deepEqual(days.map(d => [d.fromKm, d.toKm]), [[0, 15], [15, 32]], '2 km left over joins day 2');
+  assert.equal(days[0].upM, 500);
+  assert.equal(days[0].downM, 150);
+  assert.equal(days[1].upM, 0);
+  assert.equal(days[1].downM, 150);
+  assert.deepEqual(T.splitDays(profile, 10).map(d => d.toKm), [10, 20, 32], 'last 2 km of 10 is under a quarter day');
+  assert.deepEqual(T.splitDays(profile, 50).map(d => d.toKm), [32], 'one day');
+  assert.deepEqual(T.splitDays(profile, 0), []);
+});

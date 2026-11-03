@@ -715,6 +715,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
   .trip-detail-section-head:has(.trip-gear-actions){flex-wrap:wrap;gap:10px;}
   .trip-gear-actions{width:100%;justify-content:flex-start;}
 }
+/* Multi-day plan */
+#tripDaysSection[hidden]{display:none;}
+.days-goal{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}
+.days-goal input{width:64px;padding:6px 8px;font:inherit;color:var(--parchment);background:var(--panel);border:1px solid rgba(52,78,65,0.22);border-radius:8px;}
+.trip-day-row{flex-wrap:wrap;gap:4px 12px;}
+
 /* Base / worn / consumable split of a trip's gear weight. */
 .pack-split{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 10px;font-size:13px;color:var(--parchment);}
 .pack-split[hidden]{display:none;}
