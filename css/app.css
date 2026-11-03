@@ -1051,3 +1051,39 @@ body{font-size:15px;}
   background:none;border:none;color:inherit;font:inherit;font-weight:700;text-decoration:underline;
   margin-left:12px;padding:2px 4px;cursor:pointer;
 }
+
+/* ---- Route planner ---- */
+.trip-detail-section-head .ghost-btn{flex:none;}
+.planned-route-badge{
+  display:inline-block;margin-left:8px;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;
+  color:var(--brass);background:var(--sage-soft);vertical-align:1px;white-space:nowrap;
+}
+.route-planner-modal{max-width:900px;}
+.rp-body{padding:14px 20px 16px;display:flex;flex-direction:column;gap:10px;}
+.rp-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;}
+.rp-toolbar .view-toggle{flex:none;}
+.rp-toolbar .view-toggle button{padding:6px 14px;font-size:12.5px;white-space:nowrap;flex:none;}
+.rp-toolbar-actions{display:flex;gap:6px;}
+.rp-toolbar-actions .ghost-btn:disabled,.modal-actions .ghost-btn:disabled,.primary-btn:disabled{opacity:.45;cursor:default;}
+.rp-map-wrap{position:relative;}
+.rp-map{height:min(52vh,480px);border-radius:8px;border:1px solid var(--line);overflow:hidden;background:var(--panel-alt);cursor:crosshair;}
+.rp-hint{
+  position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:500;pointer-events:none;
+  background:rgba(255,255,255,.94);color:var(--parchment);font-size:12.5px;padding:6px 12px;border-radius:14px;
+  box-shadow:0 2px 8px rgba(52,78,65,.18);max-width:calc(100% - 90px);text-align:center;
+}
+.rp-hint[hidden]{display:none;}
+.rp-stats{font-size:13.5px;font-weight:600;color:var(--parchment);min-height:1.2em;}
+.rp-profile:empty{display:none;}
+.rp-credit{font-size:11px;color:var(--muted);margin:0;}
+.rp-credit a{color:inherit;}
+.rp-wp{border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);background:#fff;}
+.rp-wp-start{background:#3A5A40;}
+.rp-wp-end{background:#B3261E;}
+.rp-wp-via{background:#fff;border-color:#C4501C;}
+@media (max-width:640px){
+  #routePlannerOverlay{padding:0;}
+  .route-planner-modal{max-height:100vh;max-height:100dvh;height:100%;border-radius:0;}
+  .rp-body{padding:10px 14px 14px;}
+  .rp-map{height:48vh;height:48dvh;}
+}

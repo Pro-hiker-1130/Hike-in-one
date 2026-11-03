@@ -137,3 +137,35 @@ test('toGpx writes points with elevation and time, escaped names', () => {
   assert.match(gpx, /<trkpt lat="46" lon="7.5"><ele>1000<\/ele><time>2025-07-01T08:00:00.000Z<\/time><\/trkpt>/);
   assert.equal(T.gpxFileName({ name: 'a/b: c?' }), 'a b c .gpx'.replace('c .', 'c.'));
 });
+
+test('route planning: straight lines get evenly spaced points for elevation', () => {
+  const pts = T.densifyLine([46, 7.5], [46.01, 7.5], 0.05, 100);
+  assert.equal(pts.length, 24);           // 1.11 km in ~50 m steps
+  assert.deepEqual(pts[0], [46, 7.5]);
+  assert.deepEqual(pts[pts.length-1], [46.01, 7.5]);
+  assert.equal(T.densifyLine([46, 7.5], [47, 7.5], 0.05, 100).length, 100, 'capped');
+  assert.equal(T.densifyLine([46, 7.5], [46, 7.5]).length, 2);
+});
+
+test('route planning: segments join without doubling the shared point', () => {
+  const j = T.joinSegments([
+    { points: [[46,7],[46.01,7]], ele: [1000, 1100] },
+    { points: [[46.01,7],[46.02,7]], ele: null },
+    { points: [[46.02,7],[46.03,7]], ele: [1200, 1300] },
+  ]);
+  assert.equal(j.points.length, 4);
+  assert.deepEqual(j.ele, [1000, 1100, 1200, 1300]);
+  const t = T.buildTrack({ id: 'r', name: 'Plan', planned: true }, j);
+  assert.equal(t.elevationGainM, 300);
+  assert.equal(t.planned, true);
+  assert.equal(T.joinSegments([{ points: [[1,1],[1,2]], ele: null }]).ele, null);
+});
+
+test('route planning: BRouter answers and the walking-time rule', () => {
+  const geo = { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'LineString',
+    coordinates: [[7.6, 46.6, 1500], [7.61, 46.61, 1580.5]] } }] };
+  assert.deepEqual(T.parseBrouter(geo), { points: [[46.6, 7.6], [46.61, 7.61]], ele: [1500, 1580.5] });
+  assert.equal(T.parseBrouter({ features: [] }), null);
+  assert.equal(T.estimateHikingSec(12, 600), 4*3600);   // 3 h walking + 1 h climbing
+  assert.equal(T.estimateHikingSec(0, 0), 0);
+});

@@ -11,6 +11,8 @@ function teTrack(){ return tracks.find(t => t.id === teTrackId) || null; }
 function openTrackEditor(id){
   const t = tracks.find(x => x.id === id);
   if(!t) return;
+  // A route drawn in the planner is edited there, point by point.
+  if(t.planned){ openRoutePlanner(findTrackTrip(id) ? findTrackTrip(id).id : null, id); return; }
   teTrackId = id;
   document.getElementById('teName').value = t.name || '';
   document.getElementById('teDate').value = t.date || '';
@@ -54,7 +56,7 @@ function teActiveTab(){
 
 function fillJoinSelect(t){
   const sel = document.getElementById('teJoinSelect');
-  const others = tracks.filter(x => x.id !== t.id);
+  const others = tracks.filter(x => x.id !== t.id && !x.planned);
   // Closest in time first — the one to join is usually the next or the
   // previous recording.
   const when = x => x.startTime != null ? x.startTime : (x.date ? Date.parse(x.date) : NaN);

@@ -106,7 +106,7 @@ function renderTripDetail(){
   badge.textContent = status === 'planned' ? 'Planned' : 'Completed';
   document.getElementById('tripStatTracks').textContent = tks.length;
   document.getElementById('tripStatDistance').textContent = dist.toFixed(1);
-  const climbTracks = tks.filter(t => t.elevationGainM != null);
+  const climbTracks = tripCountedTracks(trip).filter(t => t.elevationGainM != null);
   document.getElementById('tripStatClimb').textContent = climbTracks.length
     ? climbTracks.reduce((s,t)=>s+t.elevationGainM, 0).toLocaleString('en-US') : '—';
   document.getElementById('tripStatGearCount').textContent = gearList.length;
@@ -119,7 +119,7 @@ function renderTripDetail(){
   const trackList = document.getElementById('tripTrackList');
   trackList.innerHTML = '';
   if(!tks.length){
-    trackList.innerHTML = '<div class="trip-gear-empty">No tracks linked yet — click Edit to add some.</div>';
+    trackList.innerHTML = '<div class="trip-gear-empty">No tracks yet. Plan a route, or click Edit to add GPX files.</div>';
   } else {
     tks.forEach(t=>{
       const block = document.createElement('div');
@@ -127,7 +127,8 @@ function renderTripDetail(){
       const row = document.createElement('div');
       row.className = 'trip-track-row';
       row.innerHTML =
-        '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+'</span>'+
+        '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+
+          (t.planned ? '<span class="planned-route-badge">Planned route</span>' : '')+'</span>'+
         '<span class="trip-track-row-meta">'+(t.date?escapeHtml(friendlyDate(t.date))+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>'+
         '<button type="button" class="link-btn track-edit-btn" aria-label="Edit track '+escapeHtml(t.name)+'">Edit</button>';
       row.querySelector('.track-edit-btn').addEventListener('click', ()=>openTrackEditor(t.id));
@@ -429,7 +430,8 @@ function getTripStatusToggle(){
 let tripStatusTouched = false;
 function maybeAutoSetTripStatus(){
   if(tripStatusTouched) return;
-  const hasChecked = document.querySelectorAll('#tripTrackPicker input[type="checkbox"]:checked').length > 0;
+  const hasChecked = Array.from(document.querySelectorAll('#tripTrackPicker input[type="checkbox"]:checked'))
+    .some(cb => { const t = tracks.find(x => x.id === cb.dataset.id); return t && !t.planned; });
   setTripStatusToggle(hasChecked ? 'completed' : 'planned');
 }
 

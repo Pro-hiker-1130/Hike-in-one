@@ -5,7 +5,7 @@
 // ---- Rendering ----
 function allPoints(){
   const pts = [];
-  tracks.forEach(t=>pts.push(...t.points));
+  tracks.forEach(t=>{ if(!t.planned) pts.push(...t.points); });
   pts.push(...googlePoints);
   return pts;
 }
@@ -64,17 +64,18 @@ function renderTracks(){
   const trackColors = computeTrackColors();
   tracks.forEach((t)=>{
     const color = trackColors[t.id];
-    const line = L.polyline(t.points, {color, weight:2.5, opacity:0.85});
+    // Planned routes are dashed: drawn, not walked.
+    const line = L.polyline(t.points, {color, weight:2.5, opacity:0.85, dashArray: t.planned ? '6 6' : null});
     const trip = findTrackTrip(t.id);
     const photoCount = trip ? (trip.photoIds||[]).length : 0;
     let popupHtml =
-      '<strong>'+escapeHtml(t.name)+'</strong><br>'+
+      '<strong>'+escapeHtml(t.name)+'</strong>'+(t.planned ? ' <em>(planned route)</em>' : '')+'<br>'+
       (t.date ? escapeHtml(friendlyDate(t.date))+', ' : '') +
       (sportLabel(t.sport) ? escapeHtml(sportLabel(t.sport))+', ' : '') +
       t.distanceKm.toFixed(1)+' km';
     const climbLine = trackClimbSummary(t);
     if(climbLine) popupHtml += '<br>'+climbLine;
-    popupHtml += '<br><a href="#" class="popup-track-edit" data-track-id="'+t.id+'">Edit track</a>';
+    popupHtml += '<br><a href="#" class="popup-track-edit" data-track-id="'+t.id+'">'+(t.planned ? 'Edit route' : 'Edit track')+'</a>';
     if(trip){
       const tripGear = tripGearItemsList(trip);
       if(tripGear.length){
@@ -167,9 +168,10 @@ function compactNumber(n){
 
 function renderStats(){
   document.getElementById('statTrips').textContent = trips.length;
-  const dist = tracks.reduce((s,t)=>s+t.distanceKm,0);
+  const walked = walkedTracks();
+  const dist = walked.reduce((s,t)=>s+t.distanceKm,0);
   document.getElementById('statDistance').textContent = compactNumber(dist);
-  const climb = tracks.reduce((s,t)=>s+(t.elevationGainM||0),0);
+  const climb = walked.reduce((s,t)=>s+(t.elevationGainM||0),0);
   document.getElementById('statClimb').textContent = compactNumber(climb);
   const countries = allVisitedCountries();
   const countriesEl = document.getElementById('statCountries');
@@ -215,7 +217,7 @@ function renderGettingStarted(){
   let dismissed = false;
   try{ dismissed = localStorage.getItem('hio-gs-dismissed') === '1'; }catch(e){}
   const steps = [
-    ['gsImport', tracks.length > 0],
+    ['gsImport', walkedTracks().length > 0],
     ['gsGear', gearItems.length > 0],
     ['gsSync', !CLOUD_SYNC_ENABLED || !!cloudUser],
   ];

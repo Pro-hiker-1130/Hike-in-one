@@ -1,5 +1,5 @@
-const CACHE_NAME = 'waypoints-v8';
-const APP_JS = ['setup', 'activity-files', 'storage-sync', 'strava', 'map', 'trips', 'loadouts', 'trips-ui', 'import', 'gear', 'catalog', 'track-editor', 'app']
+const CACHE_NAME = 'waypoints-v9';
+const APP_JS = ['setup', 'activity-files', 'storage-sync', 'strava', 'map', 'trips', 'loadouts', 'trips-ui', 'import', 'gear', 'catalog', 'track-editor', 'route-planner', 'app']
   .map(f => './js/' + f + '.js');
 const APP_SHELL = ['./', './index.html', './css/app.css', './catalog-core.js', './track-core.js', ...APP_JS,
   './manifest.json', './icon-192.png', './icon-512.png', './countries-50m.geo.json'];

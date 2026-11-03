@@ -612,3 +612,88 @@ test('track editor: trim with undo, split, join, rename, download GPX and delete
   await page.waitForFunction(()=> tracks.length === 2);
   assert.deepEqual(errors, []);
 });
+
+test('route planner: draw a route on trails and straight lines, save it to a planned trip, download GPX', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  // Fake BRouter: a three-point line between the two points, climbing
+  // 100 m; "no route" while failRouting is set. Fake Open-Meteo: 1500 m.
+  let failRouting = false, routerCalls = 0, elevationCalls = 0;
+  await page.context().route(/brouter\.de/, r=>{
+    routerCalls++;
+    if(failRouting) return r.fulfill({ status: 400, body: 'target island detected' });
+    const [[lon1, lat1], [lon2, lat2]] = new URL(r.request().url()).searchParams.get('lonlats').split('|').map(s => s.split(',').map(Number));
+    const coords = [[lon1, lat1, 1400], [(lon1 + lon2) / 2 + 0.001, (lat1 + lat2) / 2, 1450], [lon2, lat2, 1500]];
+    r.fulfill({ status: 200, contentType: 'application/geo+json', headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } }] }) });
+  });
+  await page.context().route(/api\.open-meteo\.com/, r=>{
+    elevationCalls++;
+    const n = new URL(r.request().url()).searchParams.get('latitude').split(',').length;
+    r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ elevation: Array(n).fill(1500) }) });
+  });
+
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.click('#addTripBtn');
+  await page.fill('#tripName', 'Haute Route');
+  await page.fill('#tripDate', isoInDays(20));
+  await page.click('#tripForm button[type="submit"]');
+  await page.click('#nextTripCard');
+  await page.waitForSelector('#tripDetailView', { state: 'visible' });
+  await page.click('#tripPlanRouteBtn');
+  await page.waitForSelector('#routePlannerOverlay', { state: 'visible' });
+  assert.equal(await page.inputValue('#rpName'), 'Haute Route');
+  assert.ok(await page.isDisabled('#rpSaveBtn'), 'nothing to save yet');
+  await page.evaluate(()=> rpMap.setView([46.0, 7.5], 13, { animate: false }));
+
+  const tap = (x, y) => page.click('#rpMap', { position: { x, y } });
+  await tap(150, 300);
+  await tap(350, 200);   // follows trails
+  await page.waitForFunction(()=> /km ·/.test(document.getElementById('rpStats').textContent));
+  assert.equal(routerCalls, 1);
+  await page.click('#rpModeToggle [data-mode="line"]');
+  await tap(550, 250);   // a straight line, elevation from Open-Meteo
+  await page.waitForFunction(()=> /km · ↑ 100 m · ↓ 0 m · about \d+ (h|min)/.test(document.getElementById('rpStats').textContent));
+  assert.equal(elevationCalls, 1);
+  assert.equal(await page.locator('#rpProfile .ele-profile').count(), 1);
+
+  // No trail between two points: a straight line instead, and a note.
+  failRouting = true;
+  await page.click('#rpModeToggle [data-mode="trail"]');
+  await tap(600, 400);
+  await page.waitForFunction(()=> /No trail found for one part/.test(document.getElementById('rpError').textContent));
+  await page.click('#rpUndoBtn');
+  await page.waitForFunction(()=> document.getElementById('rpError').textContent === '');
+  assert.equal(await page.locator('#rpMap .rp-wp').count(), 3);
+
+  // Download it, then save it to the trip.
+  await page.fill('#rpName', 'Haute Route day 1');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#rpDownloadBtn')]);
+  assert.equal(download.suggestedFilename(), 'Haute Route day 1.gpx');
+  const file = fs.readFileSync(await download.path(), 'utf8');
+  assert.match(file, /<name>Haute Route day 1<\/name>/);
+  assert.match(file, /<trkpt lat="[\d.]+" lon="[\d.]+"><ele>1400<\/ele><\/trkpt>/);
+  await page.click('#rpSaveBtn');
+  await page.waitForSelector('#routePlannerOverlay', { state: 'hidden' });
+  await page.waitForSelector('#tripTrackList .trip-track-row');
+  assert.match(await text(page, '#tripTrackList .trip-track-row'), /Haute Route day 1Planned route/);
+  assert.match(await text(page, '#tripTrackList .track-climb'), /↑ 100 m · ↓ 0 m · about .* walking/);
+  assert.equal(await text(page, '#tripDetailStatusBadge'), 'Planned', 'a planned route does not complete the trip');
+  assert.notEqual(await text(page, '#tripStatDistance'), '0.0', 'the trip shows the planned distance');
+  await page.click('.nav-tab[data-page="map"]');
+  assert.equal(await text(page, '#statDistance'), '0', 'not counted as walked');
+
+  // Reopen it from the trip: same points, can be changed or deleted.
+  await page.click('.nav-tab[data-page="trips"]');
+  assert.match(await text(page, '#nextTripMeta'), /km/, 'the countdown card shows the planned distance');
+  await page.click('#nextTripCard');
+  await page.click('.track-edit-btn');
+  await page.waitForSelector('#routePlannerOverlay', { state: 'visible' });
+  assert.equal(await text(page, '#rpTitle'), 'Edit planned route');
+  assert.equal(await page.locator('#rpMap .rp-wp').count(), 3);
+  await page.waitForFunction(()=> !document.getElementById('rpSaveBtn').disabled);
+  await page.click('#rpDeleteBtn');
+  await page.waitForFunction(()=> tracks.length === 0);
+  assert.match(await text(page, '#tripTrackList'), /No tracks yet/);
+  assert.deepEqual(errors, []);
+});

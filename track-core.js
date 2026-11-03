@@ -239,9 +239,66 @@
     return base + '.gpx';
   }
 
+
+  // ---- Route planning ----
+
+  // Points along a straight line from a to b (both included), about
+  // stepKm apart and at most maxPts long, for looking up elevation.
+  function densifyLine(a, b, stepKm, maxPts){
+    const n = Math.max(1, Math.min((maxPts || 100) - 1, Math.ceil(haversine(a, b) / (stepKm || 0.05))));
+    const out = [];
+    for(let i=0;i<=n;i++){
+      const f = i/n;
+      out.push([+(a[0] + (b[0]-a[0])*f).toFixed(6), +(a[1] + (b[1]-a[1])*f).toFixed(6)]);
+    }
+    return out;
+  }
+
+  // The route's segments ({points, ele}) as one series. Each segment
+  // starts where the previous one ended, so that shared point is kept
+  // once. Elevation is null as a whole only when no segment has any.
+  function joinSegments(segs){
+    const points = [], ele = [];
+    let anyEle = false;
+    segs.forEach((s, k)=>{
+      s.points.forEach((p, i)=>{
+        if(k > 0 && i === 0 && points.length){
+          const last = points[points.length-1];
+          if(haversine(last, p) < 0.002){
+            // Same point: keep it once, with whichever elevation is known.
+            const e = s.ele ? s.ele[i] : null;
+            if(ele[ele.length-1] == null && e != null){ ele[ele.length-1] = e; anyEle = true; }
+            return;
+          }
+        }
+        points.push([p[0], p[1]]);
+        const e = s.ele ? s.ele[i] : null;
+        if(e != null) anyEle = true;
+        ele.push(e == null ? null : e);
+      });
+    });
+    return { points, ele: anyEle ? ele : null, t: null };
+  }
+
+  // A BRouter GeoJSON answer as {points, ele}; null when it has no line.
+  function parseBrouter(geo){
+    const f = geo && geo.features && geo.features[0];
+    const c = f && f.geometry && f.geometry.type === 'LineString' && f.geometry.coordinates;
+    if(!c || c.length < 2) return null;
+    const ele = c.map(x => x.length > 2 && isFinite(x[2]) ? +x[2] : null);
+    return { points: c.map(x => [+x[1], +x[0]]), ele: ele.some(e => e != null) ? ele : null };
+  }
+
+  // Walking time by the common hiking rule: 4 km an hour on the flat plus
+  // an hour for every 600 m of climb.
+  function estimateHikingSec(distanceKm, gainM){
+    return Math.round(((distanceKm || 0) / 4 + (gainM || 0) / 600) * 3600);
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec,
   };
 });

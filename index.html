@@ -385,6 +385,7 @@
     <div class="trip-detail-section">
       <div class="trip-detail-section-head">
         <p class="section-label" style="margin:0;">Tracks in this trip</p>
+        <button type="button" class="ghost-btn" id="tripPlanRouteBtn">Plan a route</button>
       </div>
       <div id="tripTrackList"></div>
     </div>
@@ -769,6 +770,46 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="routePlannerOverlay" style="display:none;">
+  <div class="modal route-planner-modal" role="dialog" aria-labelledby="rpTitle">
+    <div class="modal-header">
+      <h3 id="rpTitle">Plan a route</h3>
+      <button class="modal-close" aria-label="Close" id="rpClose" type="button">&times;</button>
+    </div>
+    <div class="rp-body">
+      <div class="rp-toolbar">
+        <div class="view-toggle" id="rpModeToggle" role="radiogroup" aria-label="How to draw the next part">
+          <button type="button" data-mode="trail" class="active" role="radio" aria-checked="true">Follow trails</button>
+          <button type="button" data-mode="line" role="radio" aria-checked="false">Straight line</button>
+        </div>
+        <div class="rp-toolbar-actions">
+          <button type="button" class="ghost-btn" id="rpUndoBtn" disabled>Undo</button>
+          <button type="button" class="ghost-btn" id="rpClearBtn" disabled>Clear</button>
+        </div>
+      </div>
+      <div class="rp-map-wrap">
+        <div class="rp-map" id="rpMap"></div>
+        <div class="rp-hint" id="rpHint">Tap the map to set the start, then tap where the route goes. Drag a point to move it.</div>
+      </div>
+      <div class="rp-stats" id="rpStats" aria-live="polite"></div>
+      <div class="rp-profile" id="rpProfile"></div>
+      <div class="upload-error" id="rpError"></div>
+      <div class="form-field">
+        <label for="rpName">Route name</label>
+        <input type="text" id="rpName" maxlength="120">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="danger-btn" id="rpDeleteBtn" hidden>Delete</button>
+        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <button type="button" class="ghost-btn" id="rpDownloadBtn" disabled>Download GPX</button>
+          <button type="button" class="primary-btn" id="rpSaveBtn" disabled>Save to trip</button>
+        </div>
+      </div>
+      <p class="rp-credit">Trail routing by <a href="https://brouter.de" target="_blank" rel="noopener">BRouter</a> on OpenStreetMap data; elevation for straight lines by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>. Times use the rule 4 km per hour plus 1 hour per 600 m of climb.</p>
+    </div>
   </div>
 </div>
 
@@ -1178,6 +1219,7 @@
 <script src="js/gear.js"></script>
 <script src="js/catalog.js"></script>
 <script src="js/track-editor.js"></script>
+<script src="js/route-planner.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

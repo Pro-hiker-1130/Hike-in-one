@@ -124,8 +124,16 @@ function tripTracks(trip){
   if(!trip.trackIds || !trip.trackIds.length) return [];
   return trip.trackIds.map(id=>tracks.find(t=>t.id===id)).filter(Boolean);
 }
+// A route drawn in the planner (track.planned) hasn't been walked. A trip's
+// numbers come from what was walked, or from its planned route until then.
+function walkedTracks(list){ return (list || tracks).filter(t => !t.planned); }
+function tripCountedTracks(trip){
+  const tks = tripTracks(trip);
+  const walked = walkedTracks(tks);
+  return walked.length ? walked : tks;
+}
 function tripDistanceKm(trip){
-  return tripTracks(trip).reduce((s,t)=>s+t.distanceKm,0);
+  return tripCountedTracks(trip).reduce((s,t)=>s+t.distanceKm,0);
 }
 function tripGearItemsList(trip){
   if(!trip.gearIds || !trip.gearIds.length) return [];
@@ -152,7 +160,7 @@ function tripDisplayDate(trip){
 // rule: recorded tracks are evidence a trip happened.
 function tripStatus(trip){
   if(trip.status === 'planned' || trip.status === 'completed') return trip.status;
-  return tripTracks(trip).length ? 'completed' : 'planned';
+  return walkedTracks(tripTracks(trip)).length ? 'completed' : 'planned';
 }
 function gearUsageTrips(gearId){
   return trips.filter(tr => (tr.gearIds||[]).includes(gearId));

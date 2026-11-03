@@ -415,6 +415,7 @@ function trackClimbSummary(t){
   const parts = [];
   if(t.elevationGainM != null) parts.push('↑ '+t.elevationGainM+' m', '↓ '+t.elevationLossM+' m');
   if(t.durationSec) parts.push(formatDuration(t.durationSec));
+  else if(t.planned && t.distanceKm) parts.push('about '+formatDuration(TrackCore.estimateHikingSec(t.distanceKm, t.elevationGainM))+' walking');
   return parts.join(' · ');
 }
 
@@ -472,7 +473,7 @@ async function detectTrackCountries(track){
 }
 function allVisitedCountries(){
   const set = new Set();
-  tracks.forEach(t=> (t.countries||[]).forEach(c=> set.add(c)));
+  tracks.forEach(t=>{ if(!t.planned) (t.countries||[]).forEach(c=> set.add(c)); });
   return set;
 }
 

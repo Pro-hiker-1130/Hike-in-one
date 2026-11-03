@@ -16,7 +16,7 @@ as is.
 | `css/app.css` | All styles. Colors are tokens on `:root` (Topo Light theme). |
 | `js/*.js` | The app, as plain scripts that `index.html` loads in order and that share one global scope (see below). |
 | `catalog-core.js` | Catalog logic with no DOM (validation, linking gear to products). Unit-tested. |
-| `track-core.js` | Track editing with no DOM: trim, split, join, recalculating stats, GPX export. Unit-tested. |
+| `track-core.js` | Track editing and route planning with no DOM: trim, split, join, recalculating stats, GPX export, walking-time estimate. Unit-tested. |
 | `service-worker.js` | Offline support: caches the app files and the pinned CDN libraries. |
 | `supabase/` | Database schema and migrations, Edge Functions, and the catalog seed files. |
 | `tests/` | Unit, end-to-end (Playwright) and SQL tests. |
@@ -37,6 +37,7 @@ The scripts in `js/`, in load order:
 | `gear.js` | The Gear Room and the gear form. |
 | `catalog.js` | The shared gear catalog: search, product pages, reviews, browser, lookups. |
 | `track-editor.js` | The Edit track dialog: name, date, activity, trim, split, join, delete, Download GPX. |
+| `route-planner.js` | Plan a route: tap points on a map, follow trails (BRouter) or straight lines (elevation from Open-Meteo), save to a trip, Download GPX. |
 | `app.js` | Dialogs and the Back button, navigation, event wiring and start-up. |
 
 Code that runs at load time may only use things from the same file or an
