@@ -395,12 +395,17 @@
     <div class="trip-detail-section">
       <div class="trip-detail-section-head">
         <p class="section-label" style="margin:0;">Gear</p>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div class="trip-gear-actions">
           <select class="mini-select" id="tripLoadoutSelect">
             <option value="">Apply a loadout…</option>
           </select>
+          <button class="ghost-btn" id="tripPackBtn" type="button" aria-pressed="false" hidden>Pack</button>
           <button class="ghost-btn" id="tripGearEditBtn">Edit gear</button>
         </div>
+      </div>
+      <div class="pack-progress" id="tripPackProgress" hidden>
+        <span class="pack-progress-text" id="tripPackProgressText" aria-live="polite"></span>
+        <span class="pack-progress-bar"><span id="tripPackProgressFill"></span></span>
       </div>
       <div id="tripGearSummaryList"></div>
     </div>

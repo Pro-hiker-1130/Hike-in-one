@@ -83,6 +83,7 @@ function showTripsList(){
 }
 
 function showTripDetail(id){
+  if(id !== currentTripId) packingTripId = null;
   currentTripId = id;
   document.getElementById('tripsListView').style.display = 'none';
   document.getElementById('tripDetailView').style.display = 'flex';
@@ -158,22 +159,77 @@ function renderTripDetail(){
     });
   }
 
+  renderTripGear(trip);
+
+  renderTripPhotoGrid(trip);
+}
+
+// ---- Trip gear, with a packing mode ----
+// Packing mode turns the gear list into big tap rows: tap an item once it
+// is in the bag. Ticks are kept on the trip (trip.packedIds), so packing
+// can be spread over an evening, or across devices.
+let packingTripId = null;
+
+function tripPackedIds(trip){
+  const linked = new Set(trip.gearIds || []);
+  return new Set((trip.packedIds || []).filter(id => linked.has(id)));
+}
+
+function renderTripGear(trip){
+  const gearList = tripGearItemsList(trip);
+  const packing = packingTripId === trip.id && gearList.length > 0;
+  const packed = tripPackedIds(trip);
+  const btn = document.getElementById('tripPackBtn');
+  btn.hidden = !gearList.length;
+  btn.textContent = packing ? 'Done packing' : 'Pack';
+  btn.setAttribute('aria-pressed', String(packing));
+
+  const done = gearList.filter(g => packed.has(g.id)).length;
+  const progress = document.getElementById('tripPackProgress');
+  progress.hidden = !(packing || done);
+  document.getElementById('tripPackProgressText').textContent = done === gearList.length && done
+    ? 'All ' + done + ' items packed' : done + ' of ' + gearList.length + ' packed';
+  document.getElementById('tripPackProgressFill').style.width = (gearList.length ? done / gearList.length * 100 : 0) + '%';
+
   const gearListEl = document.getElementById('tripGearSummaryList');
+  gearListEl.classList.toggle('is-packing', packing);
   gearListEl.innerHTML = '';
   if(!gearList.length){
     gearListEl.innerHTML = '<div class="trip-gear-empty">No gear linked yet — click Edit gear to add some.</div>';
-  } else {
-    gearList.forEach(g=>{
-      const row = document.createElement('div');
-      row.className = 'trip-track-row';
-      row.innerHTML =
-        '<span class="trip-track-row-name">'+escapeHtml(g.name)+'</span>'+
-        '<span class="trip-track-row-meta">'+formatWeight(g.weightGrams)+'</span>';
-      gearListEl.appendChild(row);
-    });
+    return;
   }
+  gearList.forEach(g=>{
+    const isPacked = packed.has(g.id);
+    const row = document.createElement(packing ? 'button' : 'div');
+    row.className = 'trip-track-row' + (packing ? ' pack-row' : '') + (isPacked ? ' is-packed' : '');
+    if(packing){
+      row.type = 'button';
+      row.setAttribute('aria-pressed', String(isPacked));
+      row.addEventListener('click', ()=> togglePacked(trip, g.id));
+    }
+    row.innerHTML =
+      '<span class="trip-track-row-name">'+(packing || isPacked ? '<span class="pack-check" aria-hidden="true"></span>' : '')+escapeHtml(g.name)+'</span>'+
+      '<span class="trip-track-row-meta">'+formatWeight(g.weightGrams)+'</span>';
+    gearListEl.appendChild(row);
+  });
+}
 
-  renderTripPhotoGrid(trip);
+function togglePacked(trip, gearId){
+  const packed = tripPackedIds(trip);
+  if(packed.has(gearId)) packed.delete(gearId); else packed.add(gearId);
+  trip.packedIds = Array.from(packed);
+  saveTrips();
+  renderTripGear(trip);
+  const again = document.querySelector('#tripGearSummaryList .pack-row:nth-child(' +
+    (tripGearItemsList(trip).findIndex(g => g.id === gearId) + 1) + ')');
+  if(again) again.focus();
+}
+
+function toggleTripPacking(){
+  const trip = trips.find(t => t.id === currentTripId);
+  if(!trip) return;
+  packingTripId = packingTripId === trip.id ? null : trip.id;
+  renderTripGear(trip);
 }
 
 // Sunrise and sunset at the route's start on the trip's day, so an early

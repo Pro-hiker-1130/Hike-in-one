@@ -190,6 +190,33 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
   assert.deepEqual(errors, []);
 });
 
+test('trips: packing mode ticks gear off with big rows and keeps the ticks', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    trips.push({ id: 'trip_pack', name: 'Hut weekend', trackIds: [], gearIds: ['g0', 'g1', 'g2'], status: 'planned', date: '2030-07-01', createdAt: 1 });
+    await saveTrips();
+    showTripDetail('trip_pack');
+  });
+  assert.ok(await page.isHidden('#tripPackProgress'), 'nothing packed, not packing: no progress bar');
+  await page.click('#tripPackBtn');
+  assert.equal(await page.getAttribute('#tripPackBtn', 'aria-pressed'), 'true');
+  assert.equal(await page.locator('#tripGearSummaryList .pack-row').count(), 3);
+  const h = await page.$eval('#tripGearSummaryList .pack-row', el => el.getBoundingClientRect().height);
+  assert.ok(h >= 48, 'rows are big enough to tap: ' + h);
+  assert.equal(await text(page, '#tripPackProgressText'), '0 of 3 packed');
+  await page.click('#tripGearSummaryList .pack-row >> text=Exos 58');
+  assert.equal(await text(page, '#tripPackProgressText'), '1 of 3 packed');
+  assert.equal(await page.getAttribute('#tripGearSummaryList .pack-row:has-text("Exos 58")', 'aria-pressed'), 'true');
+  assert.deepEqual(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_pack').packedIds), ['g1']);
+  // Done packing: back to the plain list, the tick and progress stay.
+  await page.click('#tripPackBtn');
+  assert.equal(await page.locator('#tripGearSummaryList .pack-row').count(), 0);
+  assert.equal(await page.locator('#tripGearSummaryList .is-packed').count(), 1);
+  assert.equal(await text(page, '#tripPackProgressText'), '1 of 3 packed');
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

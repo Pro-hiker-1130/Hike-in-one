@@ -342,6 +342,7 @@ document.getElementById('addTripBtn').addEventListener('click', ()=> openTripMod
 document.getElementById('backToTripsBtn').addEventListener('click', showTripsList);
 document.getElementById('tripEditBtn').addEventListener('click', ()=> openTripModal(currentTripId));
 document.getElementById('tripGearEditBtn').addEventListener('click', ()=> openGearPickerModal(currentTripId));
+document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacking);
 document.getElementById('tripViewOnMapBtn').addEventListener('click', ()=>{
   const trip = trips.find(t=>t.id===currentTripId);
   if(!trip) return;
