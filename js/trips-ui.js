@@ -184,6 +184,13 @@ function renderTripGear(trip){
   btn.textContent = packing ? 'Done packing' : 'Pack';
   btn.setAttribute('aria-pressed', String(packing));
 
+  const split = tripWeightSplit(trip);
+  const splitEl = document.getElementById('tripPackSplit');
+  splitEl.hidden = !(split.base + split.worn + split.consumable);
+  splitEl.innerHTML = PACK_ROLES.map(r =>
+    '<span class="pack-split-part pack-split-'+r+'"><span class="pack-split-label">'+
+      {base:'Base', worn:'Worn', consumable:'Consumable'}[r]+'</span> '+formatWeight(split[r])+'</span>').join('');
+
   const done = gearList.filter(g => packed.has(g.id)).length;
   const progress = document.getElementById('tripPackProgress');
   progress.hidden = !(packing || done);

@@ -139,6 +139,18 @@ function tripGearItemsList(trip){
   if(!trip.gearIds || !trip.gearIds.length) return [];
   return trip.gearIds.map(id=>gearItems.find(g=>g.id===id)).filter(Boolean);
 }
+// How an item is carried, the usual way hikers compare packs: base weight
+// (in the pack), worn (on you) and consumable (food, water, fuel). Items
+// without a choice count as base, except the Food category.
+const PACK_ROLES = ['base', 'worn', 'consumable'];
+function gearPackRole(g){
+  return PACK_ROLES.includes(g.packRole) ? g.packRole : (g.category === 'Food' ? 'consumable' : 'base');
+}
+function tripWeightSplit(trip){
+  const split = { base: 0, worn: 0, consumable: 0 };
+  tripGearItemsList(trip).forEach(g => { split[gearPackRole(g)] += (g.weightGrams || 0) * (g.quantity || 1); });
+  return split;
+}
 function tripGearWeight(trip){
   return tripGearItemsList(trip).reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
 }

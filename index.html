@@ -403,6 +403,7 @@
           <button class="ghost-btn" id="tripGearEditBtn">Edit gear</button>
         </div>
       </div>
+      <p class="pack-split" id="tripPackSplit" hidden></p>
       <div class="pack-progress" id="tripPackProgress" hidden>
         <span class="pack-progress-text" id="tripPackProgressText" aria-live="polite"></span>
         <span class="pack-progress-bar"><span id="tripPackProgressFill"></span></span>
@@ -563,6 +564,17 @@
             <option value="retired">Retired</option>
             <option value="loaned">Loaned</option>
             <option value="wishlist">Wishlist</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="gearPackRole">Carried as</label>
+          <select id="gearPackRole">
+            <option value="">Automatic (food: consumable)</option>
+            <option value="base">Base — in the pack</option>
+            <option value="worn">Worn — on you</option>
+            <option value="consumable">Consumable — food, water, fuel</option>
           </select>
         </div>
       </div>

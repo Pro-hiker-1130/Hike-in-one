@@ -1349,6 +1349,7 @@ async function handleGearFormSubmit(e){
     weightGrams: document.getElementById('gearWeight').value ? Number(document.getElementById('gearWeight').value) : null,
     quantity: Math.max(1, Number(document.getElementById('gearQuantity').value) || 1),
     status: document.getElementById('gearStatus').value,
+    packRole: document.getElementById('gearPackRole').value,
     price: document.getElementById('gearPrice').value ? Number(document.getElementById('gearPrice').value) : null,
     currency: document.getElementById('gearCurrency').value,
     purchaseDate: document.getElementById('gearPurchaseDate').value,

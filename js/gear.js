@@ -584,7 +584,7 @@ const GEAR_CSV_COLUMNS = [
   ['Name','name'], ['Category','category'], ['Brand','brand'], ['Model','model'],
   ['Weight (g)','weightGrams'], ['Quantity','quantity'], ['Status','status'],
   ['Price','price'], ['Currency','currency'], ['Purchase date','purchaseDate'],
-  ['Condition','condition'], ['Tags','tags'],
+  ['Condition','condition'], ['Tags','tags'], ['Carried as','packRole'],
 ];
 function csvCell(v){
   if(v == null) return '';
@@ -596,7 +596,7 @@ function csvCell(v){
 function gearListCsv(items){
   const rank = c => { const i = GEAR_CATEGORIES.indexOf(c || 'Other'); return i < 0 ? GEAR_CATEGORIES.length : i; };
   const rows = items.slice().sort((a,b)=> rank(a.category) - rank(b.category) || String(a.name).localeCompare(String(b.name)))
-    .map(g => GEAR_CSV_COLUMNS.map(([, key]) => csvCell(key === 'quantity' ? (g.quantity || 1) : g[key])).join(','));
+    .map(g => GEAR_CSV_COLUMNS.map(([, key]) => csvCell(key === 'quantity' ? (g.quantity || 1) : key === 'packRole' ? gearPackRole(g) : g[key])).join(','));
   return [GEAR_CSV_COLUMNS.map(([h]) => h).join(',')].concat(rows).join('\r\n') + '\r\n';
 }
 function downloadGearCsv(){
@@ -622,6 +622,7 @@ function openGearModal(id, presetCategory){
   document.getElementById('gearWeight').value = g && g.weightGrams != null ? g.weightGrams : '';
   document.getElementById('gearQuantity').value = g ? (g.quantity || 1) : 1;
   document.getElementById('gearStatus').value = g ? (g.status || 'active') : 'active';
+  document.getElementById('gearPackRole').value = g ? (g.packRole || '') : '';
   document.getElementById('gearPrice').value = g && g.price != null ? g.price : '';
   document.getElementById('gearCurrency').value = g ? (g.currency || 'EUR') : 'EUR';
   document.getElementById('gearPurchaseDate').value = g ? (g.purchaseDate || '') : '';

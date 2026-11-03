@@ -199,6 +199,9 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
     showTripDetail('trip_pack');
   });
   assert.ok(await page.isHidden('#tripPackProgress'), 'nothing packed, not packing: no progress bar');
+  // Shelter 1219 g + pack 1212 g are base; the quilt is set to worn here.
+  await page.evaluate(()=>{ gearItems.find(g => g.id === 'g2').packRole = 'worn'; renderTripDetail(); });
+  assert.equal(await text(page, '#tripPackSplit'), 'Base 2.4 kgWorn 640 gConsumable —');
   await page.click('#tripPackBtn');
   assert.equal(await page.getAttribute('#tripPackBtn', 'aria-pressed'), 'true');
   assert.equal(await page.locator('#tripGearSummaryList .pack-row').count(), 3);
@@ -225,10 +228,10 @@ test('gear: Download CSV saves the whole list, grouped by category, safe for spr
   assert.match(download.suggestedFilename(), /^hike-in-one-gear-\d{4}-\d{2}-\d{2}\.csv$/);
   const csv = fs.readFileSync(await download.path(), 'utf8').replace(/^﻿/, '');
   const lines = csv.trim().split('\r\n');
-  assert.equal(lines[0], 'Name,Category,Brand,Model,Weight (g),Quantity,Status,Price,Currency,Purchase date,Condition,Tags');
+  assert.equal(lines[0], 'Name,Category,Brand,Model,Weight (g),Quantity,Status,Price,Currency,Purchase date,Condition,Tags,Carried as');
   assert.equal(lines.length, 1 + GEAR.length, 'wishlist included too');
   assert.match(lines[1], /^Exos 58,Backpack,Osprey,/, 'categories in Gear Room order');
-  assert.ok(lines.includes(`"'=Tent, ""two door""",Shelter,Big Agnes,,1219,1,active,,,,,"3-season, freestanding"`), csv);
+  assert.ok(lines.includes(`"'=Tent, ""two door""",Shelter,Big Agnes,,1219,1,active,,,,,"3-season, freestanding",base`), csv);
   assert.deepEqual(errors, []);
 });
 

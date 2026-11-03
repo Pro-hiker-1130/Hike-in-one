@@ -714,6 +714,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
   .trip-detail-section-head:has(.trip-gear-actions){flex-wrap:wrap;gap:10px;}
   .trip-gear-actions{width:100%;justify-content:flex-start;}
 }
+/* Base / worn / consumable split of a trip's gear weight. */
+.pack-split{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 10px;font-size:13px;color:var(--parchment);}
+.pack-split[hidden]{display:none;}
+.pack-split-label{color:var(--muted);}
+.pack-split-part::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--fern);}
+.pack-split-worn::before{background:var(--sage);}
+.pack-split-consumable::before{background:#B87333;}
 /* Packing mode: big tap rows with a round tick, and a progress bar. */
 .pack-progress{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-size:13px;color:var(--muted);}
 .pack-progress[hidden]{display:none;}
