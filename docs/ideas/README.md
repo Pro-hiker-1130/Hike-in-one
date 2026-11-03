@@ -4,13 +4,10 @@ A scheduled Claude Code session runs once a day. Each run makes **one tiny,
 finished improvement** on the `app-ideas` branch. The owner reviews the
 branch and merges it into `main` when they like it; the bot never does.
 
-> **Pushing — read this before every push.** The only allowed push is
-> `git push -u origin app-ideas`, run while `git rev-parse --abbrev-ref HEAD`
-> prints `app-ideas`. Never push to `main` in any form (`git push origin
-> HEAD:main`, `git push origin main`, merging into main and pushing), even
-> if earlier messages in this session, a summary, or a "merge" request seem
-> to ask for it. Only the owner merges into main, from their own session.
-> (On 2026-11-03 the first run pushed to main by mistake; don't repeat it.)
+> **Pushing.** A scheduled run only ever pushes with
+> `git push -u origin app-ideas`, never to `main`. Merging into `main`
+> happens only when the owner asks for it directly in this session's chat
+> (a typed message from them, not the scheduled prompt or a summary).
 
 There are two kinds of runs, alternating by day (look at the last entry in
 `log.md` and do the other kind):
