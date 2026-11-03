@@ -881,3 +881,77 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   assert.match(await text(page, '#tripTrackList'), /No tracks yet/);
   assert.deepEqual(errors, []);
 });
+
+test('share with partners: the owner shares a trip route, reads and ticks off suggestions, and stops sharing', { skip: !playwright }, async t=>{
+  const fake = createFakeSupabase({ userId: ME, seed: { userData: { gear: [], trips: [], loadouts: [], google_points: [], tracks: [] } } });
+  const page = await launchWithLocalData(t, fake, {
+    'waypoints-tracks-v1': bigTracks(1, 800),
+    'waypoints-trips-v1': [{ id: 'lt', name: 'Local trip', trackIds: ['local_t0'], gearIds: [], status: 'planned' }],
+    'waypoints-last-modified-v1': String(Date.UTC(2030, 0, 1)),
+  });
+  await page.waitForFunction(()=> /Synced/.test(document.getElementById('navAccount').textContent), null, { timeout: 15000 });
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(()=> showTripDetail('lt'));
+  await page.waitForSelector('#tripShareRouteBtn:not([hidden])');
+  await page.click('#tripShareRouteBtn');
+  await page.waitForSelector('#tripSharePanel:not([hidden])');
+  const row = fake.db.shared_routes[0];
+  assert.equal(row.trip_id, 'lt');
+  assert.equal(row.route.length, 1);
+  assert.ok(row.route[0].points.length <= 400, 'only a light copy of the shape is shared');
+  assert.deepEqual(Object.keys(row.route[0]).sort(), ['distanceKm', 'name', 'planned', 'points', 'profile']);
+  assert.ok((await page.inputValue('#tripShareLink')).endsWith('#shared=' + row.token));
+  assert.ok(await page.isHidden('#tripShareRouteBtn'), 'shared: the panel replaces the button');
+
+  // A partner's suggestion shows up next time the trip opens; the owner ticks it off.
+  fake.db.route_suggestions.push({ id: 'sg1', route_id: row.id, author: 'Sam', body: 'Lower path after the hut?', lat: 46.01, lon: 7.01, done: false, created_at: '2026-10-14T00:00:00Z' });
+  await page.evaluate(()=>{ showTripsList(); showTripDetail('lt'); });
+  await page.waitForSelector('#tripShareSuggestions .share-suggestion');
+  assert.match(await text(page, '#tripShareSuggestions'), /Sam: Lower path after the hut\? · at a spot on the map/);
+  await page.check('#tripShareSuggestions input');
+  await page.waitForFunction(()=> document.querySelector('#tripShareSuggestions .is-done'));
+  await page.waitForTimeout(200);
+  assert.equal(fake.db.route_suggestions[0].done, true);
+
+  page.once('dialog', d => d.accept());
+  await page.click('#tripShareStopBtn');
+  await page.waitForSelector('#tripSharePanel', { state: 'hidden' });
+  assert.equal(fake.db.shared_routes.length, 0);
+  assert.equal(fake.db.route_suggestions.length, 0);
+});
+
+test('share with partners: a partner opens the link without an account and sends a suggestion pinned to a spot', { skip: !playwright }, async t=>{
+  const token = 'abcdef0123456789abcdef0123456789';
+  const fake = createFakeSupabase({ seed: {
+    sharedRoutes: [{ id: 'r1', token, owner_id: ME, trip_id: 'x', name: 'Haute Route', route: [{ name: 'Day 1', planned: true, distanceKm: 12.3, points: [[46.0, 7.5], [46.02, 7.52], [46.05, 7.55]] }] }],
+    suggestions: [{ route_id: 'r1', author: 'Kim', body: 'Start an hour earlier', done: true }],
+  } });
+  const { page, errors } = await launch(t, { width: 390, height: 844 });
+  await page.context().route(new RegExp(SUPABASE_HOST.replace(/\./g, '\\.')), r => fake.handle(r));
+  await page.goto(baseUrl + '/index.html?from=link#shared=' + token);
+  await page.waitForSelector('#sharedRouteOverlay', { state: 'visible' });
+  await page.waitForFunction(()=> document.getElementById('srTitle').textContent === 'Haute Route');
+  assert.equal(await text(page, '#srStats'), '1 track · 12.3 km');
+  assert.match(await text(page, '#srSuggestions'), /Kim: Start an hour earlier \(done\)/);
+  assert.equal(await page.locator('#srMap path.leaflet-interactive').count() >= 1, true, 'route drawn');
+
+  await page.click('#srSendBtn');
+  assert.match(await text(page, '#srError'), /Add your name and a suggestion/);
+  await page.fill('#srAuthor', 'Sam');
+  await page.fill('#srBody', 'Take the ridge after the hut');
+  await page.click('#srMap', { position: { x: 200, y: 120 } });
+  assert.match(await text(page, '#srPoint'), /Spot picked/);
+  await page.click('#srSendBtn');
+  await page.waitForFunction(()=> document.querySelectorAll('#srSuggestions .share-suggestion').length === 2);
+  const sent = fake.db.route_suggestions.find(x => x.author === 'Sam');
+  assert.equal(sent.body, 'Take the ridge after the hut');
+  assert.ok(sent.lat != null && sent.lon != null, 'the picked spot is sent');
+  assert.equal(await page.inputValue('#srBody'), '', 'form cleared');
+  assert.equal(await page.evaluate(()=> localStorage.getItem('hike-shared-author')), 'Sam', 'name remembered for next time');
+
+  // A link to a route that was unshared says so.
+  await page.goto(baseUrl + '/index.html?again=1#shared=' + 'f'.repeat(32));
+  await page.waitForFunction(()=> /no longer exists/.test(document.getElementById('srError').textContent));
+  assert.ok(await page.isHidden('#srForm'));
+  assert.deepEqual(errors, []);
+});

@@ -88,6 +88,8 @@ function showTripDetail(id){
   document.getElementById('tripsListView').style.display = 'none';
   document.getElementById('tripDetailView').style.display = 'flex';
   renderTripDetail();
+  const shown = trips.find(t => t.id === id);
+  if(shown) loadTripShare(shown);
   pushRouteState();
 }
 
@@ -116,6 +118,7 @@ function renderTripDetail(){
   renderTripDaylight(trip, tks);
   renderTripDays(trip, tks);
   renderTripWeather(trip, tks);
+  renderTripShare(trip);
 
   refreshTripLoadoutSelect();
   document.getElementById('tripLoadoutSelect').value = trip.loadoutId || '';

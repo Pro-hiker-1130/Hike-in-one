@@ -390,9 +390,25 @@
     <div class="trip-detail-section">
       <div class="trip-detail-section-head">
         <p class="section-label" style="margin:0;">Tracks in this trip</p>
-        <button type="button" class="ghost-btn" id="tripPlanRouteBtn">Plan a route</button>
+        <div class="trip-gear-actions">
+          <button type="button" class="ghost-btn" id="tripShareRouteBtn" hidden>Share with partners</button>
+          <button type="button" class="ghost-btn" id="tripPlanRouteBtn">Plan a route</button>
+        </div>
       </div>
       <div id="tripTrackList"></div>
+      <div class="share-panel" id="tripSharePanel" hidden>
+        <p class="section-label share-panel-title">Shared with partners</p>
+        <div class="share-link-row">
+          <input type="text" id="tripShareLink" readonly aria-label="Link for partners">
+          <button type="button" class="ghost-btn" id="tripShareCopyBtn">Copy</button>
+        </div>
+        <p class="share-panel-note" id="tripShareNote"></p>
+        <div id="tripShareSuggestions"></div>
+        <div class="share-panel-actions">
+          <button type="button" class="ghost-btn" id="tripShareUpdateBtn">Send the latest route</button>
+          <button type="button" class="link-btn" id="tripShareStopBtn">Stop sharing</button>
+        </div>
+      </div>
     </div>
 
     <div class="trip-detail-section" id="tripDaysSection" hidden>
@@ -800,6 +816,34 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sharedRouteOverlay" style="display:none;">
+  <div class="modal route-planner-modal" role="dialog" aria-labelledby="srTitle">
+    <div class="modal-header">
+      <h3 id="srTitle">Shared route</h3>
+      <button class="modal-close" aria-label="Close" id="srClose" type="button">&times;</button>
+    </div>
+    <div class="rp-body">
+      <p class="sr-intro">A hiking partner shared this route with you. Have a look and suggest changes — they'll see them in their trip.</p>
+      <div class="rp-map" id="srMap"></div>
+      <p class="rp-stats" id="srStats"></p>
+      <div id="srSuggestions"></div>
+      <form id="srForm" class="sr-form" novalidate>
+        <div class="form-field">
+          <label for="srAuthor">Your name</label>
+          <input type="text" id="srAuthor" maxlength="60" autocomplete="name">
+        </div>
+        <div class="form-field">
+          <label for="srBody">Your suggestion</label>
+          <textarea id="srBody" maxlength="1000" placeholder="e.g. Take the ridge path after the hut, it's quieter"></textarea>
+        </div>
+        <p class="sr-point"><span id="srPoint"></span> <button type="button" class="link-btn" id="srClearPoint" hidden>Remove spot</button></p>
+        <div class="modal-actions"><button type="submit" class="primary-btn" id="srSendBtn">Send suggestion</button></div>
+      </form>
+      <p class="upload-error" id="srError" aria-live="polite"></p>
+    </div>
   </div>
 </div>
 
@@ -1250,6 +1294,7 @@
 <script src="js/catalog.js"></script>
 <script src="js/track-editor.js"></script>
 <script src="js/route-planner.js"></script>
+<script src="js/route-share.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

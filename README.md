@@ -38,6 +38,7 @@ The scripts in `js/`, in load order:
 | `catalog.js` | The shared gear catalog: search, product pages, reviews, browser, lookups. |
 | `track-editor.js` | The Edit track dialog: name, date, activity, trim, split, join, delete, Download GPX. |
 | `route-planner.js` | Plan a route: tap points on a map, follow trails (BRouter) or straight lines (elevation from Open-Meteo), save to a trip, Download GPX. |
+| `route-share.js` | Sharing a trip's route with partners: the link panel on the trip page, and the page partners see (`#shared=<token>`) where they leave suggestions. |
 | `app.js` | Dialogs and the Back button, navigation, event wiring and start-up. |
 
 Code that runs at load time may only use things from the same file or an
@@ -54,6 +55,15 @@ loaded.
     npm test           # unit tests (catalog-core, track-core, product lookup)
     npm run test:e2e   # end-to-end, needs Playwright (+ HIKE_LIBS_DIR to serve the CDN libraries offline)
     npm run test:sql   # migrations and seeds against a local PostgreSQL
+
+## Sharing routes with partners
+
+A signed-in user can share a trip's route by link; partners open it without
+an account and leave suggestions. This needs the tables and functions in
+`supabase/migrations/004_shared_routes.sql`: run that file once in the
+Supabase SQL Editor (like the earlier migrations; it is safe to re-run).
+Only the route's shape and elevation profile are shared, never the rest of
+a user's data.
 
 ## The gear catalog
 

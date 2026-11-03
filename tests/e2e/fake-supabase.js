@@ -12,6 +12,7 @@ const PNG_1PX = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUl
 function createFakeSupabase({ userId = null, seed = {}, lookups = {}, userDataDelayMs = 0 } = {}){
   const db = {
     catalog_products: [], catalog_photos: [], reviews: [], profiles: [], revisions: [], user_data: [],
+    shared_routes: [], route_suggestions: [],
   };
   const log = [];   // every request: {method, path, body}
   let seq = 1;
@@ -33,6 +34,8 @@ function createFakeSupabase({ userId = null, seed = {}, lookups = {}, userDataDe
   if(seed.userData) db.user_data.push(Object.assign({ user_id: userId, updated_at: now() }, seed.userData));
   (seed.profiles || []).forEach(p => db.profiles.push(Object.assign({ created_at: now(), updated_at: now() }, p)));
   (seed.reviews || []).forEach(r => db.reviews.push(Object.assign({ id: uuid(), text: null, created_at: now(), updated_at: now() }, r)));
+  (seed.sharedRoutes || []).forEach(r => db.shared_routes.push(Object.assign({ id: uuid(), created_at: now(), updated_at: now(), route: [] }, r)));
+  (seed.suggestions || []).forEach(x => db.route_suggestions.push(Object.assign({ id: uuid(), lat: null, lon: null, done: false, created_at: now() }, x)));
   (seed.photos || []).forEach(ph => db.catalog_photos.push(Object.assign({ id: uuid(), created_at: now() }, ph)));
 
   const searchText = p => C.normalize([p.brand, p.name, p.model].filter(Boolean).join(' '));
@@ -119,6 +122,23 @@ function createFakeSupabase({ userId = null, seed = {}, lookups = {}, userDataDe
       return json(200, rows);
     }
 
+    // Shared routes (004_shared_routes.sql): partners only go through these two.
+    if(p === '/rest/v1/rpc/get_shared_route'){
+      const r = db.shared_routes.find(x => x.token === body.p_token && String(body.p_token).length >= 24);
+      if(!r) return json(200, null);
+      return json(200, { name: r.name, route: r.route, updated_at: r.updated_at,
+        suggestions: db.route_suggestions.filter(x => x.route_id === r.id).map(({ id, author, body, lat, lon, done, created_at }) => ({ id, author, body, lat, lon, done, created_at })) });
+    }
+    if(p === '/rest/v1/rpc/add_route_suggestion'){
+      const r = db.shared_routes.find(x => x.token === body.p_token && String(body.p_token).length >= 24);
+      if(!r) return json(404, { code: 'P0002', message: 'This shared route no longer exists' });
+      const author = String(body.p_author || '').trim(), text = String(body.p_body || '').trim();
+      if(!author || !text) return json(400, { code: '23514', message: 'violates check constraint "route_suggestions_text"' });
+      const row = { id: uuid(), route_id: r.id, author, body: text, lat: body.p_lat ?? null, lon: body.p_lon ?? null, done: false, created_at: now() };
+      db.route_suggestions.push(row);
+      return json(200, row.id);
+    }
+
     // ---- Tables ----
     const m = /^\/rest\/v1\/([a-z_]+)$/.exec(p);
     if(!m) return json(404, { message: 'not mocked: ' + p });
@@ -136,6 +156,36 @@ function createFakeSupabase({ userId = null, seed = {}, lookups = {}, userDataDe
         db.user_data.splice(0, db.user_data.length, Object.assign({}, row));
       }
       return json(201, undefined);
+    }
+    if(table === 'shared_routes'){
+      if(!authed) return deny();
+      const mine = db.shared_routes.filter(r => r.owner_id === userId);
+      if(method === 'GET') return reply(filterRows(mine, params));
+      if(method === 'POST'){
+        const row = Array.isArray(body) ? body[0] : body;
+        if(row.owner_id && row.owner_id !== userId) return deny();
+        let r = mine.find(x => x.trip_id === row.trip_id);
+        if(r) Object.assign(r, { name: row.name, route: row.route, updated_at: now() });
+        else { r = { id: uuid(), token: uuid().replace(/-/g, ''), owner_id: userId, trip_id: row.trip_id, name: row.name, route: row.route, created_at: now(), updated_at: now() }; db.shared_routes.push(r); }
+        return reply([r]);
+      }
+      if(method === 'DELETE'){
+        const gone = filterRows(mine, params).map(r => r.id);
+        db.shared_routes = db.shared_routes.filter(r => !gone.includes(r.id));
+        db.route_suggestions = db.route_suggestions.filter(x => !gone.includes(x.route_id));
+        return json(204, undefined);
+      }
+    }
+    if(table === 'route_suggestions'){
+      if(!authed) return deny();
+      const myRoutes = db.shared_routes.filter(r => r.owner_id === userId).map(r => r.id);
+      const mine = db.route_suggestions.filter(x => myRoutes.includes(x.route_id));
+      if(method === 'GET') return reply(filterRows(mine, params).sort((a, b) => a.created_at < b.created_at ? -1 : 1));
+      if(method === 'PATCH'){
+        if(Object.keys(body).some(k => k !== 'done')) return json(403, { code: '42501', message: 'permission denied for table route_suggestions' });
+        filterRows(mine, params).forEach(x => { x.done = !!body.done; });
+        return json(204, undefined);
+      }
     }
     if(table === 'catalog_products'){
       if(method === 'GET'){
