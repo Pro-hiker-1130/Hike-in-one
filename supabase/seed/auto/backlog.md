@@ -92,3 +92,6 @@ pin down to "Skipped" with a reason.
 - Sea to Summit DryLite / Pocket Towel: no published weight found.
 - Cascade Mountain Tech Carbon Fiber Quick Lock poles: several models with different weights (11-16 oz per pair).
 - Black Diamond Distance Gaiter: weight differs by size and by the UL version (28-75 g).
+- Radix Nutrition Original Chocolate Breakfast: listed weights disagree (90-108 g).
+- Summit To Eat Scrambled Egg with Cheese: listed weights disagree (80-104 g).
+- Sawyer Permethrin 24 oz spray: listings show packaged weights only.
