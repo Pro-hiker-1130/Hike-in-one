@@ -11,6 +11,8 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 - Share a route map with trip partners who can suggest changes — CalTopo — planning together — L
 - Terrain summary for a planned route (steepest stretch, time above a height) — CalTopo — judging difficulty before going — M
+- Multi-day plan: split a planned route into days with a daily distance goal — Gaia GPS — planning hut-to-hut or thru-hikes — M
+- Import a gear list from a spreadsheet (CSV) — LighterPack — moving gear in from other tools — M
 
 ## Polish
 
@@ -21,9 +23,10 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 ## Questions for the owner
 
-(none yet)
+- Packing check-off mode (backlog idea) needs a new saved field on trips (which items are packed). OK to add it?
 
 ## Done
 
 - 2026-11-03 — Dialogs open with a short scale-and-fade (polish)
 - 2026-11-03 — Sunrise/sunset times on a planned trip (research)
+- 2026-11-03 — Download the gear list as CSV (research, idea from LighterPack)

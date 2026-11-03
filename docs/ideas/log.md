@@ -3,6 +3,24 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-03 — research (extra run, asked for by the owner)
+
+Looked at: LighterPack (gear lists with weight totals, spreadsheet
+import/export, shareable links) and Gaia GPS (multi-day planner with daily
+distance goals, weather overlay). Budget used: 2 searches, 0 fetches.
+Changed: the Gear Room has a "Download CSV" button. It saves the whole gear
+list (wishlist included) as a spreadsheet with these columns: name, category,
+brand, model, weight, quantity, status, price, currency, purchase date,
+condition and tags. Rows follow the Gear Room's category order. Cells are
+quoted properly, and a cell starting with = + - @ gets a leading ' so a
+spreadsheet won't run it as a formula. A byte-order mark lets Excel show
+accents correctly. New e2e test checks the download. Service worker
+cache bumped to `waypoints-v12`.
+For the owner: I chose this over the "check off while packing" idea
+because that one needs a new saved field on trips, which the bot rules
+leave to you. Say if you want that field and I can build it.
+Next run should be a polish day.
+
 ## 2026-11-03 — research
 
 Looked at: PeakVisor (sunrise/sunset times for a spot, aimed at planning

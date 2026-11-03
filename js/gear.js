@@ -579,6 +579,36 @@ async function toggleRetireGear(id){
   refreshGear();
 }
 
+// ---- Gear list as CSV (opens in any spreadsheet app) ----
+const GEAR_CSV_COLUMNS = [
+  ['Name','name'], ['Category','category'], ['Brand','brand'], ['Model','model'],
+  ['Weight (g)','weightGrams'], ['Quantity','quantity'], ['Status','status'],
+  ['Price','price'], ['Currency','currency'], ['Purchase date','purchaseDate'],
+  ['Condition','condition'], ['Tags','tags'],
+];
+function csvCell(v){
+  if(v == null) return '';
+  let s = Array.isArray(v) ? v.join(', ') : String(v);
+  // A leading = + - @ would make a spreadsheet run the cell as a formula.
+  if(typeof v === 'string' && /^[=+\-@]/.test(s)) s = "'" + s;
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function gearListCsv(items){
+  const rank = c => { const i = GEAR_CATEGORIES.indexOf(c || 'Other'); return i < 0 ? GEAR_CATEGORIES.length : i; };
+  const rows = items.slice().sort((a,b)=> rank(a.category) - rank(b.category) || String(a.name).localeCompare(String(b.name)))
+    .map(g => GEAR_CSV_COLUMNS.map(([, key]) => csvCell(key === 'quantity' ? (g.quantity || 1) : g[key])).join(','));
+  return [GEAR_CSV_COLUMNS.map(([h]) => h).join(',')].concat(rows).join('\r\n') + '\r\n';
+}
+function downloadGearCsv(){
+  // The byte-order mark makes Excel read accents and ° correctly.
+  const blob = new Blob(['\ufeff' + gearListCsv(gearItems)], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hike-in-one-gear-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 10000);
+}
+
 function openGearModal(id, presetCategory){
   const g = id ? gearItems.find(x=>x.id===id) : null;
   document.getElementById('gearModalTitle').textContent = g ? 'Edit gear' : 'Add gear';

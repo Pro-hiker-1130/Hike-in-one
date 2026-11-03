@@ -251,6 +251,7 @@ document.getElementById('gearForm').addEventListener('input', ()=> syncGearMoreD
 document.getElementById('gearForm').addEventListener('change', ()=> syncGearMoreDetails(false));
 document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openCatalogBrowser(null));
 document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
+document.getElementById('gearCsvBtn').addEventListener('click', downloadGearCsv);
 document.querySelectorAll('#gearViewToggle button').forEach(b=> b.addEventListener('click', ()=> setGearView(b.dataset.gearview)));
 setGearView(gearView);
 NARROW_SCENE.addEventListener('change', ()=>{

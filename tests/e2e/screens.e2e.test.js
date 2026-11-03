@@ -168,6 +168,21 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
   assert.deepEqual(errors, []);
 });
 
+test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.evaluate(()=>{ gearItems[0].name = '=Tent, "two door"'; gearItems[0].tags = ['3-season', 'freestanding']; });
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#gearCsvBtn')]);
+  assert.match(download.suggestedFilename(), /^hike-in-one-gear-\d{4}-\d{2}-\d{2}\.csv$/);
+  const csv = fs.readFileSync(await download.path(), 'utf8').replace(/^﻿/, '');
+  const lines = csv.trim().split('\r\n');
+  assert.equal(lines[0], 'Name,Category,Brand,Model,Weight (g),Quantity,Status,Price,Currency,Purchase date,Condition,Tags');
+  assert.equal(lines.length, 1 + GEAR.length, 'wishlist included too');
+  assert.match(lines[1], /^Exos 58,Backpack,Osprey,/, 'categories in Gear Room order');
+  assert.ok(lines.includes(`"'=Tent, ""two door""",Shelter,Big Agnes,,1219,1,active,,,,,"3-season, freestanding"`), csv);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: categories as weight bars that open to their items; Shelves still there', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');
