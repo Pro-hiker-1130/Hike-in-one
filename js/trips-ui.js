@@ -115,6 +115,7 @@ function renderTripDetail(){
 
   renderTripDaylight(trip, tks);
   renderTripDays(trip, tks);
+  renderTripWeather(trip, tks);
 
   refreshTripLoadoutSelect();
   document.getElementById('tripLoadoutSelect').value = trip.loadoutId || '';
@@ -170,6 +171,88 @@ function renderTripDetail(){
   renderTripGear(trip);
 
   renderTripPhotoGrid(trip);
+}
+
+// ---- Weather at the start of a planned trip ----
+// Open-Meteo's forecast (free, no account) for the route start on the
+// trip's days, once the trip is within its 16-day range. Only the start
+// point, rounded to about 1 km, and the dates are sent. Answers are kept
+// for an hour so re-rendering the page doesn't ask again.
+const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
+const FORECAST_DAYS = 16;
+const forecastCache = new Map();
+const WEATHER_WORDS = [[0,'Clear'],[1,'Mostly clear'],[2,'Partly cloudy'],[3,'Cloudy'],[48,'Fog'],[57,'Drizzle'],
+  [67,'Rain'],[77,'Snow'],[82,'Showers'],[86,'Snow showers'],[99,'Thunderstorms']];
+function weatherWord(code){ const w = WEATHER_WORDS.find(([max]) => code <= max); return w ? w[1] : ''; }
+
+function tripStartPoint(tks){
+  const withPoints = tks.filter(t => t.points && t.points.length);
+  const track = withPoints.find(t => t.planned) || withPoints[0];
+  return track ? track.points[0] : null;
+}
+
+function isoAddDays(iso, n){ return new Date(isoDay(iso).getTime() + n*86400000).toISOString().slice(0,10); }
+
+async function fetchForecast(lat, lon, from, to){
+  const key = [lat, lon, from, to].join('|');
+  const hit = forecastCache.get(key);
+  if(hit && Date.now() - hit.at < 3600000) return hit.data;
+  const url = FORECAST_URL + '?latitude=' + lat + '&longitude=' + lon + '&timezone=auto&start_date=' + from + '&end_date=' + to +
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max';
+  const res = await fetch(url);
+  const data = await res.json();
+  if(!res.ok || data.error || !data.daily) throw new Error(data.reason || 'Forecast unavailable');
+  forecastCache.set(key, { at: Date.now(), data });
+  return data;
+}
+
+function renderTripWeather(trip, tks){
+  const el = document.getElementById('tripWeather');
+  const date = tripDisplayDate(trip);
+  const start = tripStartPoint(tks);
+  const today = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  if(tripStatus(trip) !== 'planned' || !date || !start || String(date).slice(0,10) < today){ el.hidden = true; return; }
+  const from = String(date).slice(0,10);
+  const lastForecastDay = isoAddDays(today, FORECAST_DAYS - 1);
+  el.hidden = false;
+  if(from > lastForecastDay){
+    el.innerHTML = '<p class="trip-weather-note"></p>';
+    el.firstChild.textContent = 'Weather: the forecast reaches 16 days ahead — check back from ' + friendlyDate(isoAddDays(from, -(FORECAST_DAYS - 1))) + '.';
+    return;
+  }
+  const days = trip.dailyKm > 0 ? Math.max(1, TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm).length) : 1;
+  let to = isoAddDays(from, days - 1);
+  if(to > lastForecastDay) to = lastForecastDay;
+  const lat = Math.round(start[0]*100)/100, lon = Math.round(start[1]*100)/100;
+  const key = trip.id + '|' + [lat, lon, from, to].join('|');
+  if(el.dataset.key === key && el.dataset.state !== 'error') return;
+  el.dataset.key = key; el.dataset.state = 'loading';
+  el.innerHTML = '<p class="trip-weather-note">Loading the forecast…</p>';
+  fetchForecast(lat, lon, from, to).then(data=>{
+    if(el.dataset.key !== key) return;
+    el.dataset.state = 'done';
+    const d = data.daily;
+    const r = v => v == null ? '–' : Math.round(v);
+    el.innerHTML = '<p class="section-label trip-weather-title">Forecast at the start</p>';
+    d.time.forEach((iso, i)=>{
+      const row = document.createElement('div');
+      row.className = 'trip-weather-day';
+      row.innerHTML = '<span class="trip-weather-date"></span><span class="trip-weather-text"></span>';
+      row.firstChild.textContent = friendlyDate(iso);
+      row.lastChild.textContent = [weatherWord(d.weather_code[i]), r(d.temperature_2m_min[i]) + '–' + r(d.temperature_2m_max[i]) + ' °C',
+        'rain ' + r(d.precipitation_probability_max[i]) + ' %' + (d.precipitation_sum[i] ? ' (' + d.precipitation_sum[i] + ' mm)' : ''),
+        'wind up to ' + r(d.wind_speed_10m_max[i]) + ' km/h'].filter(Boolean).join(' · ');
+      el.appendChild(row);
+    });
+    const credit = document.createElement('p');
+    credit.className = 'trip-weather-credit';
+    credit.innerHTML = 'Forecast by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>';
+    el.appendChild(credit);
+  }).catch(()=>{
+    if(el.dataset.key !== key) return;
+    el.dataset.state = 'error';
+    el.innerHTML = '<p class="trip-weather-note">The forecast couldn\'t load right now.</p>';
+  });
 }
 
 // ---- Multi-day plan ----
@@ -301,10 +384,9 @@ function toggleTripPacking(){
 function renderTripDaylight(trip, tks){
   const el = document.getElementById('tripDaylight');
   const date = tripDisplayDate(trip);
-  const withPoints = tks.filter(t => t.points && t.points.length);
-  const track = withPoints.find(t => t.planned) || withPoints[0];
-  const sun = (tripStatus(trip) === 'planned' && date && track)
-    ? TrackCore.sunTimes(String(date).slice(0,10), track.points[0][0], track.points[0][1]) : null;
+  const start = tripStartPoint(tks);
+  const sun = (tripStatus(trip) === 'planned' && date && start)
+    ? TrackCore.sunTimes(String(date).slice(0,10), start[0], start[1]) : null;
   el.hidden = !sun;
   if(!sun) return;
   const when = 'on ' + friendlyDate(date) + ' at the start';

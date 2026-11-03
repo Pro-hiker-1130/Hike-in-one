@@ -245,6 +245,41 @@ test('trips: a planned route splits into days of about the chosen distance', { s
   assert.deepEqual(errors, []);
 });
 
+test('trips: a planned trip within 16 days shows the forecast at its start, further out says when to check', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  const asked = [];
+  await page.context().route(/api\.open-meteo\.com\/v1\/forecast/, r=>{
+    const q = new URL(r.request().url()).searchParams;
+    asked.push([q.get('latitude'), q.get('longitude'), q.get('start_date'), q.get('end_date')]);
+    const from = q.get('start_date');
+    r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ daily: { time: [from, q.get('end_date')], weather_code: [2, 63], temperature_2m_min: [4.2, 6], temperature_2m_max: [15.4, 11],
+        precipitation_probability_max: [10, 80], precipitation_sum: [0, 12.5], wind_speed_10m_max: [18.3, 32] } }) });
+  });
+  await page.click('.nav-tab[data-page="trips"]');
+  const soon = isoInDays(3), later = isoInDays(40);
+  await page.evaluate(async ({ soon, later })=>{
+    tracks.push({ id: 't_wx', name: 'Route', planned: true, distanceKm: 30, elevationGainM: 500, elevationLossM: 300, minEleM: 1000, maxEleM: 1500,
+      points: [[46.0234, 7.7491], [46.2, 7.8]], profile: [[0, 1000], [15, 1500], [30, 1200]] });
+    trips.push({ id: 'trip_wx', name: 'Soon', trackIds: ['t_wx'], gearIds: [], status: 'planned', date: soon, dailyKm: 15, createdAt: 1 });
+    trips.push({ id: 'trip_far', name: 'Later', trackIds: ['t_wx'], gearIds: [], status: 'planned', date: later, createdAt: 2 });
+    await saveTrips();
+    showTripDetail('trip_wx');
+  }, { soon, later });
+  await page.waitForSelector('#tripWeather .trip-weather-day');
+  const days = await page.$$eval('#tripWeather .trip-weather-day', els => els.map(e => e.textContent));
+  assert.equal(days.length, 2, 'two days at 15 km a day');
+  assert.match(days[0], /Partly cloudy · 4–15 °C · rain 10 % · wind up to 18 km\/h$/);
+  assert.match(days[1], /Rain · 6–11 °C · rain 80 % \(12\.5 mm\) · wind up to 32 km\/h$/);
+  assert.deepEqual(asked, [['46.02', '7.75', soon, isoInDays(4)]], 'only the rounded start point and the dates are sent');
+  await page.evaluate(()=> renderTripDetail());
+  assert.equal(asked.length, 1, 're-rendering does not ask again');
+  await page.evaluate(()=> showTripDetail('trip_far'));
+  assert.match(await text(page, '#tripWeather'), /^Weather: the forecast reaches 16 days ahead — check back from /);
+  assert.equal(asked.length, 1);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');
