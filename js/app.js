@@ -252,6 +252,14 @@ document.getElementById('gearForm').addEventListener('change', ()=> syncGearMore
 document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openCatalogBrowser(null));
 document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
 document.getElementById('gearCsvBtn').addEventListener('click', downloadGearCsv);
+document.getElementById('gearCsvInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(file) importGearCsv(file);
+});
+document.getElementById('gearCsvImportBtn').addEventListener('keydown', e=>{
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); document.getElementById('gearCsvInput').click(); }
+});
 document.querySelectorAll('#gearViewToggle button').forEach(b=> b.addEventListener('click', ()=> setGearView(b.dataset.gearview)));
 setGearView(gearView);
 NARROW_SCENE.addEventListener('change', ()=>{

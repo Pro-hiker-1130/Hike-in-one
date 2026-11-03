@@ -157,8 +157,9 @@
         <h2>The Gear Room</h2>
         <p id="gearRoomIntro">Your gear, where it lives — click a shelf, hook or bench to see what's on it</p>
       </div>
-      <div style="display:flex;gap:8px;">
+      <div class="garage-actions">
         <button class="ghost-btn" id="viewAllGearBtn">All items</button>
+        <label class="ghost-btn" id="gearCsvImportBtn" title="Add gear from a spreadsheet (CSV)" tabindex="0" role="button">Import CSV<input type="file" id="gearCsvInput" accept=".csv,text/csv" hidden></label>
         <button class="ghost-btn" id="gearCsvBtn" title="Download your gear list as a spreadsheet (CSV)">Download CSV</button>
         <button class="primary-btn" id="addGearBtnGarage">+ Add item</button>
       </div>

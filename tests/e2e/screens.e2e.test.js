@@ -260,6 +260,41 @@ test('gear: Download CSV saves the whole list, grouped by category, safe for spr
   assert.deepEqual(errors, []);
 });
 
+test('gear: Import CSV adds new items from a spreadsheet, skips ones already here, and can be undone', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  const csv = [
+    'Item Name,Category,desc,qty,weight,unit,url,price,worn,consumable',
+    'Exos 58,Backpack,already in the Gear Room,1,1212,g,,,,',
+    'Rain shell,Clothing,,1,7.5,oz,https://example.com/shell,"129.00",Worn,',
+    'Dinner,Meals,,3,0.2,kg,,,,1',
+    ',Other,no name,,,,,,,',
+  ].join('\n');
+  await page.setInputFiles('#gearCsvInput', { name: 'my-list.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await page.waitForSelector('#globalToast:not([hidden])');
+  assert.match(await text(page, '#globalToast'), /^Added 2 items from my-list\.csv \(2 skipped/);
+  const added = await page.evaluate(()=> gearItems.filter(g => ['Rain shell', 'Dinner'].includes(g.name))
+    .map(({ name, category, weightGrams, quantity, packRole, price, productUrl, tags }) => ({ name, category, weightGrams, quantity, packRole, price, productUrl, tags })));
+  assert.deepEqual(added, [
+    { name: 'Rain shell', category: 'Clothing', weightGrams: 213, quantity: 1, packRole: 'worn', price: 129, productUrl: 'https://example.com/shell', tags: [] },
+    { name: 'Dinner', category: 'Other', weightGrams: 200, quantity: 3, packRole: 'consumable', price: null, productUrl: '', tags: ['Meals'] },
+  ]);
+  assert.equal(await page.evaluate(()=> gearItems.length), 7);
+  await page.click('#globalToast .toast-action');
+  await page.waitForFunction(()=> gearItems.length === 5);
+
+  // This app's own download reads back in: on an empty Gear Room it restores everything.
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#gearCsvBtn')]);
+  const own = fs.readFileSync(await download.path());
+  await page.evaluate(async ()=>{ gearItems = []; await saveGear(); refreshGear(); });
+  await page.setInputFiles('#gearCsvInput', { name: 'back.csv', mimeType: 'text/csv', buffer: own });
+  await page.waitForFunction(()=> gearItems.length === 5);
+  assert.deepEqual(await page.evaluate(()=> gearItems.map(g => g.name + '/' + g.status + '/' + g.weightGrams).sort()), [
+    'Copper Spur HV UL2/active/1219', 'Distance Carbon Z/wishlist/298', 'Exos 58/active/1212',
+    'NeoAir XLite NXT/active/370', 'Revelation 20/active/640']);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: categories as weight bars that open to their items; Shelves still there', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

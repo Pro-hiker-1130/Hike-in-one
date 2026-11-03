@@ -715,6 +715,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
   .trip-detail-section-head:has(.trip-gear-actions){flex-wrap:wrap;gap:10px;}
   .trip-gear-actions{width:100%;justify-content:flex-start;}
 }
+.garage-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.garage-actions>*{white-space:nowrap;}
+label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
+
 /* Multi-day plan */
 #tripDaysSection[hidden]{display:none;}
 .days-goal{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}

@@ -609,6 +609,76 @@ function downloadGearCsv(){
   setTimeout(()=> URL.revokeObjectURL(a.href), 10000);
 }
 
+// ---- Gear from a spreadsheet (CSV) ----
+// Reads this app's own download and the usual gear-list layouts: columns
+// are found by name (Name / Item name, Category, Brand, Weight with an
+// optional Unit, Qty, Worn, Consumable, Price, URL, Notes / Description…).
+// Rows with no name are skipped, and so is anything already in the Gear
+// Room under the same name and brand (or the same name, when the sheet
+// has no brand).
+const CSV_UNIT_GRAMS = { g: 1, gram: 1, grams: 1, kg: 1000, oz: 28.3495, lb: 453.592, lbs: 453.592 };
+function gearFromCsv(text){
+  const rows = parseCSV(String(text).replace(/^\ufeff/, '')).filter(r => r.some(c => c.trim()));
+  if(rows.length < 2) return { items: [], skipped: 0 };
+  const head = rows[0].map(h => h.trim().toLowerCase());
+  const col = (...names) => head.findIndex(h => names.includes(h));
+  const c = {
+    name: col('name', 'item name', 'item'), category: col('category'), brand: col('brand', 'make'),
+    model: col('model'), weight: col('weight (g)', 'weight', 'weight (grams)'), unit: col('unit', 'weight unit'),
+    qty: col('quantity', 'qty'), status: col('status'), price: col('price'), currency: col('currency'),
+    date: col('purchase date'), condition: col('condition'), tags: col('tags'), role: col('carried as'),
+    worn: col('worn'), consumable: col('consumable'), url: col('url', 'link', 'product url'),
+    notes: col('notes', 'description', 'desc'),
+  };
+  if(c.name < 0) return { items: [], skipped: rows.length - 1, error: 'No "Name" column found.' };
+  // Same name and brand is a duplicate; with no brand in the sheet, the name alone.
+  const known = new Set(gearItems.flatMap(g => [(g.name + '|' + (g.brand || '')).toLowerCase(), (g.name + '|').toLowerCase()]));
+  const items = []; let skipped = 0;
+  rows.slice(1).forEach(r=>{
+    const v = i => i >= 0 && r[i] != null ? r[i].trim().replace(/^'(?=[=+\-@])/, '') : '';
+    const name = v(c.name);
+    const key = (name + '|' + v(c.brand)).toLowerCase();
+    if(!name || known.has(key)){ skipped++; return; }
+    known.add(key); known.add((name + '|').toLowerCase());
+    const cat = GEAR_CATEGORIES.find(k => k.toLowerCase() === v(c.category).toLowerCase());
+    const tags = v(c.tags).split(',').map(x => x.trim()).filter(Boolean);
+    if(v(c.category) && !cat) tags.push(v(c.category));
+    const w = parseFloat(v(c.weight).replace(',', '.'));
+    const unit = CSV_UNIT_GRAMS[v(c.unit).toLowerCase()] || 1;
+    const yes = s => s !== '' && !/^(0|no|false)$/i.test(s);
+    const role = ['base', 'worn', 'consumable'].includes(v(c.role).toLowerCase()) ? v(c.role).toLowerCase()
+      : yes(v(c.worn)) ? 'worn' : yes(v(c.consumable)) ? 'consumable' : '';
+    const price = parseFloat(v(c.price).replace(/[^\d.,-]/g, '').replace(',', '.'));
+    items.push({
+      id: uid(), name, category: cat || 'Other', brand: v(c.brand), model: v(c.model),
+      weightGrams: isFinite(w) && w > 0 ? Math.round(w * unit) : null,
+      quantity: Math.max(1, parseInt(v(c.qty), 10) || 1),
+      status: OWNED_STATUSES.concat('wishlist').includes(v(c.status).toLowerCase()) ? v(c.status).toLowerCase() : 'active',
+      packRole: role, price: isFinite(price) ? price : null, currency: v(c.currency) || 'EUR',
+      purchaseDate: /^\d{4}-\d{2}-\d{2}$/.test(v(c.date)) ? v(c.date) : '', condition: v(c.condition),
+      productUrl: /^https?:\/\//i.test(v(c.url)) ? v(c.url) : '', tags, notes: v(c.notes),
+    });
+  });
+  return { items, skipped };
+}
+
+async function importGearCsv(file){
+  const { items, skipped, error } = gearFromCsv(await file.text());
+  if(!items.length){
+    showGlobalToast(error || ('Nothing new to add from ' + file.name + (skipped ? ' — those items are already here.' : '.')), !!error);
+    return;
+  }
+  gearItems.push(...items);
+  await saveGear();
+  refreshGear();
+  const ids = new Set(items.map(g => g.id));
+  showGlobalToast('Added ' + items.length + ' item' + (items.length !== 1 ? 's' : '') + ' from ' + file.name +
+    (skipped ? ' (' + skipped + ' skipped: already here or no name)' : '') + '.', false, {
+    label: 'Undo',
+    fn: async ()=>{ gearItems = gearItems.filter(g => !ids.has(g.id)); await saveGear(); refreshGear(); },
+  });
+}
+
 function openGearModal(id, presetCategory){
   const g = id ? gearItems.find(x=>x.id===id) : null;
   document.getElementById('gearModalTitle').textContent = g ? 'Edit gear' : 'Add gear';
