@@ -314,6 +314,15 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
 }
 .icon-btn:hover{border-color:var(--brass);}
 .gear-empty{padding:40px 24px;text-align:center;color:var(--muted);font-size:13px;}
+/* Empty states get a small line drawing: two peaks, a dotted trail, a sun.
+   Drawn as a mask so it takes the theme's sage colour. */
+.gear-empty::before,.empty-hint::before{
+  content:"";display:block;width:96px;height:48px;margin:0 auto 12px;
+  background:var(--sage);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 48' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 42 30 12l12 14 10-10 40 26'/%3E%3Cpath d='M25 18l5-6 5 6'/%3E%3Cpath d='M30 42c4-6 12-7 18-9s10-6 16-6' stroke-dasharray='1 5'/%3E%3Ccircle cx='76' cy='10' r='5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 48' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 42 30 12l12 14 10-10 40 26'/%3E%3Cpath d='M25 18l5-6 5 6'/%3E%3Cpath d='M30 42c4-6 12-7 18-9s10-6 16-6' stroke-dasharray='1 5'/%3E%3Ccircle cx='76' cy='10' r='5'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.empty-hint::before{width:72px;height:36px;margin-bottom:8px;}
 
 /* ---- Garage (gear category chooser) ---- */
 .garage-view{flex:1;display:flex;flex-direction:column;overflow-y:auto;width:100%;}
