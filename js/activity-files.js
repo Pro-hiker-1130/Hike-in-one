@@ -331,6 +331,9 @@ function formatDuration(sec){
 // The SVG stretches to the container (preserveAspectRatio="none") with a
 // non-scaling stroke; the hover cursor and dot are HTML so the dot stays
 // round however wide the chart is.
+// Track ids whose profile has been drawn this session: only the first
+// showing sweeps in from the left, re-renders appear at once.
+const drawnProfiles = new Set();
 function buildElevationProfile(t){
   const pts = t.profile;
   const totalKm = pts[pts.length-1][0] || t.distanceKm || 1;
@@ -354,7 +357,7 @@ function buildElevationProfile(t){
     '<div class="ele-axis ele-axis-max">'+t.maxEleM+' m</div>'+
     '<div class="ele-axis ele-axis-min">'+t.minEleM+' m</div>'+
     '<div class="ele-plot">'+
-      '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">'+
+      '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"'+(drawnProfiles.has(t.id) ? '' : ' class="ele-draw-in"')+'>'+
         '<path class="ele-area" d="'+area+'"/>'+
         '<path class="ele-line" d="'+line+'" vector-effect="non-scaling-stroke"/>'+
       '</svg>'+
@@ -362,6 +365,7 @@ function buildElevationProfile(t){
     '</div>'+
     '<div class="ele-axis-x"><span>0 km</span><span>'+totalKm.toFixed(1)+' km</span></div>';
 
+  drawnProfiles.add(t.id);
   const plot = el.querySelector('.ele-plot');
   const cursor = el.querySelector('.ele-cursor');
   const dot = el.querySelector('.ele-dot');

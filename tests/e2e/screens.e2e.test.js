@@ -178,6 +178,15 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
     renderTripDetail();
   });
   assert.match(await text(page, '#tripDaylight'), /^Sunrise \d.+ · sunset \d.+ · \d+ h \d+ min of daylight on /);
+  // An elevation profile sweeps in the first time only, not on every re-render.
+  const sweeps = await page.evaluate(()=>{
+    const walked = trips.find(tr => tripTracks(tr).some(t => t.profile && t.profile.length > 1));
+    showTripDetail(walked.id);
+    const first = document.querySelectorAll('#tripTrackList svg.ele-draw-in').length;
+    renderTripDetail();
+    return [first, document.querySelectorAll('#tripTrackList svg.ele-draw-in').length];
+  });
+  assert.deepEqual(sweeps, [1, 0]);
   assert.deepEqual(errors, []);
 });
 
