@@ -13,7 +13,6 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 ## Polish
 
 - Smooth fade/slide when switching between Map, Gear Room, Trips and Settings — S
-- Dialogs open with a short scale-and-fade instead of appearing at once — S
 - Stat numbers on the map count up briefly when they change — S
 - Nicer empty states with a small line illustration (inline SVG) — S
 - Elevation profile draws itself from left to right the first time it shows — S
@@ -24,3 +23,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 ## Done
 
+- 2026-11-03 — Dialogs open with a short scale-and-fade (polish)
