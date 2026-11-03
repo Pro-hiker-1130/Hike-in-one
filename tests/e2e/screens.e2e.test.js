@@ -118,7 +118,11 @@ async function importHikes(page){
   await page.click('#importViewTripsBtn');
 }
 
-const text = (page, sel) => page.$eval(sel, el => el.textContent.trim());
+const text = async (page, sel) => {
+  // Stat tiles count up for a moment when they change; read the final value.
+  if(sel.startsWith('#stat')) await page.waitForSelector(sel + ':not([data-counting])');
+  return page.$eval(sel, el => el.textContent.trim());
+};
 
 test('map overview shows km, metres up, trips and countries, and opens the import', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
@@ -127,6 +131,15 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   assert.equal(await text(page, '#statTrips'), '2');
   assert.ok(Number(await text(page, '#statDistance')) >= 8, 'two ~4.3 km tracks');
   assert.equal(await text(page, '#statClimb'), '900');
+  // A change while the map is showing counts up, then lands on the new value.
+  const counting = await page.evaluate(()=>{
+    trips.push({ id: 'trip_x', name: 'X', trackIds: [], gearIds: [], status: 'planned', createdAt: 2 });
+    renderStats();
+    return document.getElementById('statTrips').hasAttribute('data-counting');
+  });
+  assert.ok(counting, 'counts up while visible');
+  assert.equal(await text(page, '#statTrips'), '3');
+  await page.evaluate(()=>{ trips.pop(); renderStats(); });
   await page.click('#mapImportBtn');
   await page.waitForSelector('#importModalOverlay', { state: 'visible' });
   assert.ok(await page.isVisible('#pageTrips'), 'import opens over the Trips page');
