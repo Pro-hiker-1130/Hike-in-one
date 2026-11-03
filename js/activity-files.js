@@ -195,6 +195,7 @@ function trackFromRaw(raw, meta){
     if(profile[profile.length-1] !== full[full.length-1]) profile.push(full[full.length-1]);
   }
   const times = raw.map(r=>r.t).filter(t=>t != null);
+  const keep = TrackCore.sampleIndices(points.length, MAX_STORED_POINTS_PER_TRACK);
   const durationSec = times.length >= 2 ? Math.round((times[times.length-1] - times[0]) / 1000) : null;
 
   return {
@@ -202,7 +203,11 @@ function trackFromRaw(raw, meta){
     name: (meta.name && meta.name.trim()) || fallbackTrackName(meta.filename || '', meta.sport, date),
     date, distanceKm,
     startTime, sport: meta.sport || null, sourceKey: meta.sourceKey || null,
-    points: downsample(points, MAX_STORED_POINTS_PER_TRACK),
+    points: keep.map(i => points[i]),
+    // Elevation (m) and time (s after startTime) of each stored point, so
+    // the track editor can trim and split without losing them.
+    pointEle: eleStats ? keep.map(i => raw[i].ele == null ? null : Math.round(raw[i].ele*10)/10) : null,
+    pointTimes: startTime != null ? keep.map(i => raw[i].t == null ? null : Math.round((raw[i].t - startTime)/1000)) : null,
     // null (not undefined) means "this file has no elevation", which
     // the UI tells apart from tracks imported before elevation existed.
     elevationGainM: eleStats ? eleStats.gain : null,

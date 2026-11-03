@@ -703,6 +703,75 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="trackEditModalOverlay" style="display:none;">
+  <div class="modal track-edit-modal" role="dialog" aria-labelledby="teTitle">
+    <div class="modal-header">
+      <h3 id="teTitle">Edit track</h3>
+      <button class="modal-close" aria-label="Close" id="trackEditClose" type="button">&times;</button>
+    </div>
+    <form class="modal-form" id="trackEditForm" novalidate>
+      <div class="form-field">
+        <label for="teName">Name</label>
+        <input type="text" id="teName" maxlength="120" required>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="teDate">Date</label>
+          <input type="date" id="teDate">
+        </div>
+        <div class="form-field">
+          <label for="teSport">Activity</label>
+          <input type="text" id="teSport" list="teSportList" maxlength="40" placeholder="Hike">
+          <datalist id="teSportList">
+            <option value="Hike"></option><option value="Walk"></option><option value="Run"></option>
+            <option value="Trail run"></option><option value="Ride"></option><option value="Mountain bike ride"></option>
+            <option value="Ski tour"></option><option value="Snowshoe"></option>
+          </datalist>
+        </div>
+      </div>
+
+      <div class="te-map" id="teMap" aria-label="Track preview"></div>
+      <div class="te-summary" id="teSummary" aria-live="polite"></div>
+
+      <div class="te-tabs" role="tablist">
+        <button type="button" role="tab" class="te-tab active" data-tab="trim" aria-selected="true">Trim</button>
+        <button type="button" role="tab" class="te-tab" data-tab="split" aria-selected="false">Split</button>
+        <button type="button" role="tab" class="te-tab" data-tab="join" aria-selected="false">Join</button>
+      </div>
+      <div class="te-panel" data-panel="trim">
+        <p class="te-help">Cut off the start or the end, for example the drive home after you forgot to stop recording.</p>
+        <label class="te-range-label" for="teTrimStart">Start <span id="teTrimStartVal"></span></label>
+        <input type="range" id="teTrimStart" min="0" value="0" step="1">
+        <label class="te-range-label" for="teTrimEnd">End <span id="teTrimEndVal"></span></label>
+        <input type="range" id="teTrimEnd" min="0" value="0" step="1">
+      </div>
+      <div class="te-panel" data-panel="split" hidden>
+        <p class="te-help">Make two tracks out of this one, for example one per day.</p>
+        <label class="te-range-label" for="teSplitAt">Split at <span id="teSplitVal"></span></label>
+        <input type="range" id="teSplitAt" min="0" value="0" step="1">
+        <button type="button" class="ghost-btn" id="teSplitBtn">Split into two tracks</button>
+      </div>
+      <div class="te-panel" data-panel="join" hidden>
+        <p class="te-help">Join another track to this one, for example when the recording was stopped and restarted. The tracks are put in time order.</p>
+        <div class="form-field">
+          <label for="teJoinSelect">Track to join</label>
+          <select id="teJoinSelect"></select>
+        </div>
+        <button type="button" class="ghost-btn" id="teJoinBtn">Join tracks</button>
+      </div>
+      <div class="upload-error" id="teError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="danger-btn" id="teDeleteBtn">Delete</button>
+        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <button type="button" class="ghost-btn" id="teDownloadBtn">Download GPX</button>
+          <button type="submit" class="primary-btn" id="teSaveBtn">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="modal-overlay" id="catalogBrowseModalOverlay" style="display:none;">
   <div class="modal catalog-browse-modal" role="dialog" aria-labelledby="cbTitle">
     <div class="modal-header">
@@ -1096,6 +1165,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/dist/umd/supabase.js"></script>
 <script src="catalog-core.js"></script>
+<script src="track-core.js"></script>
 <script src="js/setup.js"></script>
 <script src="js/activity-files.js"></script>
 <script src="js/storage-sync.js"></script>
@@ -1107,6 +1177,7 @@
 <script src="js/import.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/catalog.js"></script>
+<script src="js/track-editor.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

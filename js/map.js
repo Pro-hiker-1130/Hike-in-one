@@ -74,6 +74,7 @@ function renderTracks(){
       t.distanceKm.toFixed(1)+' km';
     const climbLine = trackClimbSummary(t);
     if(climbLine) popupHtml += '<br>'+climbLine;
+    popupHtml += '<br><a href="#" class="popup-track-edit" data-track-id="'+t.id+'">Edit track</a>';
     if(trip){
       const tripGear = tripGearItemsList(trip);
       if(tripGear.length){
@@ -105,6 +106,14 @@ map.on('popupopen', (e)=>{
     link.addEventListener('click', (evt)=>{
       evt.preventDefault();
       goToTripFromMap(link.dataset.tripId);
+    });
+  }
+  const editLink = el && el.querySelector('.popup-track-edit');
+  if(editLink){
+    editLink.addEventListener('click', (evt)=>{
+      evt.preventDefault();
+      map.closePopup();
+      openTrackEditor(editLink.dataset.trackId);
     });
   }
   const photoLink = el && el.querySelector('.popup-photo-link');

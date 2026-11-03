@@ -538,3 +538,77 @@ test('getting started: three steps on a new device, ticked off as they are done,
   }
   assert.deepEqual(errors, []);
 });
+
+test('track editor: trim with undo, split, join, rename, download GPX and delete', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  await page.click('.trip-card-timeline:has-text("Eiger trail")');
+  await page.waitForSelector('#tripDetailView', { state: 'visible' });
+  const rows = () => page.$$eval('#tripTrackList .trip-track-row', els => els.map(e => e.textContent));
+  const setRange = (sel, v) => page.$eval(sel, (el, v)=>{ el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); }, v);
+  const before = (await rows())[0];
+  assert.match(before, /4\.3 km/);
+
+  // Trim: cut the first 20 of 40 points.
+  await page.click('.track-edit-btn');
+  await page.waitForSelector('#trackEditModalOverlay', { state: 'visible' });
+  assert.equal(await page.inputValue('#teName'), 'Eiger trail');
+  await setRange('#teTrimStart', 20);
+  assert.match(await text(page, '#teSummary'), /After trimming: 2\.1 km · ↑ 2\d\d m/);
+  assert.match(await text(page, '#teTrimStartVal'), /2\.2 km · \d\d:\d\d/);
+  await page.click('#teSaveBtn');
+  await page.waitForSelector('#trackEditModalOverlay', { state: 'hidden' });
+  assert.match((await rows())[0], /2\.1 km/);
+  assert.match(await text(page, '#tripStatClimb'), /^2\d\d$/);
+  // Undo puts it back.
+  await page.click('#globalToast .toast-action');
+  await page.waitForFunction(()=> /4\.3 km/.test(document.querySelector('#tripTrackList .trip-track-row').textContent));
+
+  // Split in the middle: the second part joins the same trip.
+  await page.click('.track-edit-btn');
+  await page.click('.te-tab[data-tab="split"]');
+  await setRange('#teSplitAt', 25);
+  await page.click('#teSplitBtn');
+  await page.waitForFunction(()=> document.querySelectorAll('#tripTrackList .trip-track-row').length === 2);
+  const parts = await rows();
+  assert.match(parts[0], /Eiger trail.*2\.8 km/);
+  assert.match(parts[1], /Eiger trail \(part 2\).*1\.6 km/);
+
+  // Join them back together (the other part is offered first, being closest in time).
+  await page.click('.track-edit-btn >> nth=1');
+  await page.click('.te-tab[data-tab="join"]');
+  assert.match(await page.$eval('#teJoinSelect option:checked', o => o.textContent), /^Eiger trail ·/);
+  await page.click('#teJoinBtn');
+  await page.waitForFunction(()=> document.querySelectorAll('#tripTrackList .trip-track-row').length === 1);
+  assert.match((await rows())[0], /Eiger trail \(part 2\).*4\.3 km/);
+  assert.match(await text(page, '#tripStatClimb'), /^600$/);
+
+  // Rename, change the activity, and download it as GPX.
+  await page.click('.track-edit-btn');
+  await page.fill('#teName', 'Eiger & back');
+  await page.fill('#teSport', 'Trail run');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#teDownloadBtn')]);
+  assert.equal(download.suggestedFilename(), 'Eiger & back.gpx');
+  const file = fs.readFileSync(await download.path(), 'utf8');
+  assert.match(file, /<name>Eiger &amp; back<\/name>/);
+  assert.match(file, /<type>Trail run<\/type>/);
+  assert.equal((file.match(/<trkpt /g) || []).length, 41, 'both parts, sharing the split point');
+  assert.match(file, /<ele>1600<\/ele><time>2025-07-10T08:39:00.000Z<\/time>/);
+  await page.click('#teSaveBtn');
+  await page.waitForFunction(()=> /Eiger & back.*Trail run/.test(document.querySelector('#tripTrackList .trip-track-row').textContent));
+
+  // The map popup opens the same editor.
+  await page.click('.nav-tab[data-page="map"]');
+  await page.evaluate(()=> trackLayerGroup.getLayers()[0].openPopup());
+  await page.click('.popup-track-edit');
+  await page.waitForSelector('#trackEditModalOverlay', { state: 'visible' });
+
+  // Delete, then Undo brings it back.
+  const count = () => page.evaluate(()=> tracks.length);
+  assert.equal(await count(), 2);
+  await page.click('#teDeleteBtn');
+  await page.waitForFunction(()=> tracks.length === 1);
+  await page.click('#globalToast .toast-action');
+  await page.waitForFunction(()=> tracks.length === 2);
+  assert.deepEqual(errors, []);
+});

@@ -1030,3 +1030,24 @@ body{font-size:15px;}
 .gs-steps li.is-done .gs-text{color:var(--muted);text-decoration:line-through;}
 .gs-text{flex:1;min-width:0;}
 .gs-go{flex:none;padding:6px 12px;font-size:13px;}
+
+/* ---- Track editor ---- */
+.trip-track-row .trip-track-row-meta{margin-left:auto;}
+.track-edit-btn{flex:none;margin-right:-6px;}
+.track-edit-modal{max-width:560px;}
+.te-map{height:220px;border-radius:8px;border:1px solid var(--line);overflow:hidden;background:var(--panel-alt);}
+.te-summary{font-size:12.5px;color:var(--muted);margin-top:-4px;}
+.te-tabs{display:flex;gap:2px;background:var(--panel-alt);border-radius:20px;padding:3px;align-self:flex-start;}
+.te-tab{background:none;border:none;border-radius:16px;padding:6px 16px;font-size:12.5px;color:var(--parchment);cursor:pointer;}
+.te-tab.active{background:var(--brass);color:var(--on-accent);font-weight:600;}
+.te-panel{display:flex;flex-direction:column;gap:6px;}
+.te-panel[hidden]{display:none;}
+.te-panel .ghost-btn{align-self:flex-start;margin-top:6px;}
+.te-help{font-size:12.5px;color:var(--muted);margin:0 0 4px;}
+.te-range-label{font-size:12.5px;font-weight:500;color:var(--muted);display:flex;justify-content:space-between;gap:8px;}
+.te-range-label span{color:var(--parchment);font-variant-numeric:tabular-nums;}
+.te-panel input[type="range"]{width:100%;accent-color:var(--brass);margin:0 0 6px;}
+.global-toast .toast-action{
+  background:none;border:none;color:inherit;font:inherit;font-weight:700;text-decoration:underline;
+  margin-left:12px;padding:2px 4px;cursor:pointer;
+}

@@ -74,6 +74,7 @@ const MODAL_CLOSE_FNS = {
   catalogDetailModalOverlay: closeCatalogDetail,
   catalogBulkModalOverlay: closeCatalogBulkModal,
   catalogBrowseModalOverlay: closeCatalogBrowser,
+  trackEditModalOverlay: closeTrackEditor,
 };
 let openModalOrder = [];      // most-recently-opened last
 let expectingCleanupPop = false;  // a history.back() we triggered ourselves, to drop a closed modal's entry

@@ -128,7 +128,9 @@ function renderTripDetail(){
       row.className = 'trip-track-row';
       row.innerHTML =
         '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+'</span>'+
-        '<span class="trip-track-row-meta">'+(t.date?escapeHtml(friendlyDate(t.date))+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>';
+        '<span class="trip-track-row-meta">'+(t.date?escapeHtml(friendlyDate(t.date))+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>'+
+        '<button type="button" class="link-btn track-edit-btn" aria-label="Edit track '+escapeHtml(t.name)+'">Edit</button>';
+      row.querySelector('.track-edit-btn').addEventListener('click', ()=>openTrackEditor(t.id));
       block.appendChild(row);
       const climb = trackClimbSummary(t);
       if(climb){

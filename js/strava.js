@@ -14,13 +14,22 @@
 // and sends them along with each call, getting back whatever the
 // function refreshed so it can save the new ones.
 
-function showGlobalToast(msg, isError){
+// action: optional {label, fn}, e.g. an Undo button next to the message.
+function showGlobalToast(msg, isError, action){
   const el = document.getElementById('globalToast');
   el.textContent = msg;
   el.classList.toggle('is-error', !!isError);
+  if(action){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toast-action';
+    btn.textContent = action.label;
+    btn.addEventListener('click', ()=>{ el.hidden = true; action.fn(); }, {once:true});
+    el.appendChild(btn);
+  }
   el.hidden = false;
   clearTimeout(showGlobalToast._t);
-  showGlobalToast._t = setTimeout(()=>{ el.hidden = true; }, 5000);
+  showGlobalToast._t = setTimeout(()=>{ el.hidden = true; }, action ? 8000 : 5000);
 }
 
 function getStravaTokens(){
