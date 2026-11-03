@@ -423,6 +423,19 @@ function trackClimbSummary(t){
   return parts.join(' · ');
 }
 
+// "Steepest climb 18 % at km 3.2 · steepest descent 22 % · top 2,410 m ·
+// 4.1 km above 2,000 m" — how hard a route is, beyond its total climb.
+function trackTerrainSummary(t){
+  const s = t.profile && TrackCore.terrainSummary(t.profile, 0.5);
+  if(!s || (s.steepestUpPct < 3 && s.steepestDownPct < 3)) return '';
+  const parts = [];
+  if(s.steepestUpPct >= 3) parts.push('Steepest climb '+s.steepestUpPct+' % at km '+s.steepestUpAtKm.toFixed(1));
+  if(s.steepestDownPct >= 3) parts.push((parts.length ? 'steepest' : 'Steepest')+' descent '+s.steepestDownPct+' %');
+  parts.push('top '+s.highestM.toLocaleString('en-US')+' m');
+  if(s.aboveM && s.aboveKm >= 0.1) parts.push(s.aboveKm.toFixed(1)+' km above '+s.aboveM.toLocaleString('en-US')+' m');
+  return parts.join(' · ');
+}
+
 // ---- Country detection (offline point-in-polygon against a bundled,
 // simplified world map) so "visited countries" works with no network calls
 // and no API keys. ----

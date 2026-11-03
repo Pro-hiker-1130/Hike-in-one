@@ -187,3 +187,21 @@ test('sunTimes reports midnight sun, polar night and bad input', () => {
   assert.equal(T.sunTimes('', 46, 7), null);
   assert.equal(T.sunTimes('2025-06-21', NaN, 7), null);
 });
+
+test('terrainSummary finds the steepest climb and descent, the top and time above a line', () => {
+  // 0–2 km: gentle 5 % to 1100 m; 2–3 km: steep 30 % to 1400 m; 3–5 km: down 10 % to 1200 m.
+  const profile = [[0, 1000], [2, 1100], [3, 1400], [5, 1200]];
+  const s = T.terrainSummary(profile, 0.5);
+  assert.equal(s.steepestUpPct, 30);
+  assert.ok(s.steepestUpAtKm >= 2 && s.steepestUpAtKm <= 2.5, String(s.steepestUpAtKm));
+  assert.equal(s.steepestDownPct, 10);
+  assert.equal(s.highestM, 1400);
+  assert.equal(s.highestAtKm, 3);
+  // The line is 1000 m (highest 500 below 1300), but the start is at 1000 m: no line.
+  assert.equal(s.aboveM, null);
+  const alpine = T.terrainSummary([[0, 1800], [2, 2300], [4, 2300], [6, 1800]], 0.5);
+  assert.equal(alpine.aboveM, 2000);
+  assert.ok(Math.abs(alpine.aboveKm - 4.4) < 0.15, String(alpine.aboveKm)); // crosses 2000 m at km 0.8 and 5.2
+  assert.equal(T.terrainSummary([[0, 100]]), null);
+  assert.equal(T.terrainSummary([[0, 100], [0.1, 120]]), null, 'too short to judge');
+});

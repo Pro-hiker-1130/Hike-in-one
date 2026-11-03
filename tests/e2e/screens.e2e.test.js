@@ -187,6 +187,8 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
     return [first, document.querySelectorAll('#tripTrackList svg.ele-draw-in').length];
   });
   assert.deepEqual(sweeps, [1, 0]);
+  // Each walked track says how steep it gets (the test hikes climb steadily north).
+  assert.match(await text(page, '#tripTrackList .track-terrain'), /^Steepest climb \d+ % at km \d+\.\d · top [\d,]+ m/);
   assert.deepEqual(errors, []);
 });
 

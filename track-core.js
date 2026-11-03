@@ -320,10 +320,48 @@
     return { sunrise: toMs(jTransit - w/360), sunset: toMs(jTransit + w/360) };
   }
 
+  // How hard a route is beyond its total climb, read from a [km, ele]
+  // profile: the steepest climb and descent averaged over `windowKm`
+  // (so one noisy point can't make a cliff), the highest point, and how
+  // far the route stays above a round height near its top. Null when the
+  // profile is too short to judge.
+  function terrainSummary(profile, windowKm){
+    if(!Array.isArray(profile) || profile.length < 2) return null;
+    const total = profile[profile.length-1][0] - profile[0][0];
+    const win = Math.min(windowKm || 0.5, total / 2);
+    if(!(win >= 0.1)) return null;
+    const step = Math.min(0.05, win / 4), x0 = profile[0][0];
+    const n = Math.floor(total / step);
+    const ele = [];
+    for(let i = 0; i <= n; i++) ele.push(profileEleAt(profile, x0 + i*step));
+    const span = Math.round(win / step);
+    let up = { grade: 0, km: 0 }, down = { grade: 0, km: 0 };
+    for(let i = 0; i + span <= n; i++){
+      const g = (ele[i+span] - ele[i]) / (span * step * 1000) * 100;
+      if(g > up.grade) up = { grade: g, km: i*step };
+      if(-g > down.grade) down = { grade: -g, km: i*step };
+    }
+    let top = 0;
+    ele.forEach((e, i) => { if(e > ele[top]) top = i; });
+    const max = ele[top], min = Math.min.apply(null, ele);
+    // The highest multiple of 500 m at least 100 m below the top, if the
+    // route starts below it; otherwise there's no interesting line.
+    const line = Math.floor((max - 100) / 500) * 500;
+    let aboveKm = 0;
+    if(line > min && line > 0) for(let i = 0; i < n; i++) if((ele[i] + ele[i+1]) / 2 >= line) aboveKm += step;
+    const r1 = v => Math.round(v * 10) / 10;
+    return {
+      steepestUpPct: Math.round(up.grade), steepestUpAtKm: r1(up.km),
+      steepestDownPct: Math.round(down.grade), steepestDownAtKm: r1(down.km),
+      highestM: Math.round(max), highestAtKm: r1(top*step),
+      aboveM: line > min && line > 0 ? line : null, aboveKm: r1(aboveKm),
+    };
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary,
   };
 });
