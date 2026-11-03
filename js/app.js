@@ -352,6 +352,7 @@ document.getElementById('tripEditBtn').addEventListener('click', ()=> openTripMo
 document.getElementById('tripGearEditBtn').addEventListener('click', ()=> openGearPickerModal(currentTripId));
 document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacking);
 document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
+document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
 document.getElementById('tripViewOnMapBtn').addEventListener('click', ()=>{
   const trip = trips.find(t=>t.id===currentTripId);
   if(!trip) return;

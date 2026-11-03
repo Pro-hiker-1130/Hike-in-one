@@ -280,6 +280,19 @@ test('trips: a planned trip within 16 days shows the forecast at its start, furt
   assert.deepEqual(errors, []);
 });
 
+test('trips: Share image makes a 1080×1350 picture of the trip (downloaded where sharing files is not offered)', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  await page.click('#tripCompletedGrid .trip-card');
+  await page.waitForSelector('#tripDetailView', { state: 'visible' });
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#tripShareImageBtn')]);
+  assert.match(download.suggestedFilename(), /^[a-z0-9-]+\.png$/);
+  const png = fs.readFileSync(await download.path());
+  assert.equal(png.toString('latin1', 1, 4), 'PNG');
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1080, 1350]);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

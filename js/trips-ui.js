@@ -173,6 +173,125 @@ function renderTripDetail(){
   renderTripPhotoGrid(trip);
 }
 
+// ---- A trip as a picture to send to friends ----
+// Drawn on a canvas, nothing leaves the device: the route's shape (no map
+// tiles), the elevation profile, the key numbers and the gear list. Shared
+// through the phone's share sheet when it takes images, else downloaded.
+const SHARE_W = 1080, SHARE_H = 1350;
+function cssVar(name, fallback){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+function drawTripShareImage(trip){
+  const c = document.createElement('canvas');
+  c.width = SHARE_W; c.height = SHARE_H;
+  const g = c.getContext('2d');
+  const col = { bg: cssVar('--ink', '#EFEEE8'), panel: cssVar('--panel', '#FFFFFF'), ink: cssVar('--parchment', '#344E41'),
+    muted: cssVar('--muted', '#4E5D52'), fern: cssVar('--fern', '#588157'), sage: cssVar('--sage', '#A3B18A'), line: '#D6D9CF' };
+  const display = "700 {s}px 'Barlow Condensed', 'Barlow', sans-serif", body = "{w} {s}px 'Barlow', sans-serif";
+  const font = (tpl, s, w) => tpl.replace('{s}', s).replace('{w}', w || 400);
+  const fit = (text, max) => { let t = text; while(t.length > 1 && g.measureText(t).width > max) t = t.slice(0, -2) + '…'; return t; };
+  g.fillStyle = col.bg; g.fillRect(0, 0, SHARE_W, SHARE_H);
+
+  const P = 64;
+  g.fillStyle = col.ink; g.font = font(display, 76); g.textBaseline = 'top';
+  g.fillText(fit(trip.name.toUpperCase(), SHARE_W - 2*P), P, P);
+  const date = tripDisplayDate(trip);
+  g.fillStyle = col.muted; g.font = font(body, 30);
+  g.fillText([tripStatus(trip) === 'planned' ? 'Planned' : 'Walked', date ? friendlyDate(date) : ''].filter(Boolean).join(' · '), P, P + 92);
+
+  // Route shape in a white panel.
+  const box = { x: P, y: 220, w: SHARE_W - 2*P, h: 520 };
+  g.fillStyle = col.panel; g.beginPath(); g.roundRect(box.x, box.y, box.w, box.h, 24); g.fill();
+  const tks = tripTracks(trip);
+  const pts = tks.flatMap(t => t.points || []);
+  if(pts.length > 1){
+    const meanLat = pts.reduce((s, p) => s + p[0], 0) / pts.length;
+    const k = Math.cos(meanLat * Math.PI / 180);
+    const xs = pts.map(p => p[1] * k), ys = pts.map(p => -p[0]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = 48, sc = Math.min((box.w - 2*pad) / ((maxX - minX) || 1e-9), (box.h - 2*pad) / ((maxY - minY) || 1e-9));
+    const ox = box.x + (box.w - (maxX - minX) * sc) / 2, oy = box.y + (box.h - (maxY - minY) * sc) / 2;
+    const at = p => [ox + (p[1] * k - minX) * sc, oy + (-p[0] - minY) * sc];
+    const colors = computeTrackColors();
+    g.lineWidth = 7; g.lineJoin = g.lineCap = 'round';
+    tks.forEach(t=>{
+      if(!t.points || t.points.length < 2) return;
+      g.strokeStyle = colors[t.id] || col.fern;
+      g.setLineDash(t.planned ? [18, 14] : []);
+      g.beginPath(); t.points.forEach((p, i) => { const [x, y] = at(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+    });
+    g.setLineDash([]);
+    const [sx, sy] = at(pts[0]);
+    g.fillStyle = col.ink; g.beginPath(); g.arc(sx, sy, 11, 0, 2*Math.PI); g.fill();
+  } else {
+    g.fillStyle = col.muted; g.font = font(body, 30); g.textAlign = 'center';
+    g.fillText('No route yet', box.x + box.w/2, box.y + box.h/2 - 15); g.textAlign = 'left';
+  }
+
+  // Key numbers.
+  const counted = tripCountedTracks(trip);
+  const climb = counted.reduce((s, t) => s + (t.elevationGainM || 0), 0);
+  const split = tripWeightSplit(trip);
+  const stats = [[tripDistanceKm(trip).toFixed(1), 'km'], [climb ? climb.toLocaleString('en-US') : '—', 'm up'],
+    [formatWeight(split.base), 'base weight'], [String(tripGearItemsList(trip).length), 'gear items']];
+  const sw = (SHARE_W - 2*P - 3*20) / 4;
+  stats.forEach(([num, label], i)=>{
+    const x = P + i * (sw + 20), y = 772;
+    g.fillStyle = col.panel; g.beginPath(); g.roundRect(x, y, sw, 132, 18); g.fill();
+    g.fillStyle = col.ink; g.font = font(display, 54); g.fillText(fit(num, sw - 40), x + 22, y + 18);
+    g.fillStyle = col.muted; g.font = font(body, 24, 500); g.fillText(label.toUpperCase(), x + 22, y + 88);
+  });
+
+  // Elevation profile of the longest track.
+  const prof = tks.filter(t => t.profile && t.profile.length > 1).sort((a, b) => b.distanceKm - a.distanceKm)[0];
+  const pr = { x: P, y: 976, w: SHARE_W - 2*P, h: 130 };
+  if(prof){
+    const e = prof.profile, lo = Math.min(...e.map(p => p[1])), hi = Math.max(...e.map(p => p[1])) || 1;
+    const x0 = e[0][0], span = (e[e.length-1][0] - x0) || 1, rng = (hi - lo) || 1;
+    const xy = p => [pr.x + (p[0] - x0) / span * pr.w, pr.y + pr.h - (p[1] - lo) / rng * pr.h * 0.9];
+    g.beginPath(); e.forEach((p, i) => { const [x, y] = xy(p); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.lineTo(pr.x + pr.w, pr.y + pr.h); g.lineTo(pr.x, pr.y + pr.h); g.closePath();
+    g.fillStyle = 'rgba(88,129,87,0.18)'; g.fill();
+    g.beginPath(); e.forEach((p, i) => { const [x, y] = xy(p); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.strokeStyle = col.fern; g.lineWidth = 4; g.stroke();
+    g.fillStyle = col.muted; g.font = font(body, 22);
+    g.fillText(Math.round(hi).toLocaleString('en-US') + ' m', pr.x, pr.y - 30);
+  }
+
+  // Gear: the heaviest items, then how many more.
+  const gear = tripGearItemsList(trip).slice().sort((a, b) => (b.weightGrams || 0) * (b.quantity || 1) - (a.weightGrams || 0) * (a.quantity || 1));
+  const gy = 1146;
+  if(gear.length){
+    g.fillStyle = col.ink; g.font = font(body, 26, 600);
+    const shown = gear.slice(0, 4).map(it => it.name + ' ' + formatWeight((it.weightGrams || 0) * (it.quantity || 1)));
+    g.fillText(fit('Packing: ' + shown.join(' · ') + (gear.length > 4 ? ' · +' + (gear.length - 4) + ' more' : ''), SHARE_W - 2*P), P, gy);
+  }
+  g.fillStyle = col.sage; g.fillRect(P, SHARE_H - 120, SHARE_W - 2*P, 2);
+  g.fillStyle = col.muted; g.font = font(display, 34);
+  g.fillText('HIKE-IN-ONE', P, SHARE_H - 92);
+  return c;
+}
+
+async function shareTripImage(id){
+  const trip = trips.find(t => t.id === id);
+  if(!trip) return;
+  try{ await document.fonts.ready; }catch(e){}
+  const canvas = drawTripShareImage(trip);
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  const name = (trip.name || 'trip').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 60) || 'trip';
+  const file = new File([blob], name + '.png', { type: 'image/png' });
+  if(navigator.canShare && navigator.canShare({ files: [file] })){
+    try{ await navigator.share({ files: [file], title: trip.name }); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file);
+  a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 10000);
+}
+
 // ---- Weather at the start of a planned trip ----
 // Open-Meteo's forecast (free, no account) for the route start on the
 // trip's days, once the trip is within its 16-day range. Only the start
