@@ -156,6 +156,15 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
   await page.click('#nextTripCard');
   await page.waitForSelector('#tripDetailView', { state: 'visible' });
   assert.equal(await text(page, '#tripDetailTitle'), 'Tour du Mont Blanc');
+  assert.ok(!(await page.isVisible('#tripDaylight')), 'no route yet, so no sunrise line');
+  // Give the planned trip a route start: sunrise and sunset show for that day.
+  await page.evaluate(()=>{
+    const trip = trips.find(tr => tr.name === 'Tour du Mont Blanc');
+    tracks.push({ id: 't_plan', name: 'Plan', planned: true, distanceKm: 2, points: [[45.92, 6.87], [45.93, 6.88]] });
+    trip.trackIds = (trip.trackIds || []).concat('t_plan');
+    renderTripDetail();
+  });
+  assert.match(await text(page, '#tripDaylight'), /^Sunrise \d.+ · sunset \d.+ · \d+ h \d+ min of daylight on /);
   assert.deepEqual(errors, []);
 });
 

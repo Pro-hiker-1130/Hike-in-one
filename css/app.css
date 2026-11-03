@@ -682,6 +682,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
   .import-row{padding:8px 10px;}
 }
 
+.trip-daylight{margin:10px 0 0;padding:0 24px;font-size:13px;color:var(--muted);flex:none;}
+@media (max-width:560px){.trip-daylight{padding:0 12px;}}
+
 /* ---- Modal ---- */
 .modal-overlay{
   position:fixed;inset:0;z-index:1000;

@@ -169,3 +169,21 @@ test('route planning: BRouter answers and the walking-time rule', () => {
   assert.equal(T.estimateHikingSec(12, 600), 4*3600);   // 3 h walking + 1 h climbing
   assert.equal(T.estimateHikingSec(0, 0), 0);
 });
+
+test('sunTimes matches published times within a few minutes', () => {
+  // London, midsummer 2025: sunrise 03:43 UTC, sunset 20:21 UTC.
+  const s = T.sunTimes('2025-06-21', 51.5074, -0.1278);
+  const near = (ms, iso) => Math.abs(ms - Date.parse(iso)) < 4 * 60000;
+  assert.ok(near(s.sunrise, '2025-06-21T03:43:00Z'), new Date(s.sunrise).toISOString());
+  assert.ok(near(s.sunset, '2025-06-21T20:21:00Z'), new Date(s.sunset).toISOString());
+  // Sydney, east of Greenwich and southern winter: sunrise 07:00 local (20:59 UTC the day before).
+  const sy = T.sunTimes('2025-06-21', -33.8688, 151.2093);
+  assert.ok(near(sy.sunrise, '2025-06-20T21:00:00Z'), new Date(sy.sunrise).toISOString());
+});
+
+test('sunTimes reports midnight sun, polar night and bad input', () => {
+  assert.deepEqual(T.sunTimes('2025-06-21', 69.65, 18.96), { polar: 'day' });
+  assert.deepEqual(T.sunTimes('2025-12-21', 69.65, 18.96), { polar: 'night' });
+  assert.equal(T.sunTimes('', 46, 7), null);
+  assert.equal(T.sunTimes('2025-06-21', NaN, 7), null);
+});

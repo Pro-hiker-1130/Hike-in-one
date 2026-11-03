@@ -295,10 +295,35 @@
     return Math.round(((distanceKm || 0) / 4 + (gainM || 0) / 600) * 3600);
   }
 
+  // Sunrise and sunset for a calendar day ('YYYY-MM-DD') at lat/lon, from
+  // the standard sunrise equation (good to a minute or two; no network).
+  // Returns { sunrise, sunset } as UTC milliseconds, or { polar: 'day' }
+  // or { polar: 'night' } when the sun doesn't cross the horizon that day.
+  function sunTimes(dateStr, lat, lon){
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
+    if(!m || !isFinite(lat) || !isFinite(lon)) return null;
+    const rad = Math.PI / 180;
+    const jDay = Date.UTC(+m[1], +m[2]-1, +m[3]) / 86400000 + 2440587.5;
+    const n = Math.ceil(jDay - 2451545 + 0.0008);
+    const jStar = n - lon / 360;
+    const M = ((357.5291 + 0.98560028 * jStar) % 360 + 360) % 360;
+    const C = 1.9148*Math.sin(M*rad) + 0.02*Math.sin(2*M*rad) + 0.0003*Math.sin(3*M*rad);
+    const lambda = (M + C + 180 + 102.9372) % 360;
+    const jTransit = 2451545 + jStar + 0.0053*Math.sin(M*rad) - 0.0069*Math.sin(2*lambda*rad);
+    const sinDec = Math.sin(lambda*rad) * Math.sin(23.4397*rad);
+    const cosDec = Math.cos(Math.asin(sinDec));
+    const cosW = (Math.sin(-0.833*rad) - Math.sin(lat*rad)*sinDec) / (Math.cos(lat*rad)*cosDec);
+    if(cosW > 1) return { polar: 'night' };
+    if(cosW < -1) return { polar: 'day' };
+    const w = Math.acos(cosW) / rad;
+    const toMs = j => Math.round((j - 2440587.5) * 86400000);
+    return { sunrise: toMs(jTransit - w/360), sunset: toMs(jTransit + w/360) };
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes,
   };
 });

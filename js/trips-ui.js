@@ -112,6 +112,8 @@ function renderTripDetail(){
   document.getElementById('tripStatGearCount').textContent = gearList.length;
   document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
 
+  renderTripDaylight(trip, tks);
+
   refreshTripLoadoutSelect();
   document.getElementById('tripLoadoutSelect').value = trip.loadoutId || '';
 
@@ -172,6 +174,28 @@ function renderTripDetail(){
   }
 
   renderTripPhotoGrid(trip);
+}
+
+// Sunrise and sunset at the route's start on the trip's day, so an early
+// start can be planned. Planned trips only; times use this device's clock.
+function renderTripDaylight(trip, tks){
+  const el = document.getElementById('tripDaylight');
+  const date = tripDisplayDate(trip);
+  const withPoints = tks.filter(t => t.points && t.points.length);
+  const track = withPoints.find(t => t.planned) || withPoints[0];
+  const sun = (tripStatus(trip) === 'planned' && date && track)
+    ? TrackCore.sunTimes(String(date).slice(0,10), track.points[0][0], track.points[0][1]) : null;
+  el.hidden = !sun;
+  if(!sun) return;
+  const when = 'on ' + friendlyDate(date) + ' at the start';
+  if(sun.polar){
+    el.textContent = (sun.polar === 'day' ? 'Daylight all day ' : 'No sunrise ') + when + '.';
+    return;
+  }
+  const hm = ms => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const mins = Math.round((sun.sunset - sun.sunrise) / 60000);
+  el.textContent = 'Sunrise ' + hm(sun.sunrise) + ' · sunset ' + hm(sun.sunset) +
+    ' · ' + Math.floor(mins/60) + ' h ' + (mins%60) + ' min of daylight ' + when + ' (your time zone).';
 }
 
 // ---- Trip photos ----

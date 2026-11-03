@@ -7,8 +7,10 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - Share a trip as a read-only page or image (route, profile, gear list) — Komoot, LighterPack — easy to send to hiking friends — M
 - Pack list "checked off while packing" mode with big tap targets — PackWizard — packing the night before — S
 - Weather for a planned trip's start point on its date — Outdooractive — planning — M (needs a keyless service: ask the owner first)
-- Sunrise/sunset times on a planned trip — PeakVisor — planning early starts — S
 - Gear weight split into base / worn / consumable — LighterPack — standard way hikers compare packs — M
+
+- Share a route map with trip partners who can suggest changes — CalTopo — planning together — L
+- Terrain summary for a planned route (steepest stretch, time above a height) — CalTopo — judging difficulty before going — M
 
 ## Polish
 
@@ -24,3 +26,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 ## Done
 
 - 2026-11-03 — Dialogs open with a short scale-and-fade (polish)
+- 2026-11-03 — Sunrise/sunset times on a planned trip (research)
