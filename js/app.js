@@ -745,7 +745,8 @@ document.getElementById('clearBtn').addEventListener('click', async (e)=>{
 // ---- Init ----
 (async function init(){
   trackLayerGroup.addTo(map);
-  const savedBasemap = await storeGet('waypoints-basemap');
+  let savedBasemap = await storeGet('waypoints-basemap');
+  if(savedBasemap === 'swiss') savedBasemap = 'terrain';   // Swiss topo was removed
   if(savedBasemap && BASEMAP_KEYS.includes(savedBasemap)){
     setBasemap(savedBasemap);
     document.querySelectorAll('#basemapToggle button').forEach(b=>{

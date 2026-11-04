@@ -55,16 +55,13 @@ const map = L.map('map', {worldCopyJump:true}).setView([20,10], 2);
 // (a Leaflet layer can only be on one map at a time).
 //   light / dark  OpenStreetMap ("dark" is a CSS filter on the tiles)
 //   terrain       OpenTopoMap
-//   swiss         swisstopo national map inside Switzerland, OpenTopoMap around it
-//   satellite     Sentinel-2 cloudless (EOX) worldwide, swisstopo SWISSIMAGE in Switzerland
+//   satellite     Esri World Imagery
 //   relief        Maptoolkit's vector hiking map (shaded relief, contours), drawn by
 //                 MapLibre inside Leaflet; loaded only when picked
 // Plus an overlay of marked hiking routes from Waymarked Trails.
-const BASEMAP_KEYS = ['light', 'terrain', 'swiss', 'satellite', 'relief', 'dark'];
-const BASEMAP_LABELS = { light:'Light', terrain:'Terrain', swiss:'Swiss topo', satellite:'Satellite', relief:'Relief', dark:'Dark' };
-const SWISS_BOUNDS = L.latLngBounds([45.80, 5.90], [47.85, 10.55]);
+const BASEMAP_KEYS = ['light', 'terrain', 'relief', 'satellite', 'dark'];
+const BASEMAP_LABELS = { light:'Light', terrain:'Terrain', relief:'Relief', satellite:'Satellite', dark:'Dark' };
 const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-const SWISSTOPO_ATTR = '&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>';
 
 function tiles(url, opts){ const l = L.tileLayer(url, opts); watchTileErrors(l); return l; }
 function osmTiles(){ return tiles('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: OSM_ATTR, maxZoom: 19 }); }
@@ -72,21 +69,11 @@ function topoTiles(){
   return tiles('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
     attribution: OSM_ATTR + ', SRTM | Map style: &copy; OpenTopoMap', subdomains: 'abc', maxNativeZoom: 17, maxZoom: 19 });
 }
-function swisstopoTiles(layer, ext, maxNativeZoom){
-  return tiles('https://wmts.geo.admin.ch/1.0.0/' + layer + '/default/current/3857/{z}/{x}/{y}.' + ext, {
-    attribution: SWISSTOPO_ATTR, bounds: SWISS_BOUNDS, maxNativeZoom, maxZoom: 19 });
-}
-
 function makeBasemap(key){
   switch(key){
     case 'terrain': return topoTiles();
-    case 'swiss': return L.layerGroup([topoTiles(), swisstopoTiles('ch.swisstopo.pixelkarte-farbe', 'jpeg', 18)]);
-    case 'satellite': return L.layerGroup([
-      tiles('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2023_3857/default/g/{z}/{y}/{x}.jpg', {
-        attribution: '<a href="https://s2maps.eu">Sentinel-2 cloudless</a> by EOX (contains modified Copernicus Sentinel data 2023)',
-        maxNativeZoom: 15, maxZoom: 19 }),
-      swisstopoTiles('ch.swisstopo.swissimage', 'jpeg', 19),
-    ]);
+    case 'satellite': return tiles('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri', maxZoom: 19 });
     case 'relief': return makeReliefLayer();
     default: return osmTiles();
   }

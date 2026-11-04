@@ -1018,7 +1018,7 @@ test('map lines: white outline, bolder when zoomed in, one trip in focus fades t
   assert.deepEqual(errors, []);
 });
 
-test('basemaps: Swiss topo, Sentinel/SWISSIMAGE satellite, Relief loads MapLibre on demand, hiking routes overlay remembered', { skip: !playwright }, async t=>{
+test('basemaps: Relief loads MapLibre on demand, Satellite is Esri, hiking routes overlay remembered', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   // Relief's style comes from Maptoolkit; here a tiny stand-in style.
   await page.context().route(/styles\.maptoolkit\.org/, r => r.fulfill({ status: 200, contentType: 'application/json',
@@ -1030,17 +1030,10 @@ test('basemaps: Swiss topo, Sentinel/SWISSIMAGE satellite, Relief loads MapLibre
     return out.join(' ');
   });
   await page.click('.nav-tab[data-page="map"]');
-  assert.equal(await page.locator('#basemapToggle button').count(), 6);
-
-  await page.click('#basemapToggle [data-basemap="swiss"]');
-  assert.match(await tileUrls(), /ch\.swisstopo\.pixelkarte-farbe/);
-  assert.match(await tileUrls(), /opentopomap/, 'OpenTopoMap around Switzerland');
+  assert.deepEqual(await page.$$eval('#basemapToggle button', bs => bs.map(b => b.textContent)), ['Light', 'Terrain', 'Relief', 'Satellite', 'Dark']);
 
   await page.click('#basemapToggle [data-basemap="satellite"]');
-  const sat = await tileUrls();
-  assert.match(sat, /s2cloudless/);
-  assert.match(sat, /swissimage/);
-  assert.doesNotMatch(sat, /arcgisonline|pixelkarte/, 'Esri and the previous basemap are gone');
+  assert.match(await tileUrls(), /arcgisonline/);
 
   assert.equal(await page.evaluate(()=> typeof window.maplibregl), 'undefined', 'MapLibre is not loaded up front');
   await page.click('#basemapToggle [data-basemap="relief"]');
