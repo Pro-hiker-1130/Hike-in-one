@@ -3,6 +3,19 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — research (owner asked for several research days: 1 of 3)
+
+Looked at: Komoot (route planner: one-way or round trip, adjustable pace
+for time estimates, multi-day planner, community highlights) and AllTrails
+(viewpoints, water sources and campsites along trails; custom routes).
+Budget used: 2 searches, 0 fetches.
+Changed: the route planner has a "Back to start" button on the map. It adds
+one more leg, drawn the current way (trail or straight line), back to the
+start point, and can be undone like any other change. It is greyed out until
+there are two points, or once the route already ends at its start. Tested in
+the route-planner e2e test. Service worker cache bumped to `waypoints-v16`.
+For the owner: nothing to decide.
+
 ## 2026-11-04 — polish
 
 Looked at: the message bubble at the bottom (toast), which yesterday's

@@ -875,6 +875,15 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.waitForFunction(()=> document.querySelectorAll('#rpMap .rp-wp').length === 4);
   await page.keyboard.press('Control+z');
   await page.waitForFunction(()=> document.querySelectorAll('#rpMap .rp-wp').length === 3);
+  // Back to start closes the loop with one more leg, then can't be pressed again.
+  assert.ok(await page.isEnabled('#rpLoopBtn'));
+  await page.click('#rpLoopBtn');
+  const loop = await page.evaluate(()=> rp.waypoints.map(w => w.ll.join(',')));
+  assert.equal(loop.length, 4);
+  assert.equal(loop[3], loop[0], 'ends where it started');
+  assert.ok(await page.isDisabled('#rpLoopBtn'), 'already a round trip');
+  await page.click('#rpUndoBtn');
+  await page.waitForFunction(()=> rp.waypoints.length === 3);
 
   // Download it, then save it to the trip.
   await page.fill('#rpName', 'Haute Route day 1');

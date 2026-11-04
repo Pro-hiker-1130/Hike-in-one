@@ -134,6 +134,7 @@ function rpChanged(){
   rpDrawRoute();
   document.getElementById('rpUndoBtn').disabled = !rp.history.length;
   document.getElementById('rpClearBtn').disabled = !rp.waypoints.length;
+  document.getElementById('rpLoopBtn').disabled = !rpCanLoop();
   document.getElementById('rpHint').hidden = rp.waypoints.length > 1;
   document.getElementById('rpHint').textContent = rp.waypoints.length
     ? 'Now tap where the route goes next.'
@@ -209,6 +210,17 @@ function rpUndo(){
   rp.waypoints = rp.history.pop();
   rpChanged();
 }
+// A round trip: one more leg, drawn the current way, back to the start.
+function rpCanLoop(){
+  const w = rp ? rp.waypoints : [];
+  return w.length > 1 && TrackCore.haversine(w[0].ll, w[w.length-1].ll) > 0.02;
+}
+function rpLoop(){
+  if(!rpCanLoop()) return;
+  rpRemember();
+  rp.waypoints = rp.waypoints.concat({ ll: rp.waypoints[0].ll.slice(), mode: rpMode });
+  rpChanged();
+}
 function rpClear(){
   if(!rp || !rp.waypoints.length) return;
   rpRemember();
@@ -277,6 +289,7 @@ document.getElementById('routePlannerOverlay').addEventListener('click', e=>{
 document.querySelectorAll('#rpModeToggle button').forEach(b=> b.addEventListener('click', ()=> rpSetMode(b.dataset.mode)));
 document.getElementById('rpUndoBtn').addEventListener('click', rpUndo);
 document.getElementById('rpClearBtn').addEventListener('click', rpClear);
+document.getElementById('rpLoopBtn').addEventListener('click', rpLoop);
 document.getElementById('rpSaveBtn').addEventListener('click', saveRoutePlan);
 document.getElementById('rpDeleteBtn').addEventListener('click', deleteRoutePlan);
 document.getElementById('rpDownloadBtn').addEventListener('click', downloadRoutePlan);

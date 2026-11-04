@@ -4,7 +4,8 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 ## Ideas
 
-(all built on 2026-11-03; add new ones here)
+- Your own walking pace: a setting that adjusts every time estimate (planner, days, tracks) — Komoot — estimates fit slow and fast walkers — S
+- Mark spots along a planned route (water, camp, hut, viewpoint) — AllTrails — knowing where to refill or sleep — M
 
 ## Polish
 
@@ -33,3 +34,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-03 — Share a trip as an image (Komoot/LighterPack idea)
 - 2026-11-03 — Share a route with partners for suggestions (CalTopo idea)
 - 2026-11-04 — Toast slides in and fades out (polish)
+\n- 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)\n
