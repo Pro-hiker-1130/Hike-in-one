@@ -791,8 +791,71 @@ document.getElementById('clearBtn').addEventListener('click', async (e)=>{
   }
 })();
 
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
-  });
+// ---- Updates ----
+// An installed app is often resumed from memory rather than reloaded, so
+// it checks for a new version whenever it comes back to the screen (and
+// every 30 minutes while open). A new version installs itself in the
+// background; once it has taken over, a message offers to reload.
+let swRegistration = null;
+let reloadingForUpdate = false;
+function reloadForUpdate(){
+  if(reloadingForUpdate) return;
+  reloadingForUpdate = true;
+  location.reload();
 }
+function checkForAppUpdate(){
+  return swRegistration ? swRegistration.update().catch(()=>{}) : Promise.resolve();
+}
+async function appVersionLabel(){
+  try{
+    const keys = await caches.keys();
+    const v = keys.map(k => /^waypoints-v(\d+)$/.exec(k)).filter(Boolean).map(m => +m[1]).sort((a,b) => b-a)[0];
+    return v ? 'version ' + v : '';
+  }catch(e){ return ''; }
+}
+async function renderAppVersion(){
+  const el = document.getElementById('settingsAppVersion');
+  if(el) el.textContent = (await appVersionLabel()) || 'version unknown';
+}
+if('serviceWorker' in navigator){
+  // Only an update replaces an existing controller; the very first install
+  // just takes control, and needs no reload.
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(!hadController){ hadController = true; return; }
+    renderAppVersion();
+    if(updateCheckWanted){ reloadForUpdate(); return; }
+    showGlobalToast('Hike-in-one has been updated.', false, { label: 'Reload', fn: reloadForUpdate });
+  });
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).then(reg=>{
+      swRegistration = reg;
+      renderAppVersion();
+    }).catch(()=>{});
+  });
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') checkForAppUpdate(); });
+  setInterval(checkForAppUpdate, 30 * 60 * 1000);
+}
+
+// Settings: "Check for updates" reloads straight into a new version if
+// there is one.
+let updateCheckWanted = false;
+document.getElementById('settingsUpdateBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('settingsUpdateBtn');
+  const status = document.getElementById('settingsUpdateStatus');
+  if(!swRegistration){ status.textContent = 'Updates need the installed app or a recent browser.'; return; }
+  btn.disabled = true;
+  status.textContent = 'Checking…';
+  updateCheckWanted = true;
+  await checkForAppUpdate();
+  const pending = swRegistration.installing || swRegistration.waiting;
+  if(pending){
+    status.textContent = 'Downloading the new version…';
+    // controllerchange reloads; if nothing happens in 15 s, say so.
+    setTimeout(()=>{ if(!reloadingForUpdate){ status.textContent = 'The new version is ready. Close and reopen the app to use it.'; btn.disabled = false; } }, 15000);
+  } else {
+    updateCheckWanted = false;
+    status.textContent = 'You have the latest version.';
+    btn.disabled = false;
+  }
+});

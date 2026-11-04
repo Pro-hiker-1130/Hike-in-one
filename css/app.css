@@ -1277,3 +1277,7 @@ body{font-size:15px;}
 .bm-picker-overlay{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--parchment);cursor:pointer;}
 .bm-picker-overlay input{width:16px;height:16px;margin:0;accent-color:var(--brass);}
 @media (prefers-reduced-motion: reduce){ .bm-picker-panel{animation:none;} .bm-swatch{transition:none;} }
+.settings-update{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:10px;}
+.settings-update .settings-note{margin:0;}
+.settings-update #settingsUpdateStatus:empty{display:none;}
+.settings-update #settingsUpdateStatus{flex-basis:100%;}

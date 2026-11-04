@@ -1076,3 +1076,66 @@ test('basemaps: Relief loads MapLibre on demand, Satellite is Esri, hiking route
   assert.doesNotMatch(await tileUrls(), /waymarkedtrails/);
   assert.deepEqual(errors, []);
 });
+
+test('updates: a new version is picked up without reinstalling — "Check for updates" reloads into it, otherwise a Reload message', { skip: !playwright }, async t=>{
+  // A server whose service-worker.js can be swapped for a "new version".
+  let swOverride = null;
+  const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png' };
+  const srv = http.createServer((req, res)=>{
+    const rel = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/+/, '') || 'index.html';
+    if(rel === 'service-worker.js' && swOverride){
+      res.writeHead(200, { 'content-type': 'application/javascript', 'cache-control': 'max-age=600' });
+      return res.end(swOverride);
+    }
+    const file = path.join(ROOT, rel);
+    if(!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()){ res.writeHead(404); return res.end(); }
+    // Like GitHub Pages: browsers may reuse files for 10 minutes.
+    res.writeHead(200, { 'content-type': types[path.extname(file)] || 'application/octet-stream', 'cache-control': 'max-age=600' });
+    fs.createReadStream(file).pipe(res);
+  });
+  await new Promise(r => srv.listen(0, '127.0.0.1', r));
+  t.after(()=> srv.close());
+  const url = 'http://127.0.0.1:' + srv.address().port + '/index.html';
+  const original = fs.readFileSync(path.join(ROOT, 'service-worker.js'), 'utf8');
+  const bump = v => original.replace(/waypoints-v\d+/, 'waypoints-v' + v);
+
+  const browser = await playwright.chromium.launch(Object.assign({ args: ['--no-sandbox'] },
+    process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}));
+  t.after(()=> browser.close());
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });   // service workers allowed
+  if(process.env.HIKE_LIBS_DIR){
+    await ctx.route(/cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net/, route=>{
+      const key = Object.keys(LIBS).find(k => route.request().url().includes(k));
+      if(!key) return route.abort();
+      route.fulfill({ status: 200, contentType: LIBS[key][1], body: fs.readFileSync(path.join(process.env.HIKE_LIBS_DIR, LIBS[key][0])) });
+    });
+  }
+  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|supabase\.co/, r => r.abort());
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto(url);
+  await page.waitForFunction(()=> !!navigator.serviceWorker.controller, null, { timeout: 20000 });
+  const version = () => page.evaluate(()=> appVersionLabel());
+  const startVersion = await version();
+  assert.match(startVersion, /^version \d+$/);
+
+  // Settings → Check for updates, with nothing new.
+  await page.click('.nav-tab[data-page="settings"]');
+  await page.click('#settingsUpdateBtn');
+  await page.waitForFunction(()=> /latest version/.test(document.getElementById('settingsUpdateStatus').textContent));
+
+  // A new version is deployed; the button reloads straight into it.
+  swOverride = bump(900);
+  await Promise.all([page.waitForEvent('load', { timeout: 20000 }), page.click('#settingsUpdateBtn')]);
+  await page.waitForFunction(()=> appVersionLabel().then(v => v === 'version 900'), null, { timeout: 20000 });
+
+  // Another one, found by the background check (as when the app comes
+  // back to the screen): a message offers to reload.
+  swOverride = bump(901);
+  await page.evaluate(()=> checkForAppUpdate());
+  await page.waitForFunction(()=> /has been updated/.test(document.getElementById('globalToast').textContent), null, { timeout: 20000 });
+  await Promise.all([page.waitForEvent('load'), page.click('#globalToast .toast-action')]);
+  assert.equal(await version(), 'version 901');
+  assert.deepEqual(errors, []);
+});
