@@ -758,6 +758,13 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .pace-toggle{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--parchment);}
 .pace-toggle input:disabled + *{opacity:.5;}
 
+.personal-bests-title{margin:12px 0 4px;}
+.personal-bests{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:auto auto 1fr;gap:3px 10px;font-size:13px;align-items:baseline;}
+.personal-bests li{display:contents;}
+.pb-label{color:var(--muted);}
+.pb-value{color:var(--parchment);font-weight:600;white-space:nowrap;}
+.pb-walk{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+
 /* Difficulty: badge on trip cards and the trip page, filter chips */
 .difficulty-badge{display:inline-block;align-self:flex-start;margin-top:4px;padding:1px 8px;border-radius:9px;font-size:11px;font-weight:600;white-space:nowrap;
   color:var(--deep);background:var(--sage-soft);}

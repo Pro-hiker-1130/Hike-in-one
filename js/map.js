@@ -320,9 +320,30 @@ function renderYearReview(){
       (s.highest ? ' · Highest: ' + s.highest.eleM.toLocaleString('en-US') + ' m on ' + s.highest.name : '') +
       ' · Busiest month: ' + MONTHS_LONG[s.busiestMonth],
   ];
+  renderPersonalBests();
   const text = document.getElementById('yearReviewText');
   text.innerHTML = '';
   lines.forEach(l => { const span = document.createElement('span'); span.textContent = l; text.appendChild(span); });
+}
+
+// All-time bests under the year in review: what, how much, which walk.
+function renderPersonalBests(){
+  const b = TrackCore.personalBests(tracks);
+  const list = document.getElementById('personalBests');
+  list.innerHTML = '';
+  if(!b) return;
+  [['Longest walk', b.longestKm, v => v.toFixed(1) + ' km'], ['Biggest climb', b.biggestClimbM, v => v.toLocaleString('en-US') + ' m up'],
+   ['Longest day out', b.longestSec, v => formatDuration(v)], ['Highest point', b.highestM, v => v.toLocaleString('en-US') + ' m']]
+    .forEach(([label, rec, fmt])=>{
+      if(!rec) return;
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="pb-label"></span><span class="pb-value"></span><span class="pb-walk"></span>';
+      li.children[0].textContent = label;
+      li.children[1].textContent = fmt(rec.value);
+      li.children[2].textContent = rec.name;
+      li.children[2].title = rec.name + (rec.date ? ', ' + friendlyDate(rec.date, false) : '');
+      list.appendChild(li);
+    });
 }
 
 // Settings: how walking times are estimated.

@@ -268,3 +268,20 @@ test('kmMarkers places distance markers along a line at a sensible step', () => 
   assert.deepEqual(T.kmMarkers(long).map(x => x.km), [10, 20, 30, 40, 50, 60]);
   assert.deepEqual(T.kmMarkers([[46, 7]]), []);
 });
+
+test('personalBests picks the longest, biggest climb, longest time and highest walk', () => {
+  const list = [
+    { name: 'Ridge', date: '2025-07-10', distanceKm: 12, elevationGainM: 1400, durationSec: 7 * 3600, maxEleM: 3100 },
+    { name: 'Valley', date: '2025-08-02', distanceKm: 22, elevationGainM: 600, durationSec: 8 * 3600, maxEleM: 1500 },
+    { name: 'Plan', distanceKm: 60, elevationGainM: 5000, maxEleM: 4800, planned: true },
+    { name: 'Untimed', distanceKm: 5 },
+  ];
+  assert.deepEqual(T.personalBests(list), {
+    longestKm: { name: 'Valley', value: 22, date: '2025-08-02' },
+    biggestClimbM: { name: 'Ridge', value: 1400, date: '2025-07-10' },
+    longestSec: { name: 'Valley', value: 28800, date: '2025-08-02' },
+    highestM: { name: 'Ridge', value: 3100, date: '2025-07-10' },
+  });
+  assert.equal(T.personalBests([{ name: 'P', planned: true, distanceKm: 3 }]), null);
+  assert.equal(T.personalBests([{ name: 'Flat', distanceKm: 3 }]).biggestClimbM, null);
+});

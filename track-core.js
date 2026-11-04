@@ -446,10 +446,27 @@
     return out;
   }
 
+  // All-time bests over walked tracks: the longest walk, the biggest
+  // climb, the longest time out and the highest point, each with the
+  // walk it came from ({name, value, date}). Null with no walks.
+  function personalBests(list){
+    const ts = (list || []).filter(t => !t.planned);
+    if(!ts.length) return null;
+    const best = (val) => {
+      let top = null;
+      ts.forEach(t => { const v = val(t); if(v > 0 && (!top || v > top.value)) top = { name: t.name, value: v, date: t.date || null }; });
+      return top;
+    };
+    return {
+      longestKm: best(t => t.distanceKm), biggestClimbM: best(t => t.elevationGainM),
+      longestSec: best(t => t.durationSec), highestM: best(t => t.maxEleM),
+    };
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests,
   };
 });

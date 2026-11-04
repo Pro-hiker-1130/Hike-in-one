@@ -138,6 +138,13 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   assert.equal(await page.inputValue('#yearReviewSelect'), '2025');
   assert.match(await text(page, '#yearReviewText'),
     /^2 walks on 2 days · [\d.]+ km · 900 m upLongest: .+, [\d.]+ km · Highest: 1,600 m on Eiger trail · Busiest month: (July|August)$/);
+  // Personal bests, all time.
+  const bests = await page.$$eval('#personalBests li', els => els.map(li => [...li.children].map(c => c.textContent)));
+  assert.equal(bests[0][0], 'Longest walk');
+  assert.match(bests[0][1], /^\d+\.\d km$/);
+  assert.equal(await page.getAttribute('#personalBests li:has-text("Highest point") .pb-walk', 'title'), 'Eiger trail, 10 Jul 2025');
+  assert.deepEqual(bests.find(b => b[0] === 'Biggest climb'), ['Biggest climb', '600 m up', 'Eiger trail']);
+  assert.deepEqual(bests.find(b => b[0] === 'Highest point'), ['Highest point', '1,600 m', 'Eiger trail']);
   // A change while the map is showing counts up, then lands on the new value.
   const counting = await page.evaluate(()=>{
     trips.push({ id: 'trip_x', name: 'X', trackIds: [], gearIds: [], status: 'planned', createdAt: 2 });

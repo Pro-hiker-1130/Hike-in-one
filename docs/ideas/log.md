@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — research (7 of 7)
+
+Looked at: hike-log apps (HIKE.SH: personal records for longest
+distance, biggest climb and longest duration plus streaks; SummitLynx:
+badges via a digital hiking passport; APPEAK: summit stamps). Budget used:
+1 search, 0 fetches.
+Changed: under the year in review on the map, a "Personal bests" list
+covers all time: longest walk, biggest climb, longest day out and highest
+point, each with the walk it came from (name shown, name and date on
+hover). Planned routes don't count. `TrackCore.personalBests` has a unit
+test, plus an assertion in the map e2e test. Service worker cache
+`waypoints-v24`.
+For the owner: nothing to decide. Badges and streaks are possible
+follow-ups if you'd like them; they're not in the backlog yet.
+
 ## 2026-11-04 — research (6 of 7)
 
 Looked at: Gaia GPS (waypoints with icons, notes and photos for water and

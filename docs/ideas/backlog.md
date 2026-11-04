@@ -8,7 +8,6 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - "Lighter options" on a gear item: catalog products in the same category that weigh less — PackWizard — cutting pack weight — M
 - Kits: a reusable group of items (cook kit) added to a trip in one go — Packstack — faster packing lists — M
 - Peak list: tick off named summits reached on your walks (needs summit data) — summit-log apps — goals to work toward — L
-- Personal records: longest walk, biggest climb, highest point of all time — summit-log apps — small motivation — S
 - Km markers on the trip page map and the shared-route page too — Gaia GPS — same help when reviewing a plan — S
 
 ## Polish
@@ -45,3 +44,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-04 — Walking times fit your own pace (research, Komoot/onX idea)
 - 2026-11-04 — Trip difficulty badges and a difficulty filter (research, Hiking Project/AllTrails idea)
 - 2026-11-04 — Km markers along routes in the planner (research, Gaia GPS idea)
+- 2026-11-04 — Personal bests on the map overview (research, hike-log apps idea)
