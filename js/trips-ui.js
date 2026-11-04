@@ -74,7 +74,8 @@ function renderTripCardsUnguarded(){
   renderTripTimeline(filterByDifficulty(completed));
 }
 
-// Completed trips can be narrowed to one difficulty; the chips show once
+// Completed trips can be narrowed to those with a hike of one difficulty;
+// the chips show once
 // there are a few trips to sort through.
 let tripDifficultyFilter = 'all';
 function filterByDifficulty(completed){
@@ -88,10 +89,11 @@ function filterByDifficulty(completed){
     b.setAttribute('aria-checked', String(on));
   });
   if(tripDifficultyFilter === 'all') return completed;
-  const list = completed.filter(t => { const d = tripDifficulty(t); return d && d.level === tripDifficultyFilter; });
+  // A trip shows when any of its hikes has the chosen difficulty.
+  const list = completed.filter(trip => tripCountedTracks(trip).some(t => { const d = trackDifficulty(t); return d && d.level === tripDifficultyFilter; }));
   if(!list.length){
     const empty = document.getElementById('tripCompletedEmpty');
-    empty.textContent = 'No ' + DIFFICULTY_LABELS[tripDifficultyFilter].toLowerCase() + ' trips yet.';
+    empty.textContent = 'No trips with ' + (tripDifficultyFilter === 'easy' ? 'an' : 'a') + ' ' + DIFFICULTY_LABELS[tripDifficultyFilter].toLowerCase() + ' hike yet.';
   }
   return list;
 }
@@ -129,7 +131,6 @@ function renderTripDetail(){
   const badge = document.getElementById('tripDetailStatusBadge');
   badge.className = 'gear-badge status-' + status;
   badge.textContent = status === 'planned' ? 'Planned' : 'Completed';
-  document.getElementById('tripDetailDifficulty').innerHTML = difficultyBadgeHtml(trip);
   document.getElementById('tripStatTracks').textContent = tks.length;
   document.getElementById('tripStatDistance').textContent = dist.toFixed(1);
   const climbTracks = tripCountedTracks(trip).filter(t => t.elevationGainM != null);
@@ -159,7 +160,7 @@ function renderTripDetail(){
       row.className = 'trip-track-row';
       row.innerHTML =
         '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+
-          (t.planned ? '<span class="planned-route-badge">Planned route</span>' : '')+'</span>'+
+          (t.planned ? '<span class="planned-route-badge">Planned route</span>' : '')+trackDifficultyBadgeHtml(t)+'</span>'+
         '<span class="trip-track-row-meta">'+(t.date?escapeHtml(friendlyDate(t.date))+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>'+
         '<button type="button" class="link-btn track-edit-btn" aria-label="Edit track '+escapeHtml(t.name)+'">Edit</button>';
       row.querySelector('.track-edit-btn').addEventListener('click', ()=>openTrackEditor(t.id));

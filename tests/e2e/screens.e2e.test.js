@@ -357,29 +357,34 @@ test('walking times fit your own pace once there are 3 timed walks, and can be s
   assert.deepEqual(errors, []);
 });
 
-test('trips: difficulty badges from effort km, and completed trips filtered by difficulty', { skip: !playwright }, async t=>{
+test('hikes get difficulty badges from effort km (trips don\'t), and trips filter by the hikes they contain', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="trips"]');
   await page.evaluate(async ()=>{
-    [['Lake stroll', 6, 100, '2025-05-04'], ['Valley day', 14, 500, '2025-06-08'], ['Big ridge', 18, 1600, '2025-07-12']].forEach(([name, km, up, date], i)=>{
-      tracks.push({ id: 'd' + i, name, date, distanceKm: km, elevationGainM: up, points: [[46, 7 + i / 10], [46.01, 7 + i / 10]] });
-      trips.push({ id: 'trip_d' + i, name, trackIds: ['d' + i], gearIds: [], status: 'completed', createdAt: i });
-    });
+    const hike = (id, name, km, up, date) => tracks.push({ id, name, date, distanceKm: km, elevationGainM: up, points: [[46, 7], [46.01, 7]] });
+    hike('d0', 'Lake stroll', 6, 100, '2025-05-04');
+    hike('d1', 'Valley day', 14, 500, '2025-06-08');
+    hike('d2', 'Hut approach', 5, 300, '2025-07-12');
+    hike('d3', 'Big ridge', 18, 1600, '2025-07-13');
+    trips.push({ id: 'trip_d0', name: 'Lake weekend', trackIds: ['d0'], gearIds: [], status: 'completed', createdAt: 0 });
+    trips.push({ id: 'trip_d1', name: 'Valley', trackIds: ['d1'], gearIds: [], status: 'completed', createdAt: 1 });
+    trips.push({ id: 'trip_d2', name: 'Hut tour', trackIds: ['d2', 'd3'], gearIds: [], status: 'completed', createdAt: 2 });
     await saveTrips();
     renderTripCards();
   });
-  const badges = await page.$$eval('#tripCompletedGrid .trip-card', els => els.map(e => e.querySelector('.trip-card-name').textContent + ': ' + e.querySelector('.difficulty-badge').textContent));
-  assert.deepEqual(badges, ['Big ridge: Strenuous', 'Valley day: Moderate', 'Lake stroll: Easy']);
-  assert.ok(await page.isVisible('#tripDifficultyFilter'));
-  await page.click('#tripDifficultyFilter [data-level="moderate"]');
-  assert.deepEqual(await page.$$eval('#tripCompletedGrid .trip-card-name', els => els.map(e => e.textContent)), ['Valley day']);
+  assert.equal(await page.locator('#tripCompletedGrid .difficulty-badge').count(), 0, 'no badge on trip cards');
+  await page.click('#tripCompletedGrid .trip-card >> text=Hut tour');
+  const rows = await page.$$eval('#tripTrackList .trip-track-row-name', els => els.map(e => e.textContent));
+  assert.deepEqual(rows, ['Hut approachEasy', 'Big ridgeStrenuous'], 'each hike has its own label');
+  assert.equal(await page.locator('#tripDetailView .gear-toolbar .difficulty-badge').count(), 0, 'none for the trip as a whole');
+  await page.click('#backToTripsBtn');
+  await page.click('#tripDifficultyFilter [data-level="easy"]');
+  assert.deepEqual(await page.$$eval('#tripCompletedGrid .trip-card-name', els => els.map(e => e.textContent)), ['Hut tour', 'Lake weekend']);
+  await page.click('#tripDifficultyFilter [data-level="strenuous"]');
+  assert.deepEqual(await page.$$eval('#tripCompletedGrid .trip-card-name', els => els.map(e => e.textContent)), ['Hut tour']);
   await page.click('#tripDifficultyFilter [data-level="hard"]');
   assert.equal(await page.locator('#tripCompletedGrid .trip-card').count(), 0);
-  assert.equal(await text(page, '#tripCompletedEmpty'), 'No hard trips yet.');
-  await page.click('#tripDifficultyFilter [data-level="all"]');
-  assert.equal(await page.locator('#tripCompletedGrid .trip-card').count(), 3);
-  await page.click('#tripCompletedGrid .trip-card >> text=Big ridge');
-  assert.equal(await text(page, '#tripDetailDifficulty'), 'Strenuous');
+  assert.equal(await text(page, '#tripCompletedEmpty'), 'No trips with a hard hike yet.');
   assert.deepEqual(errors, []);
 });
 

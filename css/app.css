@@ -765,13 +765,13 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .pb-value{color:var(--parchment);font-weight:600;white-space:nowrap;}
 .pb-walk{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 
-/* Difficulty: badge on trip cards and the trip page, filter chips */
+/* Difficulty: badge on each hike (track row), filter chips */
 .difficulty-badge{display:inline-block;align-self:flex-start;margin-top:4px;padding:1px 8px;border-radius:9px;font-size:11px;font-weight:600;white-space:nowrap;
   color:var(--deep);background:var(--sage-soft);}
 .difficulty-moderate{background:#E6DFC4;}
 .difficulty-hard{background:#EED3BF;}
 .difficulty-strenuous{background:#E9C2BE;}
-#tripDetailDifficulty .difficulty-badge{margin-top:0;}
+#tripTrackList .difficulty-badge{margin:0 0 0 8px;vertical-align:1px;}
 .difficulty-filter[hidden]{display:none;}
 .difficulty-filter button{padding:5px 12px;font-size:12px;white-space:nowrap;}
 .section-subhead:has(.difficulty-filter){display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;}

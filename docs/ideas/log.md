@@ -3,6 +3,18 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — owner request: difficulty on hikes, not trips
+
+The owner asked for the difficulty label only on individual hikes, not on
+the whole trip. Changed: the badge moved from trip cards and the trip
+header to each track row on the trip page (walked hikes and planned
+routes alike, from each one's own distance and climb). The Completed
+trips filter now shows trips that contain at least one hike of the chosen
+difficulty, with a message like "No trips with a hard hike yet." when none
+match. The e2e test was rewritten for this (a trip with an easy and a
+strenuous hike shows under both filters). Service worker cache
+`waypoints-v25`. All tests pass: 46 unit, 52 e2e.
+
 ## 2026-11-04 — research (7 of 7)
 
 Looked at: hike-log apps (HIKE.SH: personal records for longest
