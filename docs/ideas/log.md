@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — polish (3 of 3)
+
+Looked at: screenshots of the Gear Room (phone and desktop) and keyboard
+focus.
+Changed: the category weight bars in the Gear Room grow in from the left
+(300 ms, 40 ms apart down the list) when the list is drawn or the Gear
+Room is opened. Opening or closing a category re-renders the list without
+replaying it. Off under reduced motion. The Gear Room e2e test checks the
+stagger and that opening a category doesn't replay it. Service worker cache
+`waypoints-v28`. All tests pass: 46 unit, 53 e2e.
+Noticed for later (in the backlog): the "Gear breakdown" donut uses
+different colours from the category dots above it (Shelter has an orange
+dot but a blue slice).
+For the owner: nothing to decide.
+
 ## 2026-11-04 — polish (2 of 3)
 
 Looked at: closing dialogs. They opened with a fade-and-scale but

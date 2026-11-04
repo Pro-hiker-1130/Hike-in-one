@@ -355,9 +355,15 @@ function setGearView(view){
   document.getElementById('gearScene').hidden = view !== 'shelves';
 }
 
+// The weight bars grow in from the left when the list is drawn or the Gear
+// Room is shown (CSS animations restart when a hidden page is shown), but
+// not when a category is just opened or closed.
+let packListQuiet = false;
 function renderGearPackList(){
   const el = document.getElementById('gearPackList');
   el.innerHTML = '';
+  el.classList.toggle('pack-list-grow', !packListQuiet);
+  packListQuiet = false;
   const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
   const itemWeight = g => (g.weightGrams||0)*(g.quantity||1);
   const cats = GEAR_CATEGORIES.map(cat=>{
@@ -370,7 +376,7 @@ function renderGearPackList(){
     return;
   }
   const max = Math.max(1, ...cats.map(c=>c.weight));
-  cats.forEach(c=>{
+  cats.forEach((c, i)=>{
     const open = openPackCategories.has(c.cat);
     const row = document.createElement('div');
     row.className = 'pack-cat' + (open ? ' is-open' : '');
@@ -384,9 +390,10 @@ function renderGearPackList(){
           ' <span class="pack-cat-count">· '+c.count+'</span></span>'+
         '<span class="pack-cat-weight">'+(c.weight ? escapeHtml(formatWeight(c.weight)) : '—')+'</span>'+
       '</span>'+
-      '<span class="pack-bar"><span style="width:'+(c.weight / max * 100).toFixed(1)+'%"></span></span>';
+      '<span class="pack-bar"><span style="width:'+(c.weight / max * 100).toFixed(1)+'%;--i:'+Math.min(i, 8)+'"></span></span>';
     head.addEventListener('click', ()=>{
       if(openPackCategories.has(c.cat)) openPackCategories.delete(c.cat); else openPackCategories.add(c.cat);
+      packListQuiet = true;
       renderGearPackList();
     });
     row.appendChild(head);

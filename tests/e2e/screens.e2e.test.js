@@ -472,8 +472,12 @@ test('gear: categories as weight bars that open to their items; Shelves still th
   const cats = await page.$$eval('.pack-cat-name', els => els.map(e => e.firstChild.nextSibling.textContent.trim()));
   assert.deepEqual(cats, ['Shelter', 'Backpack', 'Sleep system'], 'heaviest first, wishlist left out');
   assert.equal(await text(page, '.pack-cat:nth-child(3) .pack-cat-weight'), '1.0 kg');
+  // The bars grow in, one after another; opening a category doesn't replay it.
+  const bars = () => page.$$eval('#gearPackList .pack-bar span', els => els.map(e => getComputedStyle(e).animationName + ' ' + getComputedStyle(e).animationDelay));
+  assert.deepEqual(await bars(), ['pack-bar-grow 0s', 'pack-bar-grow 0.04s', 'pack-bar-grow 0.08s']);
 
   await page.click('.pack-cat:nth-child(3) .pack-cat-head');
+  assert.deepEqual((await bars()).map(b => b.split(' ')[0]), ['none', 'none', 'none']);
   assert.equal(await page.getAttribute('.pack-cat:nth-child(3) .pack-cat-head', 'aria-expanded'), 'true');
   assert.deepEqual(await page.$$eval('.pack-item-name', els => els.map(e => e.textContent)), ['Revelation 20', 'NeoAir XLite NXT']);
   await page.click('.pack-item >> nth=0');
