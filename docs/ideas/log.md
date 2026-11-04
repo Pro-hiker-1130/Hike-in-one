@@ -3,6 +3,24 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — polish
+
+Looked at: the message bubble at the bottom (toast), which yesterday's
+features now use a lot (CSV import with Undo, route sharing, link copied).
+It popped in and vanished at once.
+Changed: the toast now slides up and fades in (220 ms) and fades out
+(180 ms) before hiding. A new message while one is showing or fading
+replays the slide and cancels the fade. With reduced motion it only fades
+in. New e2e test.
+Also fixed a flaky test from yesterday's route sharing: the partner page
+drew the route only after a 60 ms delayed fit, so the route line appeared
+a moment late and the test sometimes looked too early. The map now sets
+its view at once and refits after layout; the test waits for the line.
+Tests: 41 unit, 47 e2e, all passing. Service worker cache bumped to
+`waypoints-v14`.
+For the owner: nothing to decide. The `004_shared_routes.sql` migration
+still needs running in Supabase if you haven't yet.
+
 ## 2026-11-03 — owner request: build every backlog idea
 
 The owner asked to build all 12 backlog ideas, including the ones that need
