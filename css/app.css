@@ -1219,3 +1219,18 @@ body{font-size:15px;}
   .rp-body{padding:10px 14px 14px;}
   .rp-map{height:48vh;height:48dvh;}
 }
+
+/* ---- Map: the "Showing <trip> · Show all" chip ---- */
+.track-focus-chip{
+  display:flex;align-items:center;gap:8px;max-width:min(70vw,320px);
+  background:#fff;color:var(--parchment);border-radius:8px;padding:6px 6px 6px 12px;
+  box-shadow:0 1px 5px rgba(0,0,0,.28);font-size:12.5px;
+  animation:modal-overlay-in 180ms ease-out;
+}
+.track-focus-chip[hidden]{display:none;}
+.track-focus-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.track-focus-chip button{
+  flex:none;border:none;border-radius:6px;background:var(--sage-soft);color:var(--brass);
+  font:inherit;font-weight:600;padding:4px 10px;cursor:pointer;
+}
+.track-focus-chip button:hover{background:var(--sage);color:var(--deep);}

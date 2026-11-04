@@ -370,6 +370,7 @@ document.getElementById('tripViewOnMapBtn').addEventListener('click', ()=>{
   setTimeout(()=>{
     const b = L.latLngBounds(tks.flatMap(t=>t.points));
     if(b.isValid()) map.fitBounds(b, {padding:[40,40]});
+    setTrackFocus({tripId: trip.id});
   }, 100);
 });
 document.getElementById('tripModalClose').addEventListener('click', closeTripModal);

@@ -526,7 +526,7 @@ test('trip colors: pick a swatch or any color, used on the map and the trip card
     await page.waitForSelector('#tripModalOverlay', { state: 'hidden' });
   };
   const cardStroke = ()=> page.$eval('.trip-card-timeline:has-text("Eiger") .trip-card-profile path:last-child', p => p.getAttribute('stroke'));
-  const mapLines = color => page.$$eval('#map path.leaflet-interactive', (ps, c) => ps.filter(p => (p.getAttribute('stroke') || '').toLowerCase() === c).length, color);
+  const mapLines = color => page.evaluate(c => [...trackDrawn.values()].filter(d => d.line.options.color.toLowerCase() === c).length, color);
 
   await editEiger();
   assert.equal(await page.getAttribute('#tripColorPicker .is-auto', 'aria-checked'), 'true', 'new and untouched trips are automatic');
@@ -783,7 +783,7 @@ test('track editor: trim with undo, split, join, rename, download GPX and delete
 
   // The map popup opens the same editor.
   await page.click('.nav-tab[data-page="map"]');
-  await page.evaluate(()=> trackLayerGroup.getLayers()[0].openPopup());
+  await page.evaluate(()=> trackDrawn.values().next().value.line.openPopup());
   await page.click('.popup-track-edit');
   await page.waitForSelector('#trackEditModalOverlay', { state: 'visible' });
 
@@ -961,5 +961,37 @@ test('share with partners: a partner opens the link without an account and sends
   await page.goto(baseUrl + '/index.html?again=1#shared=' + 'f'.repeat(32));
   await page.waitForFunction(()=> /no longer exists/.test(document.getElementById('srError').textContent));
   assert.ok(await page.isHidden('#srForm'));
+  assert.deepEqual(errors, []);
+});
+
+test('map lines: white outline, bolder when zoomed in, one trip in focus fades the others, start and finish dots', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  const styles = () => page.evaluate(()=> [...trackDrawn.values()].map(d => ({ name: d.t.name, w: d.line.options.weight, o: d.line.options.opacity, casingW: d.casing.options.weight, casingO: d.casing.options.opacity })));
+  await page.click('.nav-tab[data-page="map"]');
+  await page.waitForTimeout(500);   // the map first fits all tracks
+  await page.evaluate(()=> map.setView([46.6, 7.6], 5, { animate: false }));
+  let s = await styles();
+  assert.equal(s.length, 2);
+  assert.ok(s.every(x => x.w === 2 && x.o === 0.6 && x.casingO === 0), 'zoomed out: thin, see-through, no outline');
+  assert.equal(await page.evaluate(()=> trackEndGroup.getLayers().length), 0);
+
+  // View one trip on the map: it is in focus, the other fades.
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.click('.trip-card-timeline:has-text("Eiger trail")');
+  await page.click('#tripViewOnMapBtn');
+  await page.waitForSelector('#trackFocusChip:not([hidden])');
+  assert.match(await text(page, '#trackFocusChip'), /Showing Eiger trail/);
+  s = await styles();
+  const eiger = s.find(x => x.name === 'Eiger trail'), other = s.find(x => x.name !== 'Eiger trail');
+  assert.ok(eiger.w >= 3.5 && eiger.casingO > 0.5 && eiger.casingW > eiger.w, 'zoomed in: bolder, with a white outline');
+  assert.ok(other.o < 0.3 && other.casingO === 0, 'the other trip fades');
+  assert.ok(await page.evaluate(()=> map.getZoom()) >= 12);
+  assert.equal(await page.evaluate(()=> trackEndGroup.getLayers().length), 2, 'start and finish of the trip in view');
+
+  await page.click('#trackFocusChip button');
+  assert.ok(await page.isHidden('#trackFocusChip'));
+  s = await styles();
+  assert.ok(s.every(x => x.o > 0.8), 'Show all brings them back');
   assert.deepEqual(errors, []);
 });
