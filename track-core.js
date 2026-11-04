@@ -429,10 +429,27 @@
     return { effortKm: Math.round(effortKm * 10) / 10, level };
   }
 
+  // Points every `everyKm` along a line of [lat, lon] points, for distance
+  // markers: [{km, ll}], not including the start or a marker right at the
+  // end. everyKm defaults to a step that gives about 5–12 markers.
+  function kmMarkers(points, everyKm){
+    if(!Array.isArray(points) || points.length < 2) return [];
+    const cum = cumulativeKm(points), total = cum[cum.length-1];
+    const step = everyKm || [1, 2, 5, 10, 20, 50].find(s => total / s <= 12) || 100;
+    const out = [];
+    let i = 1;
+    for(let km = step; km < total - step * 0.25; km += step){
+      while(cum[i] < km) i++;
+      const a = points[i-1], b = points[i], f = (km - cum[i-1]) / ((cum[i] - cum[i-1]) || 1);
+      out.push({ km: Math.round(km * 10) / 10, ll: [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f] });
+    }
+    return out;
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers,
   };
 });

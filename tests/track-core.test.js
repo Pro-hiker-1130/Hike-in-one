@@ -256,3 +256,15 @@ test('difficulty rates a walk by effort km (distance plus 1 km per 100 m up)', (
   assert.equal(T.difficulty(0, 500), null);
   assert.deepEqual(T.DIFFICULTY_LEVELS, ['easy', 'moderate', 'hard', 'strenuous']);
 });
+
+test('kmMarkers places distance markers along a line at a sensible step', () => {
+  // ~11.1 km straight north, 0.1° of latitude per point.
+  const line = [[46, 7], [46.05, 7], [46.1, 7]];
+  const m = T.kmMarkers(line);
+  assert.deepEqual(m.map(x => x.km), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'every km; none in the last quarter step before the end');
+  assert.ok(Math.abs(m[4].ll[0] - (46 + 5 / 111.19)) < 0.001 && m[4].ll[1] === 7, 'km 5 sits 5 km up the line');
+  assert.deepEqual(T.kmMarkers(line, 5).map(x => x.km), [5], 'km 10 is within a quarter step of the 11.1 km end');
+  const long = [[46, 7], [46.6, 7]];   // ~66.7 km: every 10 km
+  assert.deepEqual(T.kmMarkers(long).map(x => x.km), [10, 20, 30, 40, 50, 60]);
+  assert.deepEqual(T.kmMarkers([[46, 7]]), []);
+});

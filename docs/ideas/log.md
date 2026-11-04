@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — research (6 of 7)
+
+Looked at: Gaia GPS (waypoints with icons, notes and photos for water and
+camps; distance to the next water; markers dropped every 1, 10 or 50 miles
+to break a route into chunks) and CalTopo (markers listed and searchable
+beside the map). Budget used: 1 search, 0 fetches.
+Changed: the route planner shows small kilometre markers along the route.
+The step is picked to give about 5–12 markers (1, 2, 5, 10, 20 or 50 km),
+and none sits right at the end. `TrackCore.kmMarkers` has a unit test; the
+route-planner e2e test checks the markers on the map. Service worker cache
+`waypoints-v23`.
+For the owner: nothing to decide. Water/camp spots along a route stay in
+the backlog as a medium idea.
+
 ## 2026-11-04 — research (5 of 7)
 
 Looked at: Hiking Project (community difficulty ratings, line colours by

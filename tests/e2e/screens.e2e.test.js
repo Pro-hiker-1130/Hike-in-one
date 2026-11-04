@@ -928,6 +928,11 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.waitForFunction(()=> /km · ↑ 100 m · ↓ 0 m · about \d+ (h|min)/.test(document.getElementById('rpStats').textContent));
   assert.equal(elevationCalls, 1);
   assert.equal(await page.locator('#rpProfile .ele-profile').count(), 1);
+  // Distance markers along the route.
+  const km = await page.evaluate(()=> ({ shown: [...document.querySelectorAll('#rpMap .rp-km')].map(e => e.textContent),
+    want: TrackCore.kmMarkers(rpRoute.points).map(m => String(m.km)), total: rpRoute.distanceKm }));
+  assert.ok(km.total > 1.5 ? km.want.length > 0 : true, 'a route over 1.5 km gets markers: ' + km.total);
+  assert.deepEqual(km.shown, km.want);
 
   // No trail between two points: a straight line instead, and a note.
   failRouting = true;
