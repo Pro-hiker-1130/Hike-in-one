@@ -34,4 +34,5 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-03 — Share a trip as an image (Komoot/LighterPack idea)
 - 2026-11-03 — Share a route with partners for suggestions (CalTopo idea)
 - 2026-11-04 — Toast slides in and fades out (polish)
-\n- 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)\n
+
+- 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
