@@ -71,7 +71,29 @@ function renderTripCardsUnguarded(){
   document.getElementById('tripPlannedLabel').textContent = next ? 'Also planned' : 'Planned trips';
   renderTripSection(otherPlanned, 'tripPlannedGrid', 'tripPlannedEmpty', 'planned');
   if(!showPlanned) document.getElementById('tripPlannedEmpty').style.display = 'none';
-  renderTripTimeline(completed);
+  renderTripTimeline(filterByDifficulty(completed));
+}
+
+// Completed trips can be narrowed to one difficulty; the chips show once
+// there are a few trips to sort through.
+let tripDifficultyFilter = 'all';
+function filterByDifficulty(completed){
+  const box = document.getElementById('tripDifficultyFilter');
+  document.getElementById('tripCompletedEmpty').textContent = 'No completed trips yet.';
+  box.hidden = completed.length < 3;
+  if(box.hidden) tripDifficultyFilter = 'all';
+  box.querySelectorAll('button').forEach(b=>{
+    const on = b.dataset.level === tripDifficultyFilter;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-checked', String(on));
+  });
+  if(tripDifficultyFilter === 'all') return completed;
+  const list = completed.filter(t => { const d = tripDifficulty(t); return d && d.level === tripDifficultyFilter; });
+  if(!list.length){
+    const empty = document.getElementById('tripCompletedEmpty');
+    empty.textContent = 'No ' + DIFFICULTY_LABELS[tripDifficultyFilter].toLowerCase() + ' trips yet.';
+  }
+  return list;
 }
 
 function showTripsList(){
@@ -107,6 +129,7 @@ function renderTripDetail(){
   const badge = document.getElementById('tripDetailStatusBadge');
   badge.className = 'gear-badge status-' + status;
   badge.textContent = status === 'planned' ? 'Planned' : 'Completed';
+  document.getElementById('tripDetailDifficulty').innerHTML = difficultyBadgeHtml(trip);
   document.getElementById('tripStatTracks').textContent = tks.length;
   document.getElementById('tripStatDistance').textContent = dist.toFixed(1);
   const climbTracks = tripCountedTracks(trip).filter(t => t.elevationGainM != null);

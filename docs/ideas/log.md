@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — research (5 of 7)
+
+Looked at: Hiking Project (community difficulty ratings, line colours by
+difficulty) and AllTrails / other trail apps (filter trails by Easy,
+Moderate, Hard, Strenuous). Budget used: 1 search, 0 fetches.
+Changed: trips get a difficulty badge (Easy, Moderate, Hard or
+Strenuous) on their cards and on the trip page. It uses effort km, our own
+choice of rule: distance plus 1 km per 100 m of climb, with cut-offs at 10,
+20 and 30. Once there are 3 or more completed trips, the Completed trips
+heading gets filter chips (All / Easy / Moderate / Hard / Strenuous), with
+a message like "No hard trips yet." when a level is empty.
+`TrackCore.difficulty` has a unit test, plus an e2e test.
+For the owner: the cut-offs are a judgement call. Say if trips feel rated
+too hard or too easy and I'll shift them.
+
 ## 2026-11-04 — research (owner asked for 4 more research days: 4 of 7)
 
 Synced first: main had new commits from other sessions (map lines,

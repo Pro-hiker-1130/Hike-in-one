@@ -418,10 +418,21 @@
     return { factor: Math.min(2, Math.max(0.5, Math.round(median * 100) / 100)), walks: ratios.length };
   }
 
+  // How demanding a walk is, from "effort km": distance plus 1 km for every
+  // 100 m of climb (a common Alpine rule of thumb). Under 10 is easy, under
+  // 20 moderate, under 30 hard, and 30 or more strenuous.
+  const DIFFICULTY_LEVELS = ['easy', 'moderate', 'hard', 'strenuous'];
+  function difficulty(distanceKm, gainM){
+    if(!(distanceKm > 0)) return null;
+    const effortKm = distanceKm + (gainM || 0) / 100;
+    const level = effortKm < 10 ? 'easy' : effortKm < 20 ? 'moderate' : effortKm < 30 ? 'hard' : 'strenuous';
+    return { effortKm: Math.round(effortKm * 10) / 10, level };
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS,
   };
 });

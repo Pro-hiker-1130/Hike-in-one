@@ -247,3 +247,12 @@ test('personalPace compares recorded walks with the standard rule', () => {
   assert.deepEqual(p, { factor: 1.2, walks: 3 }, 'median; short, planned and untimed walks left out');
   assert.equal(T.personalPace([walk(5, 0, 4), walk(6, 0, 5), walk(7, 0, 6)]).factor, 2, 'capped');
 });
+
+test('difficulty rates a walk by effort km (distance plus 1 km per 100 m up)', () => {
+  assert.deepEqual(T.difficulty(6, 200), { effortKm: 8, level: 'easy' });
+  assert.deepEqual(T.difficulty(8, 200), { effortKm: 10, level: 'moderate' });
+  assert.deepEqual(T.difficulty(12, 900), { effortKm: 21, level: 'hard' });
+  assert.deepEqual(T.difficulty(18, 1500), { effortKm: 33, level: 'strenuous' });
+  assert.equal(T.difficulty(0, 500), null);
+  assert.deepEqual(T.DIFFICULTY_LEVELS, ['easy', 'moderate', 'hard', 'strenuous']);
+});

@@ -350,6 +350,32 @@ test('walking times fit your own pace once there are 3 timed walks, and can be s
   assert.deepEqual(errors, []);
 });
 
+test('trips: difficulty badges from effort km, and completed trips filtered by difficulty', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    [['Lake stroll', 6, 100, '2025-05-04'], ['Valley day', 14, 500, '2025-06-08'], ['Big ridge', 18, 1600, '2025-07-12']].forEach(([name, km, up, date], i)=>{
+      tracks.push({ id: 'd' + i, name, date, distanceKm: km, elevationGainM: up, points: [[46, 7 + i / 10], [46.01, 7 + i / 10]] });
+      trips.push({ id: 'trip_d' + i, name, trackIds: ['d' + i], gearIds: [], status: 'completed', createdAt: i });
+    });
+    await saveTrips();
+    renderTripCards();
+  });
+  const badges = await page.$$eval('#tripCompletedGrid .trip-card', els => els.map(e => e.querySelector('.trip-card-name').textContent + ': ' + e.querySelector('.difficulty-badge').textContent));
+  assert.deepEqual(badges, ['Big ridge: Strenuous', 'Valley day: Moderate', 'Lake stroll: Easy']);
+  assert.ok(await page.isVisible('#tripDifficultyFilter'));
+  await page.click('#tripDifficultyFilter [data-level="moderate"]');
+  assert.deepEqual(await page.$$eval('#tripCompletedGrid .trip-card-name', els => els.map(e => e.textContent)), ['Valley day']);
+  await page.click('#tripDifficultyFilter [data-level="hard"]');
+  assert.equal(await page.locator('#tripCompletedGrid .trip-card').count(), 0);
+  assert.equal(await text(page, '#tripCompletedEmpty'), 'No hard trips yet.');
+  await page.click('#tripDifficultyFilter [data-level="all"]');
+  assert.equal(await page.locator('#tripCompletedGrid .trip-card').count(), 3);
+  await page.click('#tripCompletedGrid .trip-card >> text=Big ridge');
+  assert.equal(await text(page, '#tripDetailDifficulty'), 'Strenuous');
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

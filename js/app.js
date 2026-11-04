@@ -355,6 +355,12 @@ document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacki
 document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
 document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
 document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
+document.getElementById('tripDifficultyFilter').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-level]');
+  if(!b) return;
+  tripDifficultyFilter = b.dataset.level;
+  renderTripCards();
+});
 document.getElementById('paceUseMine').addEventListener('change', e=>{
   try{ if(e.target.checked) localStorage.removeItem(PACE_OFF_KEY); else localStorage.setItem(PACE_OFF_KEY, '1'); }catch(err){}
   renderPaceSettings();

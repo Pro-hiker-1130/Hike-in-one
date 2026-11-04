@@ -250,6 +250,7 @@ function renderTripSection(list, gridId, emptyId, status){
       (status === 'planned' && displayDate ? '<span class="trip-card-countdown">'+escapeHtml(relativeDayLabel(displayDate))+'</span>' : '')+
       '<div class="trip-card-name">'+(dotColor?'<span class="track-color-dot" style="background:'+dotColor+'"></span>':'')+escapeHtml(trip.name)+'</div>'+
       (dateLabel ? '<div class="trip-card-when">'+escapeHtml(dateLabel)+'</div>' : '')+
+      difficultyBadgeHtml(trip)+
       (trip.notes ? '<div class="trip-card-notes">'+escapeHtml(trip.notes)+'</div>' : '')+
       (trackLine ? '<div class="trip-card-meta">'+escapeHtml(trackLine)+'</div>' : '')+
       (gearLine ? '<div class="trip-card-meta">'+escapeHtml(gearLine)+'</div>' : '');
@@ -338,7 +339,7 @@ function renderTripTimeline(list){
         '<div class="trip-card-body">'+
           '<div class="trip-card-main">'+
             '<div class="trip-card-name"></div>'+
-            '<div class="trip-card-when"></div>'+
+            '<div class="trip-card-when"></div>'+difficultyBadgeHtml(trip)+
             (gearList.length ? '<div class="trip-card-meta">'+gearList.length+' item'+(gearList.length!==1?'s':'')+' packed</div>' : '')+
           '</div>'+
           (tks.length ? '<div class="trip-card-figures"><span class="trip-card-km">'+dist.toFixed(1)+' km</span>'+

@@ -338,6 +338,13 @@
 
     <div class="section-subhead">
       <p class="section-label" style="margin:0;">Completed trips</p>
+      <div class="view-toggle difficulty-filter" id="tripDifficultyFilter" role="radiogroup" aria-label="Show trips by difficulty" hidden>
+        <button type="button" data-level="all" class="active" role="radio" aria-checked="true">All</button>
+        <button type="button" data-level="easy" role="radio" aria-checked="false">Easy</button>
+        <button type="button" data-level="moderate" role="radio" aria-checked="false">Moderate</button>
+        <button type="button" data-level="hard" role="radio" aria-checked="false">Hard</button>
+        <button type="button" data-level="strenuous" role="radio" aria-checked="false">Strenuous</button>
+      </div>
     </div>
     <div class="trip-timeline" id="tripCompletedGrid"></div>
     <div class="gear-empty" id="tripCompletedEmpty" style="display:none;">No completed trips yet.</div>
@@ -353,6 +360,7 @@
         <span class="category-view-count" id="tripDetailSubtitle"></span>
       </div>
       <span class="gear-badge" id="tripDetailStatusBadge"></span>
+      <span id="tripDetailDifficulty"></span>
       <div style="margin-left:auto;display:flex;gap:8px;">
         <button class="ghost-btn" id="tripShareImageBtn" type="button" title="Make a picture of this trip to send to friends">Share image</button>
         <button class="ghost-btn" id="tripViewOnMapBtn">View on map</button>

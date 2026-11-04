@@ -160,6 +160,19 @@ function tripFoodPlan(trip, days){
   const low = days * FOOD_G_PER_DAY[0], high = days * FOOD_G_PER_DAY[1];
   return { days, low, high, packedG, verdict: !packedG ? 'none' : packedG < low ? 'short' : packedG > high * 1.25 ? 'plenty' : 'right' };
 }
+// A trip's difficulty from the tracks that count for it (walked ones once
+// walked, else the plan); null without tracks.
+const DIFFICULTY_LABELS = { easy: 'Easy', moderate: 'Moderate', hard: 'Hard', strenuous: 'Strenuous' };
+function tripDifficulty(trip){
+  const tks = tripCountedTracks(trip);
+  if(!tks.length) return null;
+  return TrackCore.difficulty(tks.reduce((s, t) => s + (t.distanceKm || 0), 0), tks.reduce((s, t) => s + (t.elevationGainM || 0), 0));
+}
+function difficultyBadgeHtml(trip){
+  const d = tripDifficulty(trip);
+  return d ? '<span class="difficulty-badge difficulty-' + d.level + '" title="' + d.effortKm + ' effort km: distance plus 1 km per 100 m of climb">' +
+    DIFFICULTY_LABELS[d.level] + '</span>' : '';
+}
 function tripGearWeight(trip){
   return tripGearItemsList(trip).reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
 }
