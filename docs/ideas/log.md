@@ -3,6 +3,17 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — polish (owner asked for some polish days: 1 of 3)
+
+Looked at: packing mode. Ticking an item swapped the circle for a tick
+with no feedback, and the whole list re-renders on each tap, so a plain
+CSS animation would replay on every packed row.
+Changed: only the row just ticked plays a short pop on its circle (240 ms)
+and a brief sage glow on the row (300 ms). Un-ticking stays quiet. Both are
+off under reduced motion. The packing e2e test checks that only the tapped
+row animates. Service worker cache `waypoints-v26`.
+For the owner: nothing to decide.
+
 ## 2026-11-04 — owner request: difficulty on hikes, not trips
 
 The owner asked for the difficulty label only on individual hikes, not on

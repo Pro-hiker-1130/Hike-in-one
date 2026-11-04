@@ -13,7 +13,6 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 ## Polish
 
 - Dialogs fade and scale out when closing, matching how they open (needs a small close helper) — S
-- Packing rows: a short tick animation when an item is checked — S
 
 ## Questions for the owner
 
@@ -45,3 +44,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-04 — Trip difficulty badges and a difficulty filter (research, Hiking Project/AllTrails idea)
 - 2026-11-04 — Km markers along routes in the planner (research, Gaia GPS idea)
 - 2026-11-04 — Personal bests on the map overview (research, hike-log apps idea)
+- 2026-11-04 — Packing tick pops and the row glows (polish)

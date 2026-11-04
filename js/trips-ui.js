@@ -536,7 +536,11 @@ function togglePacked(trip, gearId){
   renderTripGear(trip);
   const again = document.querySelector('#tripGearSummaryList .pack-row:nth-child(' +
     (tripGearItemsList(trip).findIndex(g => g.id === gearId) + 1) + ')');
-  if(again) again.focus();
+  if(again){
+    again.focus();
+    // Only the row just ticked plays the little pop (CSS: just-packed).
+    if(packed.has(gearId)) again.classList.add('just-packed');
+  }
 }
 
 function toggleTripPacking(){

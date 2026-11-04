@@ -227,6 +227,9 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
   await page.click('#tripGearSummaryList .pack-row >> text=Exos 58');
   assert.equal(await text(page, '#tripPackProgressText'), '1 of 3 packed');
   assert.equal(await page.getAttribute('#tripGearSummaryList .pack-row:has-text("Exos 58")', 'aria-pressed'), 'true');
+  // Only the row just ticked plays the pop.
+  assert.deepEqual(await page.$$eval('#tripGearSummaryList .just-packed', els => els.map(e => e.querySelector('.trip-track-row-name').textContent)), ['Exos 58']);
+  assert.equal(await page.$eval('#tripGearSummaryList .just-packed .pack-check', el => getComputedStyle(el).animationName), 'pack-pop');
   assert.deepEqual(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_pack').packedIds), ['g1']);
   // Done packing: back to the plain list, the tick and progress stay.
   await page.click('#tripPackBtn');
