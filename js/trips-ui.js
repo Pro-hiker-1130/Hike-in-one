@@ -412,7 +412,7 @@ function renderTripDays(trip, tks){
     row.innerHTML = '<span class="trip-track-row-name"></span><span class="trip-track-row-meta"></span>';
     row.firstChild.textContent = 'Day ' + (i+1) + when;
     row.lastChild.textContent = 'km ' + d.fromKm.toFixed(1) + '–' + d.toKm.toFixed(1) +
-      ' · ↑ ' + d.upM + ' m ↓ ' + d.downM + ' m · about ' + formatDuration(TrackCore.estimateHikingSec(d.distanceKm, d.upM));
+      ' · ↑ ' + d.upM + ' m ↓ ' + d.downM + ' m · about ' + formatDuration(walkingSec(d.distanceKm, d.upM));
     list.appendChild(row);
   });
 }

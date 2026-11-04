@@ -355,6 +355,11 @@ document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacki
 document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
 document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
 document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
+document.getElementById('paceUseMine').addEventListener('change', e=>{
+  try{ if(e.target.checked) localStorage.removeItem(PACE_OFF_KEY); else localStorage.setItem(PACE_OFF_KEY, '1'); }catch(err){}
+  renderPaceSettings();
+  if(currentTripId) renderTripDetail();
+});
 document.getElementById('yearReviewSelect').addEventListener('change', e=>{ yearReviewYear = e.target.value; renderYearReview(); });
 document.getElementById('tripShareUpdateBtn').addEventListener('click', publishTripShare);
 document.getElementById('tripShareStopBtn').addEventListener('click', stopTripShare);

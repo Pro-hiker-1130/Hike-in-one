@@ -4,7 +4,6 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 ## Ideas
 
-- Your own walking pace: a setting that adjusts every time estimate (planner, days, tracks) — Komoot — estimates fit slow and fast walkers — S
 - Mark spots along a planned route (water, camp, hut, viewpoint) — AllTrails — knowing where to refill or sleep — M
 - Filter trips by length, climb and walking time — Outdooractive — finding the right past or planned trip — S
 - "Lighter options" on a gear item: catalog products in the same category that weigh less — PackWizard — cutting pack weight — M
@@ -43,3 +42,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)
 - 2026-11-04 — Year in review on the map overview (research, summit-log apps idea)
+- 2026-11-04 — Walking times fit your own pace (research, Komoot/onX idea)

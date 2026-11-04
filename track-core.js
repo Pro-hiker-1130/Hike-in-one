@@ -404,10 +404,24 @@
     };
   }
 
+  // How your own walks compare with the standard rule: the median of
+  // (recorded time / estimated time) over walks of 2 km or more that have
+  // a recorded duration. Needs at least 3 such walks; kept between 0.5 and
+  // 2 so one odd day can't skew every estimate. Null when there's too little.
+  function personalPace(list){
+    const ratios = (list || []).filter(t => !t.planned && t.durationSec > 0 && t.distanceKm >= 2)
+      .map(t => t.durationSec / estimateHikingSec(t.distanceKm, t.elevationGainM))
+      .filter(r => isFinite(r) && r > 0).sort((a, b) => a - b);
+    if(ratios.length < 3) return null;
+    const mid = ratios.length >> 1;
+    const median = ratios.length % 2 ? ratios[mid] : (ratios[mid-1] + ratios[mid]) / 2;
+    return { factor: Math.min(2, Math.max(0.5, Math.round(median * 100) / 100)), walks: ratios.length };
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace,
   };
 });

@@ -3,6 +3,26 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — research (owner asked for 4 more research days: 4 of 7)
+
+Synced first: main had new commits from other sessions (map lines,
+basemaps, layers button, update handling). Only the service worker cache
+version conflicted, and I set it above both sides. All tests passed on the
+merged code (pushed as its own merge commit).
+Looked at: onX Backcountry (route builder with distance, climb and the
+hardest sections, but no time estimate based on your own pace) and a
+separate paid app that only does pace-based time estimates. Budget used:
+1 search, 0 fetches.
+Changed: walking-time estimates (planned routes, the planner, multi-day
+days) now fit your own pace. It's the median of recorded time ÷ rule
+estimate over timed walks of 2 km or more, needs 3 walks, and is kept
+between 0.5× and 2×. Settings has a "Walking times" card saying how you
+compare ("18 % slower than the rule, breaks included") and a switch back
+to the standard rule. `TrackCore.personalPace` has a unit test, plus an
+e2e test. Service worker cache `waypoints-v22`.
+For the owner: recorded durations include breaks, so estimates come out
+as total time out, not moving time. Say if you'd prefer moving time.
+
 ## 2026-11-04 — research (3 of 3)
 
 Looked at: FATMAP / Strava routes (FATMAP was shut down by Strava in

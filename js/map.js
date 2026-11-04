@@ -325,6 +325,23 @@ function renderYearReview(){
   lines.forEach(l => { const span = document.createElement('span'); span.textContent = l; text.appendChild(span); });
 }
 
+// Settings: how walking times are estimated.
+function renderPaceSettings(){
+  const pace = TrackCore.personalPace(tracks);
+  const on = usePersonalPace();
+  const box = document.getElementById('paceUseMine');
+  box.checked = on; box.disabled = !pace;
+  const rule = 'The standard rule is 4 km an hour plus 1 hour for every 600 m of climb.';
+  let note;
+  if(!pace) note = rule + ' Once you have 3 or more timed walks of 2 km or longer, estimates can fit your own pace.';
+  else {
+    const pct = Math.round(Math.abs(pace.factor - 1) * 100);
+    const how = pct < 3 ? 'about the same as the rule' : pct + ' % ' + (pace.factor > 1 ? 'slower' : 'faster') + ' than the rule (breaks included)';
+    note = rule + ' From ' + pace.walks + ' timed walks, you go ' + how + '.' + (on ? '' : ' Estimates use the standard rule.');
+  }
+  document.getElementById('paceNote').textContent = note;
+}
+
 function renderStats(){
   const whole = n => String(Math.round(n));
   setStatNumber(document.getElementById('statTrips'), trips.length, whole);
@@ -342,6 +359,7 @@ function renderStats(){
     googlePoints.length.toLocaleString('en-US')+' location-history point'+(googlePoints.length!==1?'s':'')+' on this device.';
   document.getElementById('clearBtn').disabled = !(tracks.length || googlePoints.length);
   renderYearReview();
+  renderPaceSettings();
   renderDeviceSummary();
   renderGettingStarted();
 }

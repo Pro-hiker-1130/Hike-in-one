@@ -328,6 +328,28 @@ test('toast slides up as it appears, fades out, and only fades with reduced moti
   assert.deepEqual(errors, []);
 });
 
+test('walking times fit your own pace once there are 3 timed walks, and can be switched back to the rule', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="settings"]');
+  assert.match(await text(page, '#paceNote'), /Once you have 3 or more timed walks/);
+  assert.ok(await page.isDisabled('#paceUseMine'));
+  await page.evaluate(()=>{
+    // Three walks, each taking 1.5 times the standard estimate.
+    [[10, 600], [8, 300], [12, 900]].forEach(([km, up], i) => tracks.push({ id: 'w' + i, name: 'Walk ' + i, date: '2025-06-0' + (i + 1),
+      distanceKm: km, elevationGainM: up, durationSec: TrackCore.estimateHikingSec(km, up) * 1.5, points: [[46, 7 + i / 10], [46.01, 7 + i / 10]] }));
+    tracks.push({ id: 'plan', name: 'Plan', planned: true, distanceKm: 12, elevationGainM: 600, points: [[46, 7.5], [46.1, 7.5]] });
+    renderStats();
+  });
+  assert.match(await text(page, '#paceNote'), /From 3 timed walks, you go 50 % slower than the rule \(breaks included\)\.$/);
+  assert.ok(await page.isChecked('#paceUseMine'));
+  // 12 km and 600 m up: the rule says 4 h; at your pace 6 h.
+  assert.match(await page.evaluate(()=> trackClimbSummary(tracks.find(t => t.id === 'plan'))), /about 6 h 00 min walking$/);
+  await page.uncheck('#paceUseMine');
+  assert.match(await page.evaluate(()=> trackClimbSummary(tracks.find(t => t.id === 'plan'))), /about 4 h 00 min walking$/);
+  assert.match(await text(page, '#paceNote'), /Estimates use the standard rule\.$/);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

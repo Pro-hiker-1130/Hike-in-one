@@ -237,3 +237,13 @@ test('yearSummary counts one year of walks, its longest, highest and busiest mon
   assert.equal(T.yearSummary(list, 2023), null);
   assert.equal(T.yearSummary(list, 2024).highest, null, 'no elevation that year');
 });
+
+test('personalPace compares recorded walks with the standard rule', () => {
+  const walk = (km, gain, factor, extra) => Object.assign({ distanceKm: km, elevationGainM: gain,
+    durationSec: T.estimateHikingSec(km, gain) * factor }, extra);
+  assert.equal(T.personalPace([walk(10, 500, 1.2), walk(8, 300, 1.2)]), null, 'needs 3 walks');
+  const p = T.personalPace([walk(10, 500, 1.2), walk(8, 300, 1.3), walk(12, 800, 1.1), walk(1, 0, 3),
+    walk(20, 0, 0.1, { planned: true }), { distanceKm: 9, elevationGainM: 100 }]);
+  assert.deepEqual(p, { factor: 1.2, walks: 3 }, 'median; short, planned and untimed walks left out');
+  assert.equal(T.personalPace([walk(5, 0, 4), walk(6, 0, 5), walk(7, 0, 6)]).factor, 2, 'capped');
+});
