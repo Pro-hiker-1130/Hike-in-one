@@ -652,6 +652,7 @@ document.querySelectorAll('.view-toggle:not(#basemapToggle):not(#gearViewToggle)
   });
 });
 
+document.getElementById('trailsOverlayToggle').addEventListener('change', e=> setTrailsOverlay(e.target.checked));
 document.querySelectorAll('#basemapToggle button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('#basemapToggle button').forEach(b=>b.classList.remove('active'));
@@ -745,11 +746,15 @@ document.getElementById('clearBtn').addEventListener('click', async (e)=>{
 (async function init(){
   trackLayerGroup.addTo(map);
   const savedBasemap = await storeGet('waypoints-basemap');
-  if(savedBasemap && ['dark','light','terrain','satellite'].includes(savedBasemap)){
+  if(savedBasemap && BASEMAP_KEYS.includes(savedBasemap)){
     setBasemap(savedBasemap);
     document.querySelectorAll('#basemapToggle button').forEach(b=>{
       b.classList.toggle('active', b.dataset.basemap === savedBasemap);
     });
+  }
+  if(await storeGet('waypoints-trails-overlay')){
+    setTrailsOverlay(true, false);
+    document.getElementById('trailsOverlayToggle').checked = true;
   }
   try{
     await loadAll();

@@ -108,9 +108,7 @@ function teClampSplit(){
 function teEnsureMap(){
   if(teMap) return;
   teMap = L.map('teMap', {zoomControl:true, scrollWheelZoom:false});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors', subdomains:'abc', maxZoom:19
-  }).addTo(teMap);
+  addMapLayerSwitcher(teMap, 'light', 'topright');
   teLayers = L.layerGroup().addTo(teMap);
 }
 

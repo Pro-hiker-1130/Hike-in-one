@@ -38,6 +38,9 @@ const LIBS = {
   'leaflet.heat/0.2.0/leaflet-heat.js': ['leaflet.heat/dist/leaflet-heat.js', 'application/javascript'],
   '@zxing/library@0.21.3/umd/index.min.js': ['@zxing/library/umd/index.min.js', 'application/javascript'],
   '@supabase/supabase-js@2.108.0/dist/umd/supabase.js': ['@supabase/supabase-js/dist/umd/supabase.js', 'application/javascript'],
+  'maplibre-gl/5.24.0/maplibre-gl.min.js': ['maplibre-gl/dist/maplibre-gl.js', 'application/javascript'],
+  'maplibre-gl/5.24.0/maplibre-gl.min.css': ['maplibre-gl/dist/maplibre-gl.css', 'text/css'],
+  '@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js': ['@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js', 'application/javascript'],
 };
 
 const GEAR = [
@@ -87,7 +90,7 @@ async function launch(t, viewport = { width: 1280, height: 900 }, fake = null){
       route.fulfill({ status: 200, contentType: LIBS[key][1], body: fs.readFileSync(path.join(process.env.HIKE_LIBS_DIR, LIBS[key][0])) });
     });
   }
-  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|supabase\.co/, r => r.abort());
+  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|geo\.admin\.ch|maps\.eox\.at|waymarkedtrails|maptoolkit|mapterhorn|supabase\.co/, r => r.abort());
   // Registered last so it wins over the blanket supabase.co block above.
   if(fake) await ctx.route(new RegExp(SUPABASE_HOST.replace(/\./g, '\\.')), r => fake.handle(r));
   await ctx.addInitScript(({ gear, session, key })=>{
@@ -459,7 +462,7 @@ async function launchWithLocalData(t, fake, local){
       route.fulfill({ status: 200, contentType: LIBS[key][1], body: fs.readFileSync(path.join(process.env.HIKE_LIBS_DIR, LIBS[key][0])) });
     });
   }
-  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|supabase\.co/, r => r.abort());
+  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|geo\.admin\.ch|maps\.eox\.at|waymarkedtrails|maptoolkit|mapterhorn|supabase\.co/, r => r.abort());
   await ctx.route(new RegExp(SUPABASE_HOST.replace(/\./g, '\\.')), r => fake.handle(r));
   await ctx.addInitScript(({ local, session, key })=>{
     if(localStorage.getItem('e2e-seeded')) return;
@@ -846,6 +849,7 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.waitForSelector('#routePlannerOverlay', { state: 'visible' });
   assert.equal(await page.inputValue('#rpName'), 'Haute Route');
   assert.ok(await page.isDisabled('#rpSaveBtn'), 'nothing to save yet');
+  assert.equal(await page.locator('#rpMap .leaflet-control-layers').count(), 1, 'the planner can switch maps');
   await page.evaluate(()=> rpMap.setView([46.0, 7.5], 13, { animate: false }));
 
   const tap = (x, y) => page.click('#rpMap', { position: { x, y } });
@@ -1011,5 +1015,47 @@ test('map lines: white outline, bolder when zoomed in, one trip in focus fades t
   assert.ok(await page.isHidden('#trackFocusChip'));
   s = await styles();
   assert.ok(s.every(x => x.o > 0.8), 'Show all brings them back');
+  assert.deepEqual(errors, []);
+});
+
+test('basemaps: Swiss topo, Sentinel/SWISSIMAGE satellite, Relief loads MapLibre on demand, hiking routes overlay remembered', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  // Relief's style comes from Maptoolkit; here a tiny stand-in style.
+  await page.context().route(/styles\.maptoolkit\.org/, r => r.fulfill({ status: 200, contentType: 'application/json',
+    headers: { 'access-control-allow-origin': '*' },
+    body: JSON.stringify({ version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#e8eadf' } }] }) }));
+  const tileUrls = () => page.evaluate(()=>{
+    const out = [];
+    map.eachLayer(l => { if(l._url) out.push(l._url); });
+    return out.join(' ');
+  });
+  await page.click('.nav-tab[data-page="map"]');
+  assert.equal(await page.locator('#basemapToggle button').count(), 6);
+
+  await page.click('#basemapToggle [data-basemap="swiss"]');
+  assert.match(await tileUrls(), /ch\.swisstopo\.pixelkarte-farbe/);
+  assert.match(await tileUrls(), /opentopomap/, 'OpenTopoMap around Switzerland');
+
+  await page.click('#basemapToggle [data-basemap="satellite"]');
+  const sat = await tileUrls();
+  assert.match(sat, /s2cloudless/);
+  assert.match(sat, /swissimage/);
+  assert.doesNotMatch(sat, /arcgisonline|pixelkarte/, 'Esri and the previous basemap are gone');
+
+  assert.equal(await page.evaluate(()=> typeof window.maplibregl), 'undefined', 'MapLibre is not loaded up front');
+  await page.click('#basemapToggle [data-basemap="relief"]');
+  await page.waitForFunction(()=> currentBasemapLayer.getLayers().some(l => L.MaplibreGL && l instanceof L.MaplibreGL));
+  assert.equal(await page.evaluate(()=> typeof window.maplibregl), 'object');
+
+  await page.check('#trailsOverlayToggle');
+  assert.match(await tileUrls(), /waymarkedtrails\.org\/hiking/);
+  await page.reload();
+  await page.waitForSelector('.nav-tab');
+  await page.waitForFunction(()=> currentBasemapKey === 'relief');
+  assert.ok(await page.isChecked('#trailsOverlayToggle'), 'overlay choice remembered');
+  assert.match(await tileUrls(), /waymarkedtrails/);
+  assert.equal(await page.getAttribute('#basemapToggle [data-basemap="relief"]', 'class'), 'active');
+  await page.uncheck('#trailsOverlayToggle');
+  assert.doesNotMatch(await tileUrls(), /waymarkedtrails/);
   assert.deepEqual(errors, []);
 });

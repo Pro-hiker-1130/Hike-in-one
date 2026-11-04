@@ -116,7 +116,8 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%;ov
   transition:background .15s ease,color .15s ease;
 }
 .view-toggle button.active{background:var(--brass);color:var(--ink);font-weight:600;}
-.toggle-4 button{padding:7px 4px;font-size:11.5px;}
+.toggle-grid{display:grid;grid-template-columns:repeat(3,1fr);border-radius:14px;}
+.toggle-grid button{padding:7px 4px;font-size:11.5px;border-radius:11px;white-space:nowrap;}
 
 .stats-row{display:flex;gap:10px;}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -1241,3 +1242,9 @@ body{font-size:15px;}
   font:inherit;font-weight:600;padding:4px 10px;cursor:pointer;
 }
 .track-focus-chip button:hover{background:var(--sage);color:var(--deep);}
+
+/* ---- Map: hiking routes overlay switch and the small layers control ---- */
+.map-overlay-switch{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--parchment);cursor:pointer;}
+.map-overlay-switch input{width:16px;height:16px;accent-color:var(--brass);margin:0;}
+.leaflet-control-layers{border-radius:8px !important;font:inherit;font-size:12.5px;}
+.leaflet-control-layers-expanded{padding:8px 10px 8px 8px;}

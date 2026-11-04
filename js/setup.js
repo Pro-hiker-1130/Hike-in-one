@@ -50,21 +50,96 @@ let currentView = 'tracks';
 // ---- Map setup ----
 const map = L.map('map', {worldCopyJump:true}).setView([20,10], 2);
 
-// CARTO's free anonymous raster tiles now require an API key, so "dark" and
-// "light" both use plain OpenStreetMap tiles; "dark" fakes its look with a
-// CSS filter on the tile pane instead of a separate tile server.
-const BASEMAPS = {
-  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors', subdomains:'abc', maxZoom:19
-  }),
-  terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap', subdomains:'abc', maxZoom:17
-  }),
-  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri', maxZoom:19
-  })
-};
-let currentTileKey = null;
+// ---- Basemaps ----
+// All free and keyless. makeBasemap(key) builds a fresh layer for any map
+// (a Leaflet layer can only be on one map at a time).
+//   light / dark  OpenStreetMap ("dark" is a CSS filter on the tiles)
+//   terrain       OpenTopoMap
+//   swiss         swisstopo national map inside Switzerland, OpenTopoMap around it
+//   satellite     Sentinel-2 cloudless (EOX) worldwide, swisstopo SWISSIMAGE in Switzerland
+//   relief        Maptoolkit's vector hiking map (shaded relief, contours), drawn by
+//                 MapLibre inside Leaflet; loaded only when picked
+// Plus an overlay of marked hiking routes from Waymarked Trails.
+const BASEMAP_KEYS = ['light', 'terrain', 'swiss', 'satellite', 'relief', 'dark'];
+const BASEMAP_LABELS = { light:'Light', terrain:'Terrain', swiss:'Swiss topo', satellite:'Satellite', relief:'Relief', dark:'Dark' };
+const SWISS_BOUNDS = L.latLngBounds([45.80, 5.90], [47.85, 10.55]);
+const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+const SWISSTOPO_ATTR = '&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>';
+
+function tiles(url, opts){ const l = L.tileLayer(url, opts); watchTileErrors(l); return l; }
+function osmTiles(){ return tiles('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: OSM_ATTR, maxZoom: 19 }); }
+function topoTiles(){
+  return tiles('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: OSM_ATTR + ', SRTM | Map style: &copy; OpenTopoMap', subdomains: 'abc', maxNativeZoom: 17, maxZoom: 19 });
+}
+function swisstopoTiles(layer, ext, maxNativeZoom){
+  return tiles('https://wmts.geo.admin.ch/1.0.0/' + layer + '/default/current/3857/{z}/{x}/{y}.' + ext, {
+    attribution: SWISSTOPO_ATTR, bounds: SWISS_BOUNDS, maxNativeZoom, maxZoom: 19 });
+}
+
+function makeBasemap(key){
+  switch(key){
+    case 'terrain': return topoTiles();
+    case 'swiss': return L.layerGroup([topoTiles(), swisstopoTiles('ch.swisstopo.pixelkarte-farbe', 'jpeg', 18)]);
+    case 'satellite': return L.layerGroup([
+      tiles('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2023_3857/default/g/{z}/{y}/{x}.jpg', {
+        attribution: '<a href="https://s2maps.eu">Sentinel-2 cloudless</a> by EOX (contains modified Copernicus Sentinel data 2023)',
+        maxNativeZoom: 15, maxZoom: 19 }),
+      swisstopoTiles('ch.swisstopo.swissimage', 'jpeg', 19),
+    ]);
+    case 'relief': return makeReliefLayer();
+    default: return osmTiles();
+  }
+}
+
+function makeTrailsOverlay(){
+  return tiles('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
+    attribution: 'Hiking routes &copy; <a href="https://hiking.waymarkedtrails.org">Waymarked Trails</a>',
+    maxNativeZoom: 17, maxZoom: 19, opacity: 0.85, zIndex: 5 });
+}
+
+// MapLibre (~900 KB) is only downloaded the first time someone picks
+// "Relief". Until it has loaded, OpenTopoMap stands in.
+const MAPLIBRE_JS = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.js';
+const MAPLIBRE_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.css';
+const MAPLIBRE_LEAFLET_JS = 'https://cdn.jsdelivr.net/npm/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js';
+const RELIEF_STYLE = 'https://styles.maptoolkit.org/summer.json';
+let maplibreLoading = null;
+function loadScriptOnce(src){
+  return new Promise((resolve, reject)=>{
+    const el = document.createElement('script');
+    el.src = src; el.onload = resolve; el.onerror = () => reject(new Error('Could not load ' + src));
+    document.head.appendChild(el);
+  });
+}
+function loadMapLibre(){
+  if(!maplibreLoading){
+    const css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = MAPLIBRE_CSS;
+    document.head.appendChild(css);
+    maplibreLoading = loadScriptOnce(MAPLIBRE_JS).then(()=> loadScriptOnce(MAPLIBRE_LEAFLET_JS));
+    maplibreLoading.catch(()=>{ maplibreLoading = null; });
+  }
+  return maplibreLoading;
+}
+function makeReliefLayer(){
+  const group = L.layerGroup();
+  const standIn = topoTiles();
+  group.addLayer(standIn);
+  loadMapLibre().then(()=>{
+    group.removeLayer(standIn);
+    group.addLayer(L.maplibreGL({
+      style: RELIEF_STYLE,
+      attribution: '&copy; <a href="https://www.maptoolkit.com">Maptoolkit</a> ' + OSM_ATTR,
+    }));
+  }).catch(()=>{
+    if(typeof showGlobalToast === 'function') showGlobalToast('The relief map needs an internet connection. Showing Terrain instead.', true);
+  });
+  return group;
+}
+
+let currentBasemapKey = null, currentBasemapLayer = null;
+let trailsOverlay = null;
 
 let tileWarningShown = false;
 function watchTileErrors(layer){
@@ -81,19 +156,44 @@ function watchTileErrors(layer){
     }
   });
 }
-Object.values(BASEMAPS).forEach(watchTileErrors);
 
 function setBasemap(key, persist = true){
-  if(!['dark','light','terrain','satellite'].includes(key)) return;
-  const wantsTile = (key === 'dark' || key === 'light') ? 'osm' : key;
-  if(currentTileKey !== wantsTile){
-    if(currentTileKey) map.removeLayer(BASEMAPS[currentTileKey]);
-    BASEMAPS[wantsTile].addTo(map);
-    currentTileKey = wantsTile;
+  if(!BASEMAP_KEYS.includes(key)) return;
+  // light and dark share the same tiles.
+  const tileKey = key === 'dark' ? 'light' : key;
+  const currentTileKey = currentBasemapKey === 'dark' ? 'light' : currentBasemapKey;
+  if(tileKey !== currentTileKey){
+    if(currentBasemapLayer) map.removeLayer(currentBasemapLayer);
+    currentBasemapLayer = makeBasemap(tileKey).addTo(map);
   }
+  currentBasemapKey = key;
   map.getContainer().classList.toggle('dark-tiles', key === 'dark');
   if(persist) storeSet('waypoints-basemap', key);
 }
+
+function setTrailsOverlay(on, persist = true){
+  if(on && !trailsOverlay) trailsOverlay = makeTrailsOverlay().addTo(map);
+  if(!on && trailsOverlay){ map.removeLayer(trailsOverlay); trailsOverlay = null; }
+  if(persist) storeSet('waypoints-trails-overlay', on ? '1' : '');
+}
+
+// A small Basemap / Hiking routes switcher for the other maps (route
+// planner, track editor), using Leaflet's own layers control.
+function addMapLayerSwitcher(m, startKey, position){
+  const bases = {};
+  let start = null;
+  BASEMAP_KEYS.filter(k => k !== 'dark').forEach(k=>{
+    // Relief only loads MapLibre once it is actually picked.
+    const layer = k === 'relief' ? L.layerGroup() : makeBasemap(k);
+    if(k === 'relief') layer.on('add', ()=>{ if(!layer.getLayers().length) layer.addLayer(makeReliefLayer()); });
+    bases[BASEMAP_LABELS[k]] = layer;
+    if(k === startKey) start = layer;
+  });
+  (start || bases[BASEMAP_LABELS.terrain]).addTo(m);
+  const overlays = { 'Marked hiking routes': makeTrailsOverlay() };
+  L.control.layers(bases, overlays, { position: position || 'bottomleft' }).addTo(m);
+}
+
 // Startup default only — not a user choice, so don't persist it. (It also
 // runs before the storage layer below is initialized.)
 setBasemap('light', false);
