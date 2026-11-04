@@ -98,8 +98,25 @@ function onModalOpened(id){
   if(el && id !== 'photoLightboxOverlay') el.style.zIndex = String(1000 + openModalOrder.length);
   history.pushState({modal:id}, '', location.pathname + location.search);
 }
+// Closing is instant (the dialog is already hidden when this runs); a
+// copy without ids or clicks fades and shrinks away in its place for
+// 180 ms, so it never gets in the way. Off with reduced motion.
+function playModalExit(id){
+  const el = document.getElementById(id);
+  if(!el || !el.classList.contains('modal-overlay') || REDUCED_MOTION.matches) return;
+  const ghost = el.cloneNode(true);
+  [ghost, ...ghost.querySelectorAll('[id]')].forEach(n => n.removeAttribute('id'));
+  ghost.querySelectorAll('[name]').forEach(n => n.removeAttribute('name'));
+  ghost.classList.add('modal-ghost');
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.inert = true;
+  ghost.style.display = 'flex';
+  document.body.appendChild(ghost);
+  setTimeout(()=> ghost.remove(), 200);
+}
 function onModalClosed(id){
   if(!openModalOrder.includes(id)) return; // wasn't open - e.g. a defensive double-close
+  playModalExit(id);
   openModalOrder = openModalOrder.filter(x=>x!==id);
   if(!closingViaPopstate){
     // Closed by a UI click, not by Back — the history entry this modal

@@ -391,6 +391,31 @@ test('hikes get difficulty badges from effort km (trips don\'t), and trips filte
   assert.deepEqual(errors, []);
 });
 
+test('closing a dialog: it is gone at once, and a copy without ids fades away briefly (none with reduced motion)', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.evaluate(()=> openGearModal(null));
+  await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
+  const after = await page.evaluate(()=>{
+    closeGearModal();
+    const g = document.querySelector('.modal-ghost');
+    return { realHidden: document.getElementById('gearModalOverlay').style.display === 'none', ghost: !!g,
+      ids: g ? g.querySelectorAll('[id]').length + (g.id ? 1 : 0) : -1, inert: g && g.inert, anim: g && getComputedStyle(g).animationName };
+  });
+  assert.deepEqual(after, { realHidden: true, ghost: true, ids: 0, inert: true, anim: 'modal-overlay-out' });
+  await page.waitForFunction(()=> !document.querySelector('.modal-ghost'), null, { timeout: 1000 });
+  // Clicks right after closing land on the page, not on the fading copy.
+  await page.evaluate(()=>{ openGearModal(null); closeGearModal(); });
+  await page.click('#viewAllGearBtn');
+  await page.waitForSelector('#categoryView', { state: 'visible' });
+  await page.evaluate(()=> openGearModal(null));
+  await page.waitForSelector('#gearModalOverlay', { state: 'visible' });
+  await page.waitForFunction(()=> !document.querySelector('.modal-ghost'), null, { timeout: 1000 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  assert.equal(await page.evaluate(()=>{ closeGearModal(); return !!document.querySelector('.modal-ghost'); }), false);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');
@@ -881,6 +906,9 @@ test('track editor: trim with undo, split, join, rename, download GPX and delete
 
   // The map popup opens the same editor.
   await page.click('.nav-tab[data-page="map"]');
+  // Showing the map refreshes its layers 50 ms later, which would close a
+  // popup opened before then; let that happen first.
+  await page.waitForTimeout(150);
   await page.evaluate(()=> trackDrawn.values().next().value.line.openPopup());
   await page.click('.popup-track-edit');
   await page.waitForSelector('#trackEditModalOverlay', { state: 'visible' });

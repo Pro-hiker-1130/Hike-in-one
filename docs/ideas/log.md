@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — polish (2 of 3)
+
+Looked at: closing dialogs. They opened with a fade-and-scale but
+vanished at once on closing. Every close function hides its dialog
+directly, so the change lives in one place, `onModalClosed`.
+Changed: when a dialog closes, the real one is hidden at once as before,
+and a copy (no ids or names, inert, no pointer events) fades and shrinks
+away for 180 ms, then is removed. Clicks right after closing reach the
+page, never the copy. Off under reduced motion. New e2e test.
+Also fixed the flaky track-editor test. Switching to the Map tab refreshes
+the map layers 50 ms later, which closed a popup the test had opened
+within those 50 ms. People can't click that fast, so the test now waits
+for the refresh first. 3 full runs in a row passed (53/53). Service worker
+cache `waypoints-v27`.
+For the owner: nothing to decide.
+
 ## 2026-11-04 — polish (owner asked for some polish days: 1 of 3)
 
 Looked at: packing mode. Ticking an item swapped the circle for a tick
