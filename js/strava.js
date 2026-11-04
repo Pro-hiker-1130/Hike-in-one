@@ -27,9 +27,17 @@ function showGlobalToast(msg, isError, action){
     btn.addEventListener('click', ()=>{ el.hidden = true; action.fn(); }, {once:true});
     el.appendChild(btn);
   }
-  el.hidden = false;
+  // Slides up as it appears; a new message while one shows replays that,
+  // and it fades out before hiding (CSS: toast-in / is-leaving).
   clearTimeout(showGlobalToast._t);
-  showGlobalToast._t = setTimeout(()=>{ el.hidden = true; }, action ? 8000 : 5000);
+  clearTimeout(showGlobalToast._leave);
+  el.classList.remove('is-leaving');
+  if(!el.hidden){ el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
+  el.hidden = false;
+  showGlobalToast._t = setTimeout(()=>{
+    el.classList.add('is-leaving');
+    showGlobalToast._leave = setTimeout(()=>{ el.hidden = true; el.classList.remove('is-leaving'); }, 180);
+  }, action ? 8000 : 5000);
 }
 
 function getStravaTokens(){
