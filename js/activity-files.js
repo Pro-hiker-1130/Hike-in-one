@@ -428,7 +428,8 @@ function walkingSec(km, gainM){
 function trackClimbSummary(t){
   const parts = [];
   if(t.elevationGainM != null) parts.push('↑ '+t.elevationGainM+' m', '↓ '+t.elevationLossM+' m');
-  if(t.durationSec) parts.push(formatDuration(t.durationSec));
+  // "about" when the time was shared out by effort after an edit, not recorded.
+  if(t.durationSec) parts.push((t.durationEstimated ? 'about ' : '') + formatDuration(t.durationSec));
   else if(t.planned && t.distanceKm) parts.push('about '+formatDuration(walkingSec(t.distanceKm, t.elevationGainM))+' walking');
   return parts.join(' · ');
 }

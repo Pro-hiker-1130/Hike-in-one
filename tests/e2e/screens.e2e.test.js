@@ -1262,3 +1262,28 @@ test('updates: a new version is picked up without reinstalling — "Check for up
   assert.equal(await version(), 'version 901');
   assert.deepEqual(errors, []);
 });
+
+test('track editor: trimming a hike imported before point times existed keeps an estimated time', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="map"]');
+  // An old-style track: points and a profile, a recorded 2 h, no point times.
+  await page.evaluate(async ()=>{
+    const points = [], profile = [];
+    for(let i=0;i<41;i++){ points.push([46.6 + i*0.0025, 7.6]); profile.push([+(i*0.278).toFixed(3), 1000 + i*15]); }
+    tracks.push({ id: 't_old', name: 'Old hike', date: '2021-06-12', startTime: Date.parse('2021-06-12T08:00:00Z'), sport: 'Hike',
+      points, profile, distanceKm: 11.1, elevationGainM: 600, elevationLossM: 0, minEleM: 1000, maxEleM: 1600, durationSec: 7200 });
+    await saveTracks();
+    refreshEverything();
+    openTrackEditor('t_old');
+  });
+  await page.waitForSelector('#trackEditModalOverlay', { state: 'visible' });
+  await page.$eval('#teTrimEnd', el=>{ el.value = '20'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  assert.match(await text(page, '#teSummary'), /After trimming: 5\.6 km · ↑ 300 m · ↓ 0 m · about 1 h 00 min \(time estimated from distance and climb\)/);
+  await page.click('#teSaveBtn');
+  await page.waitForSelector('#trackEditModalOverlay', { state: 'hidden' });
+  const saved = await page.evaluate(()=> { const t = tracks.find(x => x.id === 't_old'); return { d: t.durationSec, est: t.durationEstimated, line: trackClimbSummary(t) }; });
+  assert.equal(saved.d, 3600);
+  assert.equal(saved.est, true);
+  assert.equal(saved.line, '↑ 300 m · ↓ 0 m · about 1 h 00 min');
+  assert.deepEqual(errors, []);
+});

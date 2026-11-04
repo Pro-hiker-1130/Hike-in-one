@@ -108,7 +108,10 @@
   }
 
   // A new track object from base's metadata and a series, with every
-  // derived number recomputed. opts.durationSec overrides the duration.
+  // derived number recomputed. opts.durationSec overrides the duration,
+  // opts.startTime the start (when the points carry no times), and
+  // opts.durationEstimated marks a duration that was worked out rather
+  // than recorded.
   function buildTrack(base, series, opts){
     opts = opts || {};
     const idx = sampleIndices(series.points.length, MAX_POINTS);
@@ -127,7 +130,7 @@
     }
 
     const known = t ? t.filter(x => x != null) : [];
-    const startTime = known.length ? known[0] : null;
+    const startTime = known.length ? known[0] : (opts.startTime != null ? opts.startTime : null);
     let durationSec;
     if(opts.durationSec !== undefined) durationSec = opts.durationSec;
     else if(known.length >= 2) durationSec = Math.round((known[known.length-1] - known[0]) / 1000);
@@ -145,14 +148,42 @@
       profile,
       durationSec: durationSec > 0 ? durationSec : null,
       pointEle: ele ? ele.map(e => e == null ? null : Math.round(e*10)/10) : null,
-      pointTimes: t && startTime != null ? t.map(x => x == null ? null : Math.round((x - startTime)/1000)) : null,
+      pointTimes: t && known.length ? t.map(x => x == null ? null : Math.round((x - startTime)/1000)) : null,
     });
+    if(opts.durationEstimated && out.durationSec) out.durationEstimated = true;
+    else delete out.durationEstimated;
     // Countries are worked out again by the caller (it needs the map data).
     delete out.countries;
     return out;
   }
 
   function clampIndex(i, n){ return Math.max(0, Math.min(n-1, Math.round(i))); }
+
+  // Hiking effort up to each point, in hours by the 4 km/h + 600 m/h rule.
+  // Used to share out a recorded duration when the points carry no times.
+  function cumulativeEffort(s){
+    const cum = [0];
+    for(let i=1;i<s.points.length;i++){
+      const up = s.ele && s.ele[i] != null && s.ele[i-1] != null ? Math.max(0, s.ele[i] - s.ele[i-1]) : 0;
+      cum.push(cum[i-1] + haversine(s.points[i-1], s.points[i]) / 4 + up / 600);
+    }
+    return cum;
+  }
+
+  // Options for buildTrack for points a..b of a track without point times:
+  // its share of the recorded duration (by effort) and its estimated start.
+  // Nothing when there is no duration to share out.
+  function estimatedTiming(track, s, a, b, effort){
+    if(s.t || !(track.durationSec > 0)) return {};
+    const total = effort[effort.length-1];
+    if(!(total > 0)) return {};
+    const before = Math.round(track.durationSec * effort[a] / total);
+    return {
+      durationSec: Math.round(track.durationSec * (effort[b] - effort[a]) / total),
+      startTime: track.startTime != null ? track.startTime + before*1000 : undefined,
+      durationEstimated: true,
+    };
+  }
 
   // Keep points startIdx..endIdx (inclusive).
   function trim(track, startIdx, endIdx){
@@ -161,7 +192,7 @@
     const a = clampIndex(startIdx, n), b = clampIndex(endIdx, n);
     if(b - a < 1) throw new Error('A track needs at least two points');
     if(a === 0 && b === n-1) return Object.assign({}, track);
-    return buildTrack(track, sliceSeries(s, a, b));
+    return buildTrack(track, sliceSeries(s, a, b), estimatedTiming(track, s, a, b, cumulativeEffort(s)));
   }
 
   // Two tracks that meet at point idx (both keep it). The first keeps the
@@ -171,8 +202,10 @@
     const n = s.points.length;
     const i = clampIndex(idx, n);
     if(i < 1 || i > n-2) throw new Error('Split somewhere between the start and the end');
-    const first = buildTrack(track, sliceSeries(s, 0, i));
-    const second = buildTrack(Object.assign({}, track, { id: newId, sourceKey: null }), sliceSeries(s, i, n-1));
+    const effort = cumulativeEffort(s);
+    const first = buildTrack(track, sliceSeries(s, 0, i), estimatedTiming(track, s, 0, i, effort));
+    const second = buildTrack(Object.assign({}, track, { id: newId, sourceKey: null }), sliceSeries(s, i, n-1),
+      estimatedTiming(track, s, i, n-1, effort));
     second.name = (track.name || 'Track') + ' (part 2)';
     return [first, second];
   }
@@ -199,7 +232,8 @@
     };
     const durationSec = (a.durationSec || b.durationSec) ? (a.durationSec || 0) + (b.durationSec || 0) : null;
     const base = Object.assign({}, a, { date: x.date || a.date || null });
-    const out = buildTrack(base, series, { durationSec });
+    const out = buildTrack(base, series, { durationSec, startTime: x.startTime,
+      durationEstimated: !!(a.durationEstimated || b.durationEstimated) });
     // Point times of the earlier part when only the later one had them
     // would put startTime on the wrong part — the date still comes first.
     if(x.date && out.date && x.date < out.date) out.date = x.date;

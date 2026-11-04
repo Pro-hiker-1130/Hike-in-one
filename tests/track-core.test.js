@@ -102,20 +102,49 @@ test('merge across days keeps the earlier date and skips the night', () => {
   assert.equal(m.pointEle[m.pointEle.length-1], null);
 });
 
-test('older tracks: elevation read from the profile, duration unknown after edits', () => {
+test('older tracks: elevation read from the profile, time shared out by effort after edits', () => {
   // Imported before per-point data existed: no pointEle / pointTimes.
   const points = [], profile = [];
   for(let i=0;i<11;i++){ points.push([46 + i*0.01, 7.5]); profile.push([+(i*1.112).toFixed(3), 1000 + i*50]); }
-  const old = { id: 't_old', name: 'Old', date: '2020-05-05', startTime: Date.parse('2020-05-05T09:00:00Z'),
+  const start = Date.parse('2020-05-05T09:00:00Z');
+  const old = { id: 't_old', name: 'Old', date: '2020-05-05', startTime: start,
     points, profile, distanceKm: 11.12, elevationGainM: 500, elevationLossM: 0, durationSec: 7200 };
   const s = T.trackSeries(old);
   assert.equal(s.t, null);
   assert.ok(Math.abs(s.ele[5] - 1250) < 2, s.ele[5]);
+
+  // An even climb: the first half took half the time.
   const out = T.trim(old, 0, 5);
   assert.ok(Math.abs(out.elevationGainM - 250) <= 2, out.elevationGainM);
-  assert.equal(out.durationSec, null);
+  assert.ok(Math.abs(out.durationSec - 3600) <= 2, out.durationSec);
+  assert.equal(out.durationEstimated, true);
+  assert.equal(out.startTime, start);
   assert.equal(out.date, '2020-05-05');
-  assert.equal(out.startTime, null);
+  assert.equal(out.pointTimes, null);
+
+  const late = T.trim(old, 5, 10);
+  assert.ok(Math.abs(late.startTime - (start + 3600e3)) <= 2000, 'its start moves with what was cut off');
+
+  const [a, b] = T.split(old, 3, 't_b');
+  assert.equal(a.durationSec + b.durationSec, 7200, 'the parts add up to the whole');
+  assert.ok(a.durationEstimated && b.durationEstimated);
+  assert.equal(T.merge(a, b).durationEstimated, true);
+
+  // A climb costs time: a steep first half takes more of it than a flat second half.
+  const steep = Object.assign({}, old, { profile: profile.map(([km], i) => [km, i <= 5 ? 1000 + i*200 : 2000]) });
+  assert.ok(T.trim(steep, 0, 5).durationSec > T.trim(steep, 5, 10).durationSec * 2);
+
+  // No recorded duration: nothing to share out.
+  const none = T.trim(Object.assign({}, old, { durationSec: null }), 0, 5);
+  assert.equal(none.durationSec, null);
+  assert.equal(none.durationEstimated, undefined);
+});
+
+test('tracks with point times keep a recorded, not estimated, duration', () => {
+  const t = makeTrack(101);
+  const out = T.trim(t, 10, 50);
+  assert.equal(out.durationSec, 40*60);
+  assert.equal(out.durationEstimated, undefined);
 });
 
 test('tracks without any elevation stay without', () => {

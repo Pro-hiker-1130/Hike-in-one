@@ -143,7 +143,7 @@ function teDrawPreview(fit){
   if(climb) parts.push(climb);
   const trimmed = tePreview !== t;
   document.getElementById('teSummary').textContent = (trimmed ? 'After trimming: ' : '') + parts.join(' · ') +
-    (trimmed && t.durationSec && !tePreview.durationSec ? ' · time unknown (imported before track editing)' : '');
+    (trimmed && tePreview.durationEstimated && !t.durationEstimated ? ' (time estimated from distance and climb)' : '');
 }
 
 // The track with everything typed and dragged in the dialog applied, or
