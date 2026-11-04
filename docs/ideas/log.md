@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — research (2 of 3)
+
+Looked at: Outdooractive (tour planner with snap-to-path, filters by
+length, ascent and duration) and Packstack / PackWizard (gear closet,
+reusable kits, calorie planning, lighter-gear suggestions from a catalog).
+Budget used: 2 searches, 0 fetches.
+Changed: a planned trip's gear section now shows a food estimate, for
+example "Food for 2 days: about 1.4–1.8 kg. Packed so far: 1 kg, 400 g
+short." It uses the common rule of 700–900 g of food a day, takes the
+number of days from the day split (1 day otherwise), and compares it with
+the trip's Food items. It says "about right" when the packed food is
+within range and "more than you'll likely eat" when it's well over. The
+days e2e test checks all three messages.
+For the owner: the 700–900 g a day rule is a rough guide for full hiking
+days. Say if you'd rather have it in calories, or adjustable.
+
 ## 2026-11-04 — research (owner asked for several research days: 1 of 3)
 
 Looked at: Komoot (route planner: one-way or round trip, adjustable pace

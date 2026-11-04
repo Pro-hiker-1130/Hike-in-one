@@ -151,6 +151,15 @@ function tripWeightSplit(trip){
   tripGearItemsList(trip).forEach(g => { split[gearPackRole(g)] += (g.weightGrams || 0) * (g.quantity || 1); });
   return split;
 }
+// Food to carry, by the usual rule of about 700–900 g of food a day, set
+// against the food the trip already has (the Food category).
+const FOOD_G_PER_DAY = [700, 900];
+function tripFoodPlan(trip, days){
+  const packedG = tripGearItemsList(trip).filter(g => g.category === 'Food')
+    .reduce((s, g) => s + (g.weightGrams || 0) * (g.quantity || 1), 0);
+  const low = days * FOOD_G_PER_DAY[0], high = days * FOOD_G_PER_DAY[1];
+  return { days, low, high, packedG, verdict: !packedG ? 'none' : packedG < low ? 'short' : packedG > high * 1.25 ? 'plenty' : 'right' };
+}
 function tripGearWeight(trip){
   return tripGearItemsList(trip).reduce((s,g)=>s+(g.weightGrams||0)*(g.quantity||1),0);
 }

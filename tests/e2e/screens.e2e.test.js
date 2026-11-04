@@ -240,6 +240,16 @@ test('trips: a planned route splits into days of about the chosen distance', { s
   assert.match(rows[0], /^Day 1 · Fri 5 Jul 2030km 0\.0–15\.0 · ↑ 500 m ↓ 150 m · about /);
   assert.match(rows[1], /^Day 2 · Sat 6 Jul 2030km 15\.0–32\.0/);
   assert.equal(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_days').dailyKm), 15);
+  // Food for those days, against the food packed.
+  assert.equal(await text(page, '#tripFoodPlan'), 'Food for 2 days: about 1.4–1.8 kg. No food in the gear list yet.');
+  await page.evaluate(()=>{
+    gearItems.push({ id: 'food1', name: 'Dinners', category: 'Food', weightGrams: 250, quantity: 4, status: 'active' });
+    trips.find(tr => tr.id === 'trip_days').gearIds = ['food1'];
+    renderTripDetail();
+  });
+  assert.equal(await text(page, '#tripFoodPlan'), 'Food for 2 days: about 1.4–1.8 kg. Packed so far: 1 kg, 400 g short.');
+  await page.evaluate(()=>{ gearItems.find(g => g.id === 'food1').quantity = 6; renderTripDetail(); });
+  assert.match(await text(page, '#tripFoodPlan'), /Packed: 1\.5 kg, about right\.$/);
   await page.fill('#tripDailyKm', '');
   assert.equal(await page.evaluate(()=> 'dailyKm' in trips.find(tr => tr.id === 'trip_days')), false);
   assert.deepEqual(errors, []);

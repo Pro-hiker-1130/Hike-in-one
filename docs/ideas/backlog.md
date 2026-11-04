@@ -6,6 +6,9 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 - Your own walking pace: a setting that adjusts every time estimate (planner, days, tracks) — Komoot — estimates fit slow and fast walkers — S
 - Mark spots along a planned route (water, camp, hut, viewpoint) — AllTrails — knowing where to refill or sleep — M
+- Filter trips by length, climb and walking time — Outdooractive — finding the right past or planned trip — S
+- "Lighter options" on a gear item: catalog products in the same category that weigh less — PackWizard — cutting pack weight — M
+- Kits: a reusable group of items (cook kit) added to a trip in one go — Packstack — faster packing lists — M
 
 ## Polish
 
@@ -36,3 +39,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-04 — Toast slides in and fades out (polish)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
+- 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)

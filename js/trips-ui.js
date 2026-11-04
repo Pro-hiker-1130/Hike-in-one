@@ -424,6 +424,7 @@ function setTripDailyKm(){
   if(v > 0) trip.dailyKm = Math.min(200, v); else delete trip.dailyKm;
   saveTrips();
   renderTripDays(trip, tripTracks(trip));
+  renderTripFoodPlan(trip, tripGearItemsList(trip));
 }
 
 // ---- Trip gear, with a packing mode ----
@@ -453,6 +454,8 @@ function renderTripGear(trip){
     '<span class="pack-split-part pack-split-'+r+'"><span class="pack-split-label">'+
       {base:'Base', worn:'Worn', consumable:'Consumable'}[r]+'</span> '+formatWeight(split[r])+'</span>').join('');
 
+  renderTripFoodPlan(trip, gearList);
+
   const done = gearList.filter(g => packed.has(g.id)).length;
   const progress = document.getElementById('tripPackProgress');
   progress.hidden = !(packing || done);
@@ -481,6 +484,24 @@ function renderTripGear(trip){
       '<span class="trip-track-row-meta">'+formatWeight(g.weightGrams)+'</span>';
     gearListEl.appendChild(row);
   });
+}
+
+// "Food for 2 days: about 1.4–1.8 kg. Packed: 1.5 kg, about right."
+// Planned trips with gear or a daily distance; days from the day split.
+function renderTripFoodPlan(trip, gearList){
+  const el = document.getElementById('tripFoodPlan');
+  const tks = tripTracks(trip);
+  const days = trip.dailyKm > 0 ? TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm).length || 1 : 1;
+  el.hidden = tripStatus(trip) !== 'planned' || !(gearList.length || trip.dailyKm > 0);
+  if(el.hidden) return;
+  const f = tripFoodPlan(trip, days);
+  const kg = g => (g / 1000).toFixed(1).replace(/\.0$/, '');
+  el.textContent = 'Food for ' + days + ' day' + (days !== 1 ? 's' : '') + ': about ' + kg(f.low) + '–' + kg(f.high) + ' kg. ' + {
+    none: 'No food in the gear list yet.',
+    short: 'Packed so far: ' + formatWeight(f.packedG) + ', ' + formatWeight(f.low - f.packedG) + ' short.',
+    right: 'Packed: ' + formatWeight(f.packedG) + ', about right.',
+    plenty: 'Packed: ' + formatWeight(f.packedG) + ', more than you\'ll likely eat.',
+  }[f.verdict];
 }
 
 function togglePacked(trip, gearId){
