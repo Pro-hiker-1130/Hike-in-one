@@ -218,3 +218,22 @@ test('splitDays cuts a route into days and folds a short last stretch into the d
   assert.deepEqual(T.splitDays(profile, 50).map(d => d.toKm), [32], 'one day');
   assert.deepEqual(T.splitDays(profile, 0), []);
 });
+
+test('yearSummary counts one year of walks, its longest, highest and busiest month', () => {
+  const list = [
+    { name: 'Ridge', date: '2025-07-10', distanceKm: 12, elevationGainM: 900, maxEleM: 2900 },
+    { name: 'Lake', date: '2025-07-10', distanceKm: 5, elevationGainM: 100, maxEleM: 1800 },
+    { name: 'Long valley', date: '2025-09-02', distanceKm: 15, elevationGainM: 300 },
+    { name: 'Plan', date: '2025-10-01', distanceKm: 40, elevationGainM: 3000, maxEleM: 4000, planned: true },
+    { name: 'Old', date: '2024-05-05', distanceKm: 8 },
+  ];
+  const s = T.yearSummary(list, 2025);
+  assert.deepEqual(s, {
+    year: 2025, count: 3, days: 2, distanceKm: 32, gainM: 1300,
+    longest: { name: 'Long valley', distanceKm: 15 },
+    highest: { name: 'Ridge', eleM: 2900 },
+    busiestMonth: 6,   // July: 17 km
+  });
+  assert.equal(T.yearSummary(list, 2023), null);
+  assert.equal(T.yearSummary(list, 2024).highest, null, 'no elevation that year');
+});

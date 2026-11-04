@@ -131,6 +131,10 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   assert.equal(await text(page, '#statTrips'), '2');
   assert.ok(Number(await text(page, '#statDistance')) >= 8, 'two ~4.3 km tracks');
   assert.equal(await text(page, '#statClimb'), '900');
+  // Year in review: both test hikes are in 2025.
+  assert.equal(await page.inputValue('#yearReviewSelect'), '2025');
+  assert.match(await text(page, '#yearReviewText'),
+    /^2 walks on 2 days · [\d.]+ km · 900 m upLongest: .+, [\d.]+ km · Highest: 1,600 m on Eiger trail · Busiest month: (July|August)$/);
   // A change while the map is showing counts up, then lands on the new value.
   const counting = await page.evaluate(()=>{
     trips.push({ id: 'trip_x', name: 'X', trackIds: [], gearIds: [], status: 'planned', createdAt: 2 });

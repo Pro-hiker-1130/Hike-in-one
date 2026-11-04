@@ -355,6 +355,7 @@ document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacki
 document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
 document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
 document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
+document.getElementById('yearReviewSelect').addEventListener('change', e=>{ yearReviewYear = e.target.value; renderYearReview(); });
 document.getElementById('tripShareUpdateBtn').addEventListener('click', publishTripShare);
 document.getElementById('tripShareStopBtn').addEventListener('click', stopTripShare);
 document.getElementById('tripShareCopyBtn').addEventListener('click', copyTripShareLink);

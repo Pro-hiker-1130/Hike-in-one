@@ -192,6 +192,29 @@ function setStatNumber(el, value, format){
   el._statFrame = requestAnimationFrame(step);
 }
 
+// "Year in review" under the overview: pick any year with walks.
+let yearReviewYear = null;
+function renderYearReview(){
+  const years = Array.from(new Set(walkedTracks().filter(t => t.date).map(t => String(t.date).slice(0, 4)))).sort().reverse();
+  const box = document.getElementById('yearReview');
+  box.hidden = !years.length;
+  if(!years.length) return;
+  if(!years.includes(yearReviewYear)) yearReviewYear = years[0];
+  const sel = document.getElementById('yearReviewSelect');
+  sel.innerHTML = years.map(y => '<option'+(y === yearReviewYear ? ' selected' : '')+'>'+y+'</option>').join('');
+  const s = TrackCore.yearSummary(tracks, yearReviewYear);
+  const n = (v, one, many) => v.toLocaleString('en-US') + ' ' + (v === 1 ? one : many);
+  const lines = [
+    n(s.count, 'walk', 'walks') + ' on ' + n(s.days, 'day', 'days') + ' · ' + compactNumber(s.distanceKm) + ' km · ' + compactNumber(s.gainM) + ' m up',
+    'Longest: ' + s.longest.name + ', ' + s.longest.distanceKm.toFixed(1) + ' km' +
+      (s.highest ? ' · Highest: ' + s.highest.eleM.toLocaleString('en-US') + ' m on ' + s.highest.name : '') +
+      ' · Busiest month: ' + MONTHS_LONG[s.busiestMonth],
+  ];
+  const text = document.getElementById('yearReviewText');
+  text.innerHTML = '';
+  lines.forEach(l => { const span = document.createElement('span'); span.textContent = l; text.appendChild(span); });
+}
+
 function renderStats(){
   const whole = n => String(Math.round(n));
   setStatNumber(document.getElementById('statTrips'), trips.length, whole);
@@ -208,6 +231,7 @@ function renderStats(){
     tracks.length+' track'+(tracks.length!==1?'s':'')+' and '+
     googlePoints.length.toLocaleString('en-US')+' location-history point'+(googlePoints.length!==1?'s':'')+' on this device.';
   document.getElementById('clearBtn').disabled = !(tracks.length || googlePoints.length);
+  renderYearReview();
   renderDeviceSummary();
   renderGettingStarted();
 }

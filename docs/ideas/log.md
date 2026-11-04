@@ -3,6 +3,24 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — research (3 of 3)
+
+Looked at: FATMAP / Strava routes (FATMAP was shut down by Strava in
+October 2024 and folded into Strava) and summit-log apps (yearly
+summaries, highest point, busiest months, personal records, progress
+toward peak lists). Budget used: 2 searches, 0 fetches.
+Changed: the map overview has a "Year in review" line with a year picker
+(every year you've walked in, newest first), for example "2 walks on 2 days
+· 22 km · 1,490 m up / Longest: Gornergrat ridge, 14.2 km · Highest:
+3,104 m on Gornergrat ridge · Busiest month: July". Planned routes don't
+count. The numbers come from `TrackCore.yearSummary` (unit test); the
+map e2e test checks the line.
+Note: the first test run broke the whole page because a new global name
+(`MONTHS`) clashed with one in `import.js`. Since all scripts share one
+scope, I fixed it by reusing `MONTHS_LONG`, and checked that no other
+global names are duplicated. All tests pass: 42 unit, 47 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-04 — research (2 of 3)
 
 Looked at: Outdooractive (tour planner with snap-to-path, filters by

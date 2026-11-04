@@ -755,6 +755,15 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .sr-point{margin:0;font-size:12.5px;color:var(--muted);}
 #sharedRouteOverlay .rp-map{cursor:pointer;height:min(42vh,380px);}
 
+/* Year in review under the map overview */
+.year-review{margin-top:12px;}
+.year-review[hidden]{display:none;}
+.year-review-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.year-review-head .section-label{margin:0;}
+.year-review-text{margin:0;font-size:13px;color:var(--muted);line-height:1.45;}
+.year-review-text span{display:block;}
+.year-review-text span:first-child{color:var(--parchment);font-weight:600;}
+
 /* Multi-day plan */
 #tripDaysSection[hidden]{display:none;}
 .days-goal{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}

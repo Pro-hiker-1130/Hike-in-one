@@ -9,6 +9,8 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - Filter trips by length, climb and walking time — Outdooractive — finding the right past or planned trip — S
 - "Lighter options" on a gear item: catalog products in the same category that weigh less — PackWizard — cutting pack weight — M
 - Kits: a reusable group of items (cook kit) added to a trip in one go — Packstack — faster packing lists — M
+- Peak list: tick off named summits reached on your walks (needs summit data) — summit-log apps — goals to work toward — L
+- Personal records: longest walk, biggest climb, highest point of all time — summit-log apps — small motivation — S
 
 ## Polish
 
@@ -40,3 +42,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)
+- 2026-11-04 — Year in review on the map overview (research, summit-log apps idea)

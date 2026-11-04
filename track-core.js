@@ -380,10 +380,34 @@
     return days;
   }
 
+  // One year of walked tracks: how many, on how many days, distance,
+  // climb, the longest and the highest, and the busiest month (0–11, by
+  // distance). Tracks are {date:'YYYY-MM-DD', distanceKm, elevationGainM,
+  // maxEleM, name}; planned routes don't count. Null for an empty year.
+  function yearSummary(list, year){
+    const ts = (list || []).filter(t => !t.planned && t.date && String(t.date).slice(0, 4) === String(year));
+    if(!ts.length) return null;
+    const byMonth = Array(12).fill(0);
+    let longest = ts[0], highest = null;
+    ts.forEach(t => {
+      byMonth[Number(String(t.date).slice(5, 7)) - 1] += t.distanceKm || 0;
+      if((t.distanceKm || 0) > (longest.distanceKm || 0)) longest = t;
+      if(t.maxEleM != null && (!highest || t.maxEleM > highest.maxEleM)) highest = t;
+    });
+    return {
+      year: Number(year), count: ts.length, days: new Set(ts.map(t => String(t.date).slice(0, 10))).size,
+      distanceKm: ts.reduce((s, t) => s + (t.distanceKm || 0), 0),
+      gainM: ts.reduce((s, t) => s + (t.elevationGainM || 0), 0),
+      longest: { name: longest.name, distanceKm: longest.distanceKm || 0 },
+      highest: highest ? { name: highest.name, eleM: highest.maxEleM } : null,
+      busiestMonth: byMonth.indexOf(Math.max.apply(null, byMonth)),
+    };
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary,
   };
 });
