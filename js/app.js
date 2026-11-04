@@ -74,6 +74,9 @@ const MODAL_CLOSE_FNS = {
   catalogDetailModalOverlay: closeCatalogDetail,
   catalogBulkModalOverlay: closeCatalogBulkModal,
   catalogBrowseModalOverlay: closeCatalogBrowser,
+  trackEditModalOverlay: closeTrackEditor,
+  routePlannerOverlay: closeRoutePlanner,
+  sharedRouteOverlay: closeSharedRoute,
 };
 let openModalOrder = [];      // most-recently-opened last
 let expectingCleanupPop = false;  // a history.back() we triggered ourselves, to drop a closed modal's entry
@@ -249,6 +252,15 @@ document.getElementById('gearForm').addEventListener('input', ()=> syncGearMoreD
 document.getElementById('gearForm').addEventListener('change', ()=> syncGearMoreDetails(false));
 document.getElementById('addGearBtnGarage').addEventListener('click', ()=> openCatalogBrowser(null));
 document.getElementById('viewAllGearBtn').addEventListener('click', ()=> showCategory('ALL'));
+document.getElementById('gearCsvBtn').addEventListener('click', downloadGearCsv);
+document.getElementById('gearCsvInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(file) importGearCsv(file);
+});
+document.getElementById('gearCsvImportBtn').addEventListener('keydown', e=>{
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); document.getElementById('gearCsvInput').click(); }
+});
 document.querySelectorAll('#gearViewToggle button').forEach(b=> b.addEventListener('click', ()=> setGearView(b.dataset.gearview)));
 setGearView(gearView);
 NARROW_SCENE.addEventListener('change', ()=>{
@@ -339,6 +351,16 @@ document.getElementById('addTripBtn').addEventListener('click', ()=> openTripMod
 document.getElementById('backToTripsBtn').addEventListener('click', showTripsList);
 document.getElementById('tripEditBtn').addEventListener('click', ()=> openTripModal(currentTripId));
 document.getElementById('tripGearEditBtn').addEventListener('click', ()=> openGearPickerModal(currentTripId));
+document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacking);
+document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
+document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
+document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
+document.getElementById('tripShareUpdateBtn').addEventListener('click', publishTripShare);
+document.getElementById('tripShareStopBtn').addEventListener('click', stopTripShare);
+document.getElementById('tripShareCopyBtn').addEventListener('click', copyTripShareLink);
+document.getElementById('srClose').addEventListener('click', closeSharedRoute);
+document.getElementById('srForm').addEventListener('submit', sendRouteSuggestion);
+document.getElementById('srClearPoint').addEventListener('click', ()=> srSetPoint(null));
 document.getElementById('tripViewOnMapBtn').addEventListener('click', ()=>{
   const trip = trips.find(t=>t.id===currentTripId);
   if(!trip) return;
@@ -752,6 +774,7 @@ document.getElementById('clearBtn').addEventListener('click', async (e)=>{
   // (per the static HTML/CSS default, that's Map, not Gear).
   appInitializing = false;
   history.replaceState(currentRouteState(), '', location.pathname + location.search);
+  if(SHARED_ROUTE_TOKEN) openSharedRoute(SHARED_ROUTE_TOKEN);
 
   // Backfill country tags for tracks saved before this feature existed.
   // Runs after first paint so it never blocks initial load.

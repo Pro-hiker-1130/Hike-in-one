@@ -157,8 +157,10 @@
         <h2>The Gear Room</h2>
         <p id="gearRoomIntro">Your gear, where it lives — click a shelf, hook or bench to see what's on it</p>
       </div>
-      <div style="display:flex;gap:8px;">
+      <div class="garage-actions">
         <button class="ghost-btn" id="viewAllGearBtn">All items</button>
+        <label class="ghost-btn" id="gearCsvImportBtn" title="Add gear from a spreadsheet (CSV)" tabindex="0" role="button">Import CSV<input type="file" id="gearCsvInput" accept=".csv,text/csv" hidden></label>
+        <button class="ghost-btn" id="gearCsvBtn" title="Download your gear list as a spreadsheet (CSV)">Download CSV</button>
         <button class="primary-btn" id="addGearBtnGarage">+ Add item</button>
       </div>
     </div>
@@ -354,6 +356,7 @@
       </div>
       <span class="gear-badge" id="tripDetailStatusBadge"></span>
       <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="ghost-btn" id="tripShareImageBtn" type="button" title="Make a picture of this trip to send to friends">Share image</button>
         <button class="ghost-btn" id="tripViewOnMapBtn">View on map</button>
         <button class="ghost-btn" id="tripEditBtn">Edit</button>
       </div>
@@ -381,23 +384,56 @@
         <div class="stat-label">pack weight</div>
       </div>
     </div>
+    <p class="trip-daylight" id="tripDaylight" hidden></p>
+    <div class="trip-weather" id="tripWeather" hidden></div>
 
     <div class="trip-detail-section">
       <div class="trip-detail-section-head">
         <p class="section-label" style="margin:0;">Tracks in this trip</p>
+        <div class="trip-gear-actions">
+          <button type="button" class="ghost-btn" id="tripShareRouteBtn" hidden>Share with partners</button>
+          <button type="button" class="ghost-btn" id="tripPlanRouteBtn">Plan a route</button>
+        </div>
       </div>
       <div id="tripTrackList"></div>
+      <div class="share-panel" id="tripSharePanel" hidden>
+        <p class="section-label share-panel-title">Shared with partners</p>
+        <div class="share-link-row">
+          <input type="text" id="tripShareLink" readonly aria-label="Link for partners">
+          <button type="button" class="ghost-btn" id="tripShareCopyBtn">Copy</button>
+        </div>
+        <p class="share-panel-note" id="tripShareNote"></p>
+        <div id="tripShareSuggestions"></div>
+        <div class="share-panel-actions">
+          <button type="button" class="ghost-btn" id="tripShareUpdateBtn">Send the latest route</button>
+          <button type="button" class="link-btn" id="tripShareStopBtn">Stop sharing</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="trip-detail-section" id="tripDaysSection" hidden>
+      <div class="trip-detail-section-head">
+        <p class="section-label" style="margin:0;">Days</p>
+        <label class="days-goal">About <input type="number" id="tripDailyKm" min="1" max="200" step="1" inputmode="numeric"> km a day</label>
+      </div>
+      <div id="tripDaysList"></div>
     </div>
 
     <div class="trip-detail-section">
       <div class="trip-detail-section-head">
         <p class="section-label" style="margin:0;">Gear</p>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div class="trip-gear-actions">
           <select class="mini-select" id="tripLoadoutSelect">
             <option value="">Apply a loadout…</option>
           </select>
+          <button class="ghost-btn" id="tripPackBtn" type="button" aria-pressed="false" hidden>Pack</button>
           <button class="ghost-btn" id="tripGearEditBtn">Edit gear</button>
         </div>
+      </div>
+      <p class="pack-split" id="tripPackSplit" hidden></p>
+      <div class="pack-progress" id="tripPackProgress" hidden>
+        <span class="pack-progress-text" id="tripPackProgressText" aria-live="polite"></span>
+        <span class="pack-progress-bar"><span id="tripPackProgressFill"></span></span>
       </div>
       <div id="tripGearSummaryList"></div>
     </div>
@@ -558,6 +594,17 @@
           </select>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="gearPackRole">Carried as</label>
+          <select id="gearPackRole">
+            <option value="">Automatic (food: consumable)</option>
+            <option value="base">Base — in the pack</option>
+            <option value="worn">Worn — on you</option>
+            <option value="consumable">Consumable — food, water, fuel</option>
+          </select>
+        </div>
+      </div>
       <details class="more-details" id="gearMoreDetails">
         <summary><span class="more-details-title">More details</span> <span class="more-details-hint" id="gearMoreDetailsHint">price, purchase date, condition, links, tags, notes</span></summary>
       <div class="form-row">
@@ -700,6 +747,143 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="trackEditModalOverlay" style="display:none;">
+  <div class="modal track-edit-modal" role="dialog" aria-labelledby="teTitle">
+    <div class="modal-header">
+      <h3 id="teTitle">Edit track</h3>
+      <button class="modal-close" aria-label="Close" id="trackEditClose" type="button">&times;</button>
+    </div>
+    <form class="modal-form" id="trackEditForm" novalidate>
+      <div class="form-field">
+        <label for="teName">Name</label>
+        <input type="text" id="teName" maxlength="120" required>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="teDate">Date</label>
+          <input type="date" id="teDate">
+        </div>
+        <div class="form-field">
+          <label for="teSport">Activity</label>
+          <input type="text" id="teSport" list="teSportList" maxlength="40" placeholder="Hike">
+          <datalist id="teSportList">
+            <option value="Hike"></option><option value="Walk"></option><option value="Run"></option>
+            <option value="Trail run"></option><option value="Ride"></option><option value="Mountain bike ride"></option>
+            <option value="Ski tour"></option><option value="Snowshoe"></option>
+          </datalist>
+        </div>
+      </div>
+
+      <div class="te-map" id="teMap" aria-label="Track preview"></div>
+      <div class="te-summary" id="teSummary" aria-live="polite"></div>
+
+      <div class="te-tabs" role="tablist">
+        <button type="button" role="tab" class="te-tab active" data-tab="trim" aria-selected="true">Trim</button>
+        <button type="button" role="tab" class="te-tab" data-tab="split" aria-selected="false">Split</button>
+        <button type="button" role="tab" class="te-tab" data-tab="join" aria-selected="false">Join</button>
+      </div>
+      <div class="te-panel" data-panel="trim">
+        <p class="te-help">Cut off the start or the end, for example the drive home after you forgot to stop recording.</p>
+        <label class="te-range-label" for="teTrimStart">Start <span id="teTrimStartVal"></span></label>
+        <input type="range" id="teTrimStart" min="0" value="0" step="1">
+        <label class="te-range-label" for="teTrimEnd">End <span id="teTrimEndVal"></span></label>
+        <input type="range" id="teTrimEnd" min="0" value="0" step="1">
+      </div>
+      <div class="te-panel" data-panel="split" hidden>
+        <p class="te-help">Make two tracks out of this one, for example one per day.</p>
+        <label class="te-range-label" for="teSplitAt">Split at <span id="teSplitVal"></span></label>
+        <input type="range" id="teSplitAt" min="0" value="0" step="1">
+        <button type="button" class="ghost-btn" id="teSplitBtn">Split into two tracks</button>
+      </div>
+      <div class="te-panel" data-panel="join" hidden>
+        <p class="te-help">Join another track to this one, for example when the recording was stopped and restarted. The tracks are put in time order.</p>
+        <div class="form-field">
+          <label for="teJoinSelect">Track to join</label>
+          <select id="teJoinSelect"></select>
+        </div>
+        <button type="button" class="ghost-btn" id="teJoinBtn">Join tracks</button>
+      </div>
+      <div class="upload-error" id="teError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="danger-btn" id="teDeleteBtn">Delete</button>
+        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <button type="button" class="ghost-btn" id="teDownloadBtn">Download GPX</button>
+          <button type="submit" class="primary-btn" id="teSaveBtn">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sharedRouteOverlay" style="display:none;">
+  <div class="modal route-planner-modal" role="dialog" aria-labelledby="srTitle">
+    <div class="modal-header">
+      <h3 id="srTitle">Shared route</h3>
+      <button class="modal-close" aria-label="Close" id="srClose" type="button">&times;</button>
+    </div>
+    <div class="rp-body">
+      <p class="sr-intro">A hiking partner shared this route with you. Have a look and suggest changes — they'll see them in their trip.</p>
+      <div class="rp-map" id="srMap"></div>
+      <p class="rp-stats" id="srStats"></p>
+      <div id="srSuggestions"></div>
+      <form id="srForm" class="sr-form" novalidate>
+        <div class="form-field">
+          <label for="srAuthor">Your name</label>
+          <input type="text" id="srAuthor" maxlength="60" autocomplete="name">
+        </div>
+        <div class="form-field">
+          <label for="srBody">Your suggestion</label>
+          <textarea id="srBody" maxlength="1000" placeholder="e.g. Take the ridge path after the hut, it's quieter"></textarea>
+        </div>
+        <p class="sr-point"><span id="srPoint"></span> <button type="button" class="link-btn" id="srClearPoint" hidden>Remove spot</button></p>
+        <div class="modal-actions"><button type="submit" class="primary-btn" id="srSendBtn">Send suggestion</button></div>
+      </form>
+      <p class="upload-error" id="srError" aria-live="polite"></p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="routePlannerOverlay" style="display:none;">
+  <div class="modal route-planner-modal" role="dialog" aria-labelledby="rpTitle">
+    <div class="modal-header">
+      <h3 id="rpTitle">Plan a route</h3>
+      <button class="modal-close" aria-label="Close" id="rpClose" type="button">&times;</button>
+    </div>
+    <div class="rp-body">
+      <div class="rp-toolbar">
+        <div class="view-toggle" id="rpModeToggle" role="radiogroup" aria-label="How to draw the next part">
+          <button type="button" data-mode="trail" class="active" role="radio" aria-checked="true">Follow trails</button>
+          <button type="button" data-mode="line" role="radio" aria-checked="false">Straight line</button>
+        </div>
+        <div class="rp-toolbar-actions">
+          <button type="button" class="ghost-btn" id="rpUndoBtn" disabled>Undo</button>
+          <button type="button" class="ghost-btn" id="rpClearBtn" disabled>Clear</button>
+        </div>
+      </div>
+      <div class="rp-map-wrap">
+        <div class="rp-map" id="rpMap"></div>
+        <div class="rp-hint" id="rpHint">Tap the map to set the start, then tap where the route goes. Drag a point to move it.</div>
+      </div>
+      <div class="rp-stats" id="rpStats" aria-live="polite"></div>
+      <div class="rp-profile" id="rpProfile"></div>
+      <div class="upload-error" id="rpError"></div>
+      <div class="form-field">
+        <label for="rpName">Route name</label>
+        <input type="text" id="rpName" maxlength="120">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="danger-btn" id="rpDeleteBtn" hidden>Delete</button>
+        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <button type="button" class="ghost-btn" id="rpDownloadBtn" disabled>Download GPX</button>
+          <button type="button" class="primary-btn" id="rpSaveBtn" disabled>Save to trip</button>
+        </div>
+      </div>
+      <p class="rp-credit">Trail routing by <a href="https://brouter.de" target="_blank" rel="noopener">BRouter</a> on OpenStreetMap data; elevation for straight lines by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>. Times use the rule 4 km per hour plus 1 hour per 600 m of climb.</p>
+    </div>
   </div>
 </div>
 
@@ -1096,6 +1280,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/dist/umd/supabase.js"></script>
 <script src="catalog-core.js"></script>
+<script src="track-core.js"></script>
 <script src="js/setup.js"></script>
 <script src="js/activity-files.js"></script>
 <script src="js/storage-sync.js"></script>
@@ -1107,6 +1292,9 @@
 <script src="js/import.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/catalog.js"></script>
+<script src="js/track-editor.js"></script>
+<script src="js/route-planner.js"></script>
+<script src="js/route-share.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

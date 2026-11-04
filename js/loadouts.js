@@ -228,7 +228,7 @@ function renderTripSection(list, gridId, emptyId, status){
   document.getElementById(emptyId).style.display = list.length ? 'none' : 'block';
   const trackColors = computeTrackColors();
   list.forEach(trip=>{
-    const tks = tripTracks(trip);
+    const tks = tripCountedTracks(trip);
     const dist = tripDistanceKm(trip);
     const gearList = tripGearItemsList(trip);
     const weight = tripGearWeight(trip);
@@ -261,7 +261,7 @@ function renderTripSection(list, gridId, emptyId, status){
 // A trip's tracks laid end to end (in date order) as one profile, so a
 // two-day hike reads as one line: [[km, ele], ...] or null.
 function tripProfile(trip){
-  const tks = tripTracks(trip).filter(t => Array.isArray(t.profile) && t.profile.length > 1)
+  const tks = tripCountedTracks(trip).filter(t => Array.isArray(t.profile) && t.profile.length > 1)
     .sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')));
   const pts = [];
   let offset = 0;
@@ -322,7 +322,7 @@ function renderTripTimeline(list){
     section.appendChild(h);
     section.appendChild(grid);
     g.trips.forEach(trip=>{ try{
-      const tks = tripTracks(trip);
+      const tks = tripCountedTracks(trip);
       const color = tripColor(trip, trackColors) || 'var(--fern)';
       const dist = tripDistanceKm(trip);
       const climb = tks.reduce((sum,t)=>sum+(t.elevationGainM||0), 0);
@@ -376,7 +376,10 @@ function renderNextTrip(planned){
   document.getElementById('nextTripName').textContent = upcoming.name;
   const gearList = tripGearItemsList(upcoming);
   const weight = tripGearWeight(upcoming);
-  document.getElementById('nextTripMeta').textContent = friendlyDate(date) + ' · ' + (gearList.length
+  const routeKm = tripDistanceKm(upcoming);
+  const routeUp = tripCountedTracks(upcoming).reduce((sum,t)=>sum+(t.elevationGainM||0), 0);
+  document.getElementById('nextTripMeta').textContent = friendlyDate(date) + ' · ' +
+    (routeKm ? routeKm.toFixed(1) + ' km' + (routeUp ? ', ↑ ' + routeUp.toLocaleString('en-US') + ' m' : '') + ' · ' : '') + (gearList.length
     ? gearList.length + ' item' + (gearList.length !== 1 ? 's' : '') + ' packed' + (weight ? ', ' + formatWeight(weight) : '')
     : 'nothing packed yet');
   card.onclick = ()=> showTripDetail(upcoming.id);

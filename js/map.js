@@ -5,7 +5,7 @@
 // ---- Rendering ----
 function allPoints(){
   const pts = [];
-  tracks.forEach(t=>pts.push(...t.points));
+  tracks.forEach(t=>{ if(!t.planned) pts.push(...t.points); });
   pts.push(...googlePoints);
   return pts;
 }
@@ -64,16 +64,18 @@ function renderTracks(){
   const trackColors = computeTrackColors();
   tracks.forEach((t)=>{
     const color = trackColors[t.id];
-    const line = L.polyline(t.points, {color, weight:2.5, opacity:0.85});
+    // Planned routes are dashed: drawn, not walked.
+    const line = L.polyline(t.points, {color, weight:2.5, opacity:0.85, dashArray: t.planned ? '6 6' : null});
     const trip = findTrackTrip(t.id);
     const photoCount = trip ? (trip.photoIds||[]).length : 0;
     let popupHtml =
-      '<strong>'+escapeHtml(t.name)+'</strong><br>'+
+      '<strong>'+escapeHtml(t.name)+'</strong>'+(t.planned ? ' <em>(planned route)</em>' : '')+'<br>'+
       (t.date ? escapeHtml(friendlyDate(t.date))+', ' : '') +
       (sportLabel(t.sport) ? escapeHtml(sportLabel(t.sport))+', ' : '') +
       t.distanceKm.toFixed(1)+' km';
     const climbLine = trackClimbSummary(t);
     if(climbLine) popupHtml += '<br>'+climbLine;
+    popupHtml += '<br><a href="#" class="popup-track-edit" data-track-id="'+t.id+'">'+(t.planned ? 'Edit route' : 'Edit track')+'</a>';
     if(trip){
       const tripGear = tripGearItemsList(trip);
       if(tripGear.length){
@@ -105,6 +107,14 @@ map.on('popupopen', (e)=>{
     link.addEventListener('click', (evt)=>{
       evt.preventDefault();
       goToTripFromMap(link.dataset.tripId);
+    });
+  }
+  const editLink = el && el.querySelector('.popup-track-edit');
+  if(editLink){
+    editLink.addEventListener('click', (evt)=>{
+      evt.preventDefault();
+      map.closePopup();
+      openTrackEditor(editLink.dataset.trackId);
     });
   }
   const photoLink = el && el.querySelector('.popup-photo-link');
@@ -156,15 +166,43 @@ function compactNumber(n){
   return n >= 10000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : n.toLocaleString('en-US');
 }
 
+// Sets a stat tile's number; when it changes on screen it counts up (or
+// down) from the old value over 300 ms. Off with reduced motion. While it
+// runs the element carries data-counting.
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)');
+function setStatNumber(el, value, format){
+  const from = el._statValue;
+  el._statValue = value;
+  cancelAnimationFrame(el._statFrame);
+  const visible = el.offsetParent !== null && !document.hidden;
+  if(from == null || from === value || REDUCED_MOTION.matches || !visible){
+    delete el.dataset.counting;
+    el.textContent = format(value);
+    return;
+  }
+  el.dataset.counting = '';
+  const start = performance.now();
+  const step = now => {
+    const k = Math.min(1, (now - start) / 300);
+    const eased = 1 - Math.pow(1 - k, 3);
+    el.textContent = format(k < 1 ? from + (value - from) * eased : value);
+    if(k < 1) el._statFrame = requestAnimationFrame(step);
+    else delete el.dataset.counting;
+  };
+  el._statFrame = requestAnimationFrame(step);
+}
+
 function renderStats(){
-  document.getElementById('statTrips').textContent = trips.length;
-  const dist = tracks.reduce((s,t)=>s+t.distanceKm,0);
-  document.getElementById('statDistance').textContent = compactNumber(dist);
-  const climb = tracks.reduce((s,t)=>s+(t.elevationGainM||0),0);
-  document.getElementById('statClimb').textContent = compactNumber(climb);
+  const whole = n => String(Math.round(n));
+  setStatNumber(document.getElementById('statTrips'), trips.length, whole);
+  const walked = walkedTracks();
+  const dist = walked.reduce((s,t)=>s+t.distanceKm,0);
+  setStatNumber(document.getElementById('statDistance'), dist, compactNumber);
+  const climb = walked.reduce((s,t)=>s+(t.elevationGainM||0),0);
+  setStatNumber(document.getElementById('statClimb'), climb, compactNumber);
   const countries = allVisitedCountries();
   const countriesEl = document.getElementById('statCountries');
-  countriesEl.textContent = countries.size;
+  setStatNumber(countriesEl, countries.size, whole);
   countriesEl.title = countries.size ? Array.from(countries).sort().join(', ') : '';
   document.getElementById('settingsDataSummary').textContent =
     tracks.length+' track'+(tracks.length!==1?'s':'')+' and '+
@@ -206,7 +244,7 @@ function renderGettingStarted(){
   let dismissed = false;
   try{ dismissed = localStorage.getItem('hio-gs-dismissed') === '1'; }catch(e){}
   const steps = [
-    ['gsImport', tracks.length > 0],
+    ['gsImport', walkedTracks().length > 0],
     ['gsGear', gearItems.length > 0],
     ['gsSync', !CLOUD_SYNC_ENABLED || !!cloudUser],
   ];

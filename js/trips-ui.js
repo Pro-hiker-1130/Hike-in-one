@@ -83,10 +83,13 @@ function showTripsList(){
 }
 
 function showTripDetail(id){
+  if(id !== currentTripId) packingTripId = null;
   currentTripId = id;
   document.getElementById('tripsListView').style.display = 'none';
   document.getElementById('tripDetailView').style.display = 'flex';
   renderTripDetail();
+  const shown = trips.find(t => t.id === id);
+  if(shown) loadTripShare(shown);
   pushRouteState();
 }
 
@@ -106,11 +109,16 @@ function renderTripDetail(){
   badge.textContent = status === 'planned' ? 'Planned' : 'Completed';
   document.getElementById('tripStatTracks').textContent = tks.length;
   document.getElementById('tripStatDistance').textContent = dist.toFixed(1);
-  const climbTracks = tks.filter(t => t.elevationGainM != null);
+  const climbTracks = tripCountedTracks(trip).filter(t => t.elevationGainM != null);
   document.getElementById('tripStatClimb').textContent = climbTracks.length
     ? climbTracks.reduce((s,t)=>s+t.elevationGainM, 0).toLocaleString('en-US') : '—';
   document.getElementById('tripStatGearCount').textContent = gearList.length;
   document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
+
+  renderTripDaylight(trip, tks);
+  renderTripDays(trip, tks);
+  renderTripWeather(trip, tks);
+  renderTripShare(trip);
 
   refreshTripLoadoutSelect();
   document.getElementById('tripLoadoutSelect').value = trip.loadoutId || '';
@@ -119,7 +127,7 @@ function renderTripDetail(){
   const trackList = document.getElementById('tripTrackList');
   trackList.innerHTML = '';
   if(!tks.length){
-    trackList.innerHTML = '<div class="trip-gear-empty">No tracks linked yet — click Edit to add some.</div>';
+    trackList.innerHTML = '<div class="trip-gear-empty">No tracks yet. Plan a route, or click Edit to add GPX files.</div>';
   } else {
     tks.forEach(t=>{
       const block = document.createElement('div');
@@ -127,8 +135,11 @@ function renderTripDetail(){
       const row = document.createElement('div');
       row.className = 'trip-track-row';
       row.innerHTML =
-        '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+'</span>'+
-        '<span class="trip-track-row-meta">'+(t.date?escapeHtml(friendlyDate(t.date))+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>';
+        '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+
+          (t.planned ? '<span class="planned-route-badge">Planned route</span>' : '')+'</span>'+
+        '<span class="trip-track-row-meta">'+(t.date?escapeHtml(friendlyDate(t.date))+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>'+
+        '<button type="button" class="link-btn track-edit-btn" aria-label="Edit track '+escapeHtml(t.name)+'">Edit</button>';
+      row.querySelector('.track-edit-btn').addEventListener('click', ()=>openTrackEditor(t.id));
       block.appendChild(row);
       const climb = trackClimbSummary(t);
       if(climb){
@@ -144,6 +155,13 @@ function renderTripDetail(){
         c.textContent = 'Added before elevation tracking — re-add this GPX to see its profile.';
         block.appendChild(c);
       }
+      const terrain = trackTerrainSummary(t);
+      if(terrain){
+        const c = document.createElement('div');
+        c.className = 'track-terrain';
+        c.textContent = terrain;
+        block.appendChild(c);
+      }
       if(t.profile && t.profile.length > 1){
         const prof = buildElevationProfile(t);
         prof.style.setProperty('--ele-color', trackColors[t.id]);
@@ -153,22 +171,355 @@ function renderTripDetail(){
     });
   }
 
+  renderTripGear(trip);
+
+  renderTripPhotoGrid(trip);
+}
+
+// ---- A trip as a picture to send to friends ----
+// Drawn on a canvas, nothing leaves the device: the route's shape (no map
+// tiles), the elevation profile, the key numbers and the gear list. Shared
+// through the phone's share sheet when it takes images, else downloaded.
+const SHARE_W = 1080, SHARE_H = 1350;
+function cssVar(name, fallback){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+function drawTripShareImage(trip){
+  const c = document.createElement('canvas');
+  c.width = SHARE_W; c.height = SHARE_H;
+  const g = c.getContext('2d');
+  const col = { bg: cssVar('--ink', '#EFEEE8'), panel: cssVar('--panel', '#FFFFFF'), ink: cssVar('--parchment', '#344E41'),
+    muted: cssVar('--muted', '#4E5D52'), fern: cssVar('--fern', '#588157'), sage: cssVar('--sage', '#A3B18A'), line: '#D6D9CF' };
+  const display = "700 {s}px 'Barlow Condensed', 'Barlow', sans-serif", body = "{w} {s}px 'Barlow', sans-serif";
+  const font = (tpl, s, w) => tpl.replace('{s}', s).replace('{w}', w || 400);
+  const fit = (text, max) => { let t = text; while(t.length > 1 && g.measureText(t).width > max) t = t.slice(0, -2) + '…'; return t; };
+  g.fillStyle = col.bg; g.fillRect(0, 0, SHARE_W, SHARE_H);
+
+  const P = 64;
+  g.fillStyle = col.ink; g.font = font(display, 76); g.textBaseline = 'top';
+  g.fillText(fit(trip.name.toUpperCase(), SHARE_W - 2*P), P, P);
+  const date = tripDisplayDate(trip);
+  g.fillStyle = col.muted; g.font = font(body, 30);
+  g.fillText([tripStatus(trip) === 'planned' ? 'Planned' : 'Walked', date ? friendlyDate(date) : ''].filter(Boolean).join(' · '), P, P + 92);
+
+  // Route shape in a white panel.
+  const box = { x: P, y: 220, w: SHARE_W - 2*P, h: 520 };
+  g.fillStyle = col.panel; g.beginPath(); g.roundRect(box.x, box.y, box.w, box.h, 24); g.fill();
+  const tks = tripTracks(trip);
+  const pts = tks.flatMap(t => t.points || []);
+  if(pts.length > 1){
+    const meanLat = pts.reduce((s, p) => s + p[0], 0) / pts.length;
+    const k = Math.cos(meanLat * Math.PI / 180);
+    const xs = pts.map(p => p[1] * k), ys = pts.map(p => -p[0]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = 48, sc = Math.min((box.w - 2*pad) / ((maxX - minX) || 1e-9), (box.h - 2*pad) / ((maxY - minY) || 1e-9));
+    const ox = box.x + (box.w - (maxX - minX) * sc) / 2, oy = box.y + (box.h - (maxY - minY) * sc) / 2;
+    const at = p => [ox + (p[1] * k - minX) * sc, oy + (-p[0] - minY) * sc];
+    const colors = computeTrackColors();
+    g.lineWidth = 7; g.lineJoin = g.lineCap = 'round';
+    tks.forEach(t=>{
+      if(!t.points || t.points.length < 2) return;
+      g.strokeStyle = colors[t.id] || col.fern;
+      g.setLineDash(t.planned ? [18, 14] : []);
+      g.beginPath(); t.points.forEach((p, i) => { const [x, y] = at(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+    });
+    g.setLineDash([]);
+    const [sx, sy] = at(pts[0]);
+    g.fillStyle = col.ink; g.beginPath(); g.arc(sx, sy, 11, 0, 2*Math.PI); g.fill();
+  } else {
+    g.fillStyle = col.muted; g.font = font(body, 30); g.textAlign = 'center';
+    g.fillText('No route yet', box.x + box.w/2, box.y + box.h/2 - 15); g.textAlign = 'left';
+  }
+
+  // Key numbers.
+  const counted = tripCountedTracks(trip);
+  const climb = counted.reduce((s, t) => s + (t.elevationGainM || 0), 0);
+  const split = tripWeightSplit(trip);
+  const stats = [[tripDistanceKm(trip).toFixed(1), 'km'], [climb ? climb.toLocaleString('en-US') : '—', 'm up'],
+    [formatWeight(split.base), 'base weight'], [String(tripGearItemsList(trip).length), 'gear items']];
+  const sw = (SHARE_W - 2*P - 3*20) / 4;
+  stats.forEach(([num, label], i)=>{
+    const x = P + i * (sw + 20), y = 772;
+    g.fillStyle = col.panel; g.beginPath(); g.roundRect(x, y, sw, 132, 18); g.fill();
+    g.fillStyle = col.ink; g.font = font(display, 54); g.fillText(fit(num, sw - 40), x + 22, y + 18);
+    g.fillStyle = col.muted; g.font = font(body, 24, 500); g.fillText(label.toUpperCase(), x + 22, y + 88);
+  });
+
+  // Elevation profile of the longest track.
+  const prof = tks.filter(t => t.profile && t.profile.length > 1).sort((a, b) => b.distanceKm - a.distanceKm)[0];
+  const pr = { x: P, y: 976, w: SHARE_W - 2*P, h: 130 };
+  if(prof){
+    const e = prof.profile, lo = Math.min(...e.map(p => p[1])), hi = Math.max(...e.map(p => p[1])) || 1;
+    const x0 = e[0][0], span = (e[e.length-1][0] - x0) || 1, rng = (hi - lo) || 1;
+    const xy = p => [pr.x + (p[0] - x0) / span * pr.w, pr.y + pr.h - (p[1] - lo) / rng * pr.h * 0.9];
+    g.beginPath(); e.forEach((p, i) => { const [x, y] = xy(p); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.lineTo(pr.x + pr.w, pr.y + pr.h); g.lineTo(pr.x, pr.y + pr.h); g.closePath();
+    g.fillStyle = 'rgba(88,129,87,0.18)'; g.fill();
+    g.beginPath(); e.forEach((p, i) => { const [x, y] = xy(p); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.strokeStyle = col.fern; g.lineWidth = 4; g.stroke();
+    g.fillStyle = col.muted; g.font = font(body, 22);
+    g.fillText(Math.round(hi).toLocaleString('en-US') + ' m', pr.x, pr.y - 30);
+  }
+
+  // Gear: the heaviest items, then how many more.
+  const gear = tripGearItemsList(trip).slice().sort((a, b) => (b.weightGrams || 0) * (b.quantity || 1) - (a.weightGrams || 0) * (a.quantity || 1));
+  const gy = 1146;
+  if(gear.length){
+    g.fillStyle = col.ink; g.font = font(body, 26, 600);
+    const shown = gear.slice(0, 4).map(it => it.name + ' ' + formatWeight((it.weightGrams || 0) * (it.quantity || 1)));
+    g.fillText(fit('Packing: ' + shown.join(' · ') + (gear.length > 4 ? ' · +' + (gear.length - 4) + ' more' : ''), SHARE_W - 2*P), P, gy);
+  }
+  g.fillStyle = col.sage; g.fillRect(P, SHARE_H - 120, SHARE_W - 2*P, 2);
+  g.fillStyle = col.muted; g.font = font(display, 34);
+  g.fillText('HIKE-IN-ONE', P, SHARE_H - 92);
+  return c;
+}
+
+async function shareTripImage(id){
+  const trip = trips.find(t => t.id === id);
+  if(!trip) return;
+  try{ await document.fonts.ready; }catch(e){}
+  const canvas = drawTripShareImage(trip);
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  const name = (trip.name || 'trip').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase().slice(0, 60) || 'trip';
+  const file = new File([blob], name + '.png', { type: 'image/png' });
+  if(navigator.canShare && navigator.canShare({ files: [file] })){
+    try{ await navigator.share({ files: [file], title: trip.name }); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file);
+  a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 10000);
+}
+
+// ---- Weather at the start of a planned trip ----
+// Open-Meteo's forecast (free, no account) for the route start on the
+// trip's days, once the trip is within its 16-day range. Only the start
+// point, rounded to about 1 km, and the dates are sent. Answers are kept
+// for an hour so re-rendering the page doesn't ask again.
+const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
+const FORECAST_DAYS = 16;
+const forecastCache = new Map();
+const WEATHER_WORDS = [[0,'Clear'],[1,'Mostly clear'],[2,'Partly cloudy'],[3,'Cloudy'],[48,'Fog'],[57,'Drizzle'],
+  [67,'Rain'],[77,'Snow'],[82,'Showers'],[86,'Snow showers'],[99,'Thunderstorms']];
+function weatherWord(code){ const w = WEATHER_WORDS.find(([max]) => code <= max); return w ? w[1] : ''; }
+
+function tripStartPoint(tks){
+  const withPoints = tks.filter(t => t.points && t.points.length);
+  const track = withPoints.find(t => t.planned) || withPoints[0];
+  return track ? track.points[0] : null;
+}
+
+function isoAddDays(iso, n){ return new Date(isoDay(iso).getTime() + n*86400000).toISOString().slice(0,10); }
+
+async function fetchForecast(lat, lon, from, to){
+  const key = [lat, lon, from, to].join('|');
+  const hit = forecastCache.get(key);
+  if(hit && Date.now() - hit.at < 3600000) return hit.data;
+  const url = FORECAST_URL + '?latitude=' + lat + '&longitude=' + lon + '&timezone=auto&start_date=' + from + '&end_date=' + to +
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max';
+  const res = await fetch(url);
+  const data = await res.json();
+  if(!res.ok || data.error || !data.daily) throw new Error(data.reason || 'Forecast unavailable');
+  forecastCache.set(key, { at: Date.now(), data });
+  return data;
+}
+
+function renderTripWeather(trip, tks){
+  const el = document.getElementById('tripWeather');
+  const date = tripDisplayDate(trip);
+  const start = tripStartPoint(tks);
+  const today = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  if(tripStatus(trip) !== 'planned' || !date || !start || String(date).slice(0,10) < today){ el.hidden = true; return; }
+  const from = String(date).slice(0,10);
+  const lastForecastDay = isoAddDays(today, FORECAST_DAYS - 1);
+  el.hidden = false;
+  if(from > lastForecastDay){
+    el.innerHTML = '<p class="trip-weather-note"></p>';
+    el.firstChild.textContent = 'Weather: the forecast reaches 16 days ahead — check back from ' + friendlyDate(isoAddDays(from, -(FORECAST_DAYS - 1))) + '.';
+    return;
+  }
+  const days = trip.dailyKm > 0 ? Math.max(1, TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm).length) : 1;
+  let to = isoAddDays(from, days - 1);
+  if(to > lastForecastDay) to = lastForecastDay;
+  const lat = Math.round(start[0]*100)/100, lon = Math.round(start[1]*100)/100;
+  const key = trip.id + '|' + [lat, lon, from, to].join('|');
+  if(el.dataset.key === key && el.dataset.state !== 'error') return;
+  el.dataset.key = key; el.dataset.state = 'loading';
+  el.innerHTML = '<p class="trip-weather-note">Loading the forecast…</p>';
+  fetchForecast(lat, lon, from, to).then(data=>{
+    if(el.dataset.key !== key) return;
+    el.dataset.state = 'done';
+    const d = data.daily;
+    const r = v => v == null ? '–' : Math.round(v);
+    el.innerHTML = '<p class="section-label trip-weather-title">Forecast at the start</p>';
+    d.time.forEach((iso, i)=>{
+      const row = document.createElement('div');
+      row.className = 'trip-weather-day';
+      row.innerHTML = '<span class="trip-weather-date"></span><span class="trip-weather-text"></span>';
+      row.firstChild.textContent = friendlyDate(iso);
+      row.lastChild.textContent = [weatherWord(d.weather_code[i]), r(d.temperature_2m_min[i]) + '–' + r(d.temperature_2m_max[i]) + ' °C',
+        'rain ' + r(d.precipitation_probability_max[i]) + ' %' + (d.precipitation_sum[i] ? ' (' + d.precipitation_sum[i] + ' mm)' : ''),
+        'wind up to ' + r(d.wind_speed_10m_max[i]) + ' km/h'].filter(Boolean).join(' · ');
+      el.appendChild(row);
+    });
+    const credit = document.createElement('p');
+    credit.className = 'trip-weather-credit';
+    credit.innerHTML = 'Forecast by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>';
+    el.appendChild(credit);
+  }).catch(()=>{
+    if(el.dataset.key !== key) return;
+    el.dataset.state = 'error';
+    el.innerHTML = '<p class="trip-weather-note">The forecast couldn\'t load right now.</p>';
+  });
+}
+
+// ---- Multi-day plan ----
+// A planned route split into days of about trip.dailyKm each, with each
+// day's distance, climb and a walking-time estimate. Planned tracks with a
+// profile are taken end to end, in the trip's order.
+function tripPlannedProfile(tks){
+  const out = [];
+  tks.filter(t => t.planned && t.profile && t.profile.length > 1).forEach(t=>{
+    const offset = out.length ? out[out.length-1][0] : 0;
+    t.profile.forEach(([km, ele]) => out.push([offset + km - t.profile[0][0], ele]));
+  });
+  return out;
+}
+
+function renderTripDays(trip, tks){
+  const profile = tripPlannedProfile(tks);
+  const section = document.getElementById('tripDaysSection');
+  section.hidden = profile.length < 2;
+  if(section.hidden) return;
+  const input = document.getElementById('tripDailyKm');
+  if(document.activeElement !== input) input.value = trip.dailyKm || '';
+  const list = document.getElementById('tripDaysList');
+  list.innerHTML = '';
+  if(!(trip.dailyKm > 0)){
+    list.innerHTML = '<div class="trip-gear-empty">Set a daily distance to split the route into days.</div>';
+    return;
+  }
+  const date0 = tripDisplayDate(trip);
+  const day0 = date0 && isoDay(String(date0).slice(0,10));
+  TrackCore.splitDays(profile, trip.dailyKm).forEach((d, i)=>{
+    const row = document.createElement('div');
+    row.className = 'trip-track-row trip-day-row';
+    const when = day0 ? ' · ' + friendlyDate(new Date(day0.getTime() + i*86400000).toISOString().slice(0,10)) : '';
+    row.innerHTML = '<span class="trip-track-row-name"></span><span class="trip-track-row-meta"></span>';
+    row.firstChild.textContent = 'Day ' + (i+1) + when;
+    row.lastChild.textContent = 'km ' + d.fromKm.toFixed(1) + '–' + d.toKm.toFixed(1) +
+      ' · ↑ ' + d.upM + ' m ↓ ' + d.downM + ' m · about ' + formatDuration(TrackCore.estimateHikingSec(d.distanceKm, d.upM));
+    list.appendChild(row);
+  });
+}
+
+function setTripDailyKm(){
+  const trip = trips.find(t => t.id === currentTripId);
+  if(!trip) return;
+  const v = Number(document.getElementById('tripDailyKm').value);
+  if(v > 0) trip.dailyKm = Math.min(200, v); else delete trip.dailyKm;
+  saveTrips();
+  renderTripDays(trip, tripTracks(trip));
+}
+
+// ---- Trip gear, with a packing mode ----
+// Packing mode turns the gear list into big tap rows: tap an item once it
+// is in the bag. Ticks are kept on the trip (trip.packedIds), so packing
+// can be spread over an evening, or across devices.
+let packingTripId = null;
+
+function tripPackedIds(trip){
+  const linked = new Set(trip.gearIds || []);
+  return new Set((trip.packedIds || []).filter(id => linked.has(id)));
+}
+
+function renderTripGear(trip){
+  const gearList = tripGearItemsList(trip);
+  const packing = packingTripId === trip.id && gearList.length > 0;
+  const packed = tripPackedIds(trip);
+  const btn = document.getElementById('tripPackBtn');
+  btn.hidden = !gearList.length;
+  btn.textContent = packing ? 'Done packing' : 'Pack';
+  btn.setAttribute('aria-pressed', String(packing));
+
+  const split = tripWeightSplit(trip);
+  const splitEl = document.getElementById('tripPackSplit');
+  splitEl.hidden = !(split.base + split.worn + split.consumable);
+  splitEl.innerHTML = PACK_ROLES.map(r =>
+    '<span class="pack-split-part pack-split-'+r+'"><span class="pack-split-label">'+
+      {base:'Base', worn:'Worn', consumable:'Consumable'}[r]+'</span> '+formatWeight(split[r])+'</span>').join('');
+
+  const done = gearList.filter(g => packed.has(g.id)).length;
+  const progress = document.getElementById('tripPackProgress');
+  progress.hidden = !(packing || done);
+  document.getElementById('tripPackProgressText').textContent = done === gearList.length && done
+    ? 'All ' + done + ' items packed' : done + ' of ' + gearList.length + ' packed';
+  document.getElementById('tripPackProgressFill').style.width = (gearList.length ? done / gearList.length * 100 : 0) + '%';
+
   const gearListEl = document.getElementById('tripGearSummaryList');
+  gearListEl.classList.toggle('is-packing', packing);
   gearListEl.innerHTML = '';
   if(!gearList.length){
     gearListEl.innerHTML = '<div class="trip-gear-empty">No gear linked yet — click Edit gear to add some.</div>';
-  } else {
-    gearList.forEach(g=>{
-      const row = document.createElement('div');
-      row.className = 'trip-track-row';
-      row.innerHTML =
-        '<span class="trip-track-row-name">'+escapeHtml(g.name)+'</span>'+
-        '<span class="trip-track-row-meta">'+formatWeight(g.weightGrams)+'</span>';
-      gearListEl.appendChild(row);
-    });
+    return;
   }
+  gearList.forEach(g=>{
+    const isPacked = packed.has(g.id);
+    const row = document.createElement(packing ? 'button' : 'div');
+    row.className = 'trip-track-row' + (packing ? ' pack-row' : '') + (isPacked ? ' is-packed' : '');
+    if(packing){
+      row.type = 'button';
+      row.setAttribute('aria-pressed', String(isPacked));
+      row.addEventListener('click', ()=> togglePacked(trip, g.id));
+    }
+    row.innerHTML =
+      '<span class="trip-track-row-name">'+(packing || isPacked ? '<span class="pack-check" aria-hidden="true"></span>' : '')+escapeHtml(g.name)+'</span>'+
+      '<span class="trip-track-row-meta">'+formatWeight(g.weightGrams)+'</span>';
+    gearListEl.appendChild(row);
+  });
+}
 
-  renderTripPhotoGrid(trip);
+function togglePacked(trip, gearId){
+  const packed = tripPackedIds(trip);
+  if(packed.has(gearId)) packed.delete(gearId); else packed.add(gearId);
+  trip.packedIds = Array.from(packed);
+  saveTrips();
+  renderTripGear(trip);
+  const again = document.querySelector('#tripGearSummaryList .pack-row:nth-child(' +
+    (tripGearItemsList(trip).findIndex(g => g.id === gearId) + 1) + ')');
+  if(again) again.focus();
+}
+
+function toggleTripPacking(){
+  const trip = trips.find(t => t.id === currentTripId);
+  if(!trip) return;
+  packingTripId = packingTripId === trip.id ? null : trip.id;
+  renderTripGear(trip);
+}
+
+// Sunrise and sunset at the route's start on the trip's day, so an early
+// start can be planned. Planned trips only; times use this device's clock.
+function renderTripDaylight(trip, tks){
+  const el = document.getElementById('tripDaylight');
+  const date = tripDisplayDate(trip);
+  const start = tripStartPoint(tks);
+  const sun = (tripStatus(trip) === 'planned' && date && start)
+    ? TrackCore.sunTimes(String(date).slice(0,10), start[0], start[1]) : null;
+  el.hidden = !sun;
+  if(!sun) return;
+  const when = 'on ' + friendlyDate(date) + ' at the start';
+  if(sun.polar){
+    el.textContent = (sun.polar === 'day' ? 'Daylight all day ' : 'No sunrise ') + when + '.';
+    return;
+  }
+  const hm = ms => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const mins = Math.round((sun.sunset - sun.sunrise) / 60000);
+  el.textContent = 'Sunrise ' + hm(sun.sunrise) + ' · sunset ' + hm(sun.sunset) +
+    ' · ' + Math.floor(mins/60) + ' h ' + (mins%60) + ' min of daylight ' + when + ' (your time zone).';
 }
 
 // ---- Trip photos ----
@@ -427,7 +778,8 @@ function getTripStatusToggle(){
 let tripStatusTouched = false;
 function maybeAutoSetTripStatus(){
   if(tripStatusTouched) return;
-  const hasChecked = document.querySelectorAll('#tripTrackPicker input[type="checkbox"]:checked').length > 0;
+  const hasChecked = Array.from(document.querySelectorAll('#tripTrackPicker input[type="checkbox"]:checked'))
+    .some(cb => { const t = tracks.find(x => x.id === cb.dataset.id); return t && !t.planned; });
   setTripStatusToggle(hasChecked ? 'completed' : 'planned');
 }
 

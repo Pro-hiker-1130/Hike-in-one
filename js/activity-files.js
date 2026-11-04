@@ -195,6 +195,7 @@ function trackFromRaw(raw, meta){
     if(profile[profile.length-1] !== full[full.length-1]) profile.push(full[full.length-1]);
   }
   const times = raw.map(r=>r.t).filter(t=>t != null);
+  const keep = TrackCore.sampleIndices(points.length, MAX_STORED_POINTS_PER_TRACK);
   const durationSec = times.length >= 2 ? Math.round((times[times.length-1] - times[0]) / 1000) : null;
 
   return {
@@ -202,7 +203,11 @@ function trackFromRaw(raw, meta){
     name: (meta.name && meta.name.trim()) || fallbackTrackName(meta.filename || '', meta.sport, date),
     date, distanceKm,
     startTime, sport: meta.sport || null, sourceKey: meta.sourceKey || null,
-    points: downsample(points, MAX_STORED_POINTS_PER_TRACK),
+    points: keep.map(i => points[i]),
+    // Elevation (m) and time (s after startTime) of each stored point, so
+    // the track editor can trim and split without losing them.
+    pointEle: eleStats ? keep.map(i => raw[i].ele == null ? null : Math.round(raw[i].ele*10)/10) : null,
+    pointTimes: startTime != null ? keep.map(i => raw[i].t == null ? null : Math.round((raw[i].t - startTime)/1000)) : null,
     // null (not undefined) means "this file has no elevation", which
     // the UI tells apart from tracks imported before elevation existed.
     elevationGainM: eleStats ? eleStats.gain : null,
@@ -326,6 +331,9 @@ function formatDuration(sec){
 // The SVG stretches to the container (preserveAspectRatio="none") with a
 // non-scaling stroke; the hover cursor and dot are HTML so the dot stays
 // round however wide the chart is.
+// Track ids whose profile has been drawn this session: only the first
+// showing sweeps in from the left, re-renders appear at once.
+const drawnProfiles = new Set();
 function buildElevationProfile(t){
   const pts = t.profile;
   const totalKm = pts[pts.length-1][0] || t.distanceKm || 1;
@@ -349,7 +357,7 @@ function buildElevationProfile(t){
     '<div class="ele-axis ele-axis-max">'+t.maxEleM+' m</div>'+
     '<div class="ele-axis ele-axis-min">'+t.minEleM+' m</div>'+
     '<div class="ele-plot">'+
-      '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">'+
+      '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"'+(drawnProfiles.has(t.id) ? '' : ' class="ele-draw-in"')+'>'+
         '<path class="ele-area" d="'+area+'"/>'+
         '<path class="ele-line" d="'+line+'" vector-effect="non-scaling-stroke"/>'+
       '</svg>'+
@@ -357,6 +365,7 @@ function buildElevationProfile(t){
     '</div>'+
     '<div class="ele-axis-x"><span>0 km</span><span>'+totalKm.toFixed(1)+' km</span></div>';
 
+  drawnProfiles.add(t.id);
   const plot = el.querySelector('.ele-plot');
   const cursor = el.querySelector('.ele-cursor');
   const dot = el.querySelector('.ele-dot');
@@ -410,6 +419,20 @@ function trackClimbSummary(t){
   const parts = [];
   if(t.elevationGainM != null) parts.push('↑ '+t.elevationGainM+' m', '↓ '+t.elevationLossM+' m');
   if(t.durationSec) parts.push(formatDuration(t.durationSec));
+  else if(t.planned && t.distanceKm) parts.push('about '+formatDuration(TrackCore.estimateHikingSec(t.distanceKm, t.elevationGainM))+' walking');
+  return parts.join(' · ');
+}
+
+// "Steepest climb 18 % at km 3.2 · steepest descent 22 % · top 2,410 m ·
+// 4.1 km above 2,000 m" — how hard a route is, beyond its total climb.
+function trackTerrainSummary(t){
+  const s = t.profile && TrackCore.terrainSummary(t.profile, 0.5);
+  if(!s || (s.steepestUpPct < 3 && s.steepestDownPct < 3)) return '';
+  const parts = [];
+  if(s.steepestUpPct >= 3) parts.push('Steepest climb '+s.steepestUpPct+' % at km '+s.steepestUpAtKm.toFixed(1));
+  if(s.steepestDownPct >= 3) parts.push((parts.length ? 'steepest' : 'Steepest')+' descent '+s.steepestDownPct+' %');
+  parts.push('top '+s.highestM.toLocaleString('en-US')+' m');
+  if(s.aboveM && s.aboveKm >= 0.1) parts.push(s.aboveKm.toFixed(1)+' km above '+s.aboveM.toLocaleString('en-US')+' m');
   return parts.join(' · ');
 }
 
@@ -467,7 +490,7 @@ async function detectTrackCountries(track){
 }
 function allVisitedCountries(){
   const set = new Set();
-  tracks.forEach(t=> (t.countries||[]).forEach(c=> set.add(c)));
+  tracks.forEach(t=>{ if(!t.planned) (t.countries||[]).forEach(c=> set.add(c)); });
   return set;
 }
 

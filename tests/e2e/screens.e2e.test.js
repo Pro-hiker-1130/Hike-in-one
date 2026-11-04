@@ -118,7 +118,11 @@ async function importHikes(page){
   await page.click('#importViewTripsBtn');
 }
 
-const text = (page, sel) => page.$eval(sel, el => el.textContent.trim());
+const text = async (page, sel) => {
+  // Stat tiles count up for a moment when they change; read the final value.
+  if(sel.startsWith('#stat')) await page.waitForSelector(sel + ':not([data-counting])');
+  return page.$eval(sel, el => el.textContent.trim());
+};
 
 test('map overview shows km, metres up, trips and countries, and opens the import', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
@@ -127,6 +131,15 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   assert.equal(await text(page, '#statTrips'), '2');
   assert.ok(Number(await text(page, '#statDistance')) >= 8, 'two ~4.3 km tracks');
   assert.equal(await text(page, '#statClimb'), '900');
+  // A change while the map is showing counts up, then lands on the new value.
+  const counting = await page.evaluate(()=>{
+    trips.push({ id: 'trip_x', name: 'X', trackIds: [], gearIds: [], status: 'planned', createdAt: 2 });
+    renderStats();
+    return document.getElementById('statTrips').hasAttribute('data-counting');
+  });
+  assert.ok(counting, 'counts up while visible');
+  assert.equal(await text(page, '#statTrips'), '3');
+  await page.evaluate(()=>{ trips.pop(); renderStats(); });
   await page.click('#mapImportBtn');
   await page.waitForSelector('#importModalOverlay', { state: 'visible' });
   assert.ok(await page.isVisible('#pageTrips'), 'import opens over the Trips page');
@@ -156,6 +169,177 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
   await page.click('#nextTripCard');
   await page.waitForSelector('#tripDetailView', { state: 'visible' });
   assert.equal(await text(page, '#tripDetailTitle'), 'Tour du Mont Blanc');
+  assert.ok(!(await page.isVisible('#tripDaylight')), 'no route yet, so no sunrise line');
+  // Give the planned trip a route start: sunrise and sunset show for that day.
+  await page.evaluate(()=>{
+    const trip = trips.find(tr => tr.name === 'Tour du Mont Blanc');
+    tracks.push({ id: 't_plan', name: 'Plan', planned: true, distanceKm: 2, points: [[45.92, 6.87], [45.93, 6.88]] });
+    trip.trackIds = (trip.trackIds || []).concat('t_plan');
+    renderTripDetail();
+  });
+  assert.match(await text(page, '#tripDaylight'), /^Sunrise \d.+ · sunset \d.+ · \d+ h \d+ min of daylight on /);
+  // An elevation profile sweeps in the first time only, not on every re-render.
+  const sweeps = await page.evaluate(()=>{
+    const walked = trips.find(tr => tripTracks(tr).some(t => t.profile && t.profile.length > 1));
+    showTripDetail(walked.id);
+    const first = document.querySelectorAll('#tripTrackList svg.ele-draw-in').length;
+    renderTripDetail();
+    return [first, document.querySelectorAll('#tripTrackList svg.ele-draw-in').length];
+  });
+  assert.deepEqual(sweeps, [1, 0]);
+  // Each walked track says how steep it gets (the test hikes climb steadily north).
+  assert.match(await text(page, '#tripTrackList .track-terrain'), /^Steepest climb \d+ % at km \d+\.\d · top [\d,]+ m/);
+  assert.deepEqual(errors, []);
+});
+
+test('trips: packing mode ticks gear off with big rows and keeps the ticks', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    trips.push({ id: 'trip_pack', name: 'Hut weekend', trackIds: [], gearIds: ['g0', 'g1', 'g2'], status: 'planned', date: '2030-07-01', createdAt: 1 });
+    await saveTrips();
+    showTripDetail('trip_pack');
+  });
+  assert.ok(await page.isHidden('#tripPackProgress'), 'nothing packed, not packing: no progress bar');
+  // Shelter 1219 g + pack 1212 g are base; the quilt is set to worn here.
+  await page.evaluate(()=>{ gearItems.find(g => g.id === 'g2').packRole = 'worn'; renderTripDetail(); });
+  assert.equal(await text(page, '#tripPackSplit'), 'Base 2.4 kgWorn 640 gConsumable —');
+  await page.click('#tripPackBtn');
+  assert.equal(await page.getAttribute('#tripPackBtn', 'aria-pressed'), 'true');
+  assert.equal(await page.locator('#tripGearSummaryList .pack-row').count(), 3);
+  const h = await page.$eval('#tripGearSummaryList .pack-row', el => el.getBoundingClientRect().height);
+  assert.ok(h >= 48, 'rows are big enough to tap: ' + h);
+  assert.equal(await text(page, '#tripPackProgressText'), '0 of 3 packed');
+  await page.click('#tripGearSummaryList .pack-row >> text=Exos 58');
+  assert.equal(await text(page, '#tripPackProgressText'), '1 of 3 packed');
+  assert.equal(await page.getAttribute('#tripGearSummaryList .pack-row:has-text("Exos 58")', 'aria-pressed'), 'true');
+  assert.deepEqual(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_pack').packedIds), ['g1']);
+  // Done packing: back to the plain list, the tick and progress stay.
+  await page.click('#tripPackBtn');
+  assert.equal(await page.locator('#tripGearSummaryList .pack-row').count(), 0);
+  assert.equal(await page.locator('#tripGearSummaryList .is-packed').count(), 1);
+  assert.equal(await text(page, '#tripPackProgressText'), '1 of 3 packed');
+  assert.deepEqual(errors, []);
+});
+
+test('trips: a planned route splits into days of about the chosen distance', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    tracks.push({ id: 't_route', name: 'Hut to hut', planned: true, distanceKm: 32, elevationGainM: 500, elevationLossM: 300,
+      minEleM: 1000, maxEleM: 1500, points: [[46, 7.5], [46.3, 7.5]], profile: [[0, 1000], [10, 1500], [20, 1200], [32, 1200]] });
+    trips.push({ id: 'trip_days', name: 'Three huts', trackIds: ['t_route'], gearIds: [], status: 'planned', date: '2030-07-05', createdAt: 1 });
+    await saveTrips();
+    showTripDetail('trip_days');
+  });
+  assert.ok(await page.isVisible('#tripDaysSection'));
+  assert.match(await text(page, '#tripDaysList'), /Set a daily distance/);
+  await page.fill('#tripDailyKm', '15');
+  const rows = await page.$$eval('#tripDaysList .trip-day-row', els => els.map(e => e.textContent));
+  assert.equal(rows.length, 2, '32 km at 15 a day: the 2 km left over joins day 2');
+  assert.match(rows[0], /^Day 1 · Fri 5 Jul 2030km 0\.0–15\.0 · ↑ 500 m ↓ 150 m · about /);
+  assert.match(rows[1], /^Day 2 · Sat 6 Jul 2030km 15\.0–32\.0/);
+  assert.equal(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_days').dailyKm), 15);
+  await page.fill('#tripDailyKm', '');
+  assert.equal(await page.evaluate(()=> 'dailyKm' in trips.find(tr => tr.id === 'trip_days')), false);
+  assert.deepEqual(errors, []);
+});
+
+test('trips: a planned trip within 16 days shows the forecast at its start, further out says when to check', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  const asked = [];
+  await page.context().route(/api\.open-meteo\.com\/v1\/forecast/, r=>{
+    const q = new URL(r.request().url()).searchParams;
+    asked.push([q.get('latitude'), q.get('longitude'), q.get('start_date'), q.get('end_date')]);
+    const from = q.get('start_date');
+    r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ daily: { time: [from, q.get('end_date')], weather_code: [2, 63], temperature_2m_min: [4.2, 6], temperature_2m_max: [15.4, 11],
+        precipitation_probability_max: [10, 80], precipitation_sum: [0, 12.5], wind_speed_10m_max: [18.3, 32] } }) });
+  });
+  await page.click('.nav-tab[data-page="trips"]');
+  const soon = isoInDays(3), later = isoInDays(40);
+  await page.evaluate(async ({ soon, later })=>{
+    tracks.push({ id: 't_wx', name: 'Route', planned: true, distanceKm: 30, elevationGainM: 500, elevationLossM: 300, minEleM: 1000, maxEleM: 1500,
+      points: [[46.0234, 7.7491], [46.2, 7.8]], profile: [[0, 1000], [15, 1500], [30, 1200]] });
+    trips.push({ id: 'trip_wx', name: 'Soon', trackIds: ['t_wx'], gearIds: [], status: 'planned', date: soon, dailyKm: 15, createdAt: 1 });
+    trips.push({ id: 'trip_far', name: 'Later', trackIds: ['t_wx'], gearIds: [], status: 'planned', date: later, createdAt: 2 });
+    await saveTrips();
+    showTripDetail('trip_wx');
+  }, { soon, later });
+  await page.waitForSelector('#tripWeather .trip-weather-day');
+  const days = await page.$$eval('#tripWeather .trip-weather-day', els => els.map(e => e.textContent));
+  assert.equal(days.length, 2, 'two days at 15 km a day');
+  assert.match(days[0], /Partly cloudy · 4–15 °C · rain 10 % · wind up to 18 km\/h$/);
+  assert.match(days[1], /Rain · 6–11 °C · rain 80 % \(12\.5 mm\) · wind up to 32 km\/h$/);
+  assert.deepEqual(asked, [['46.02', '7.75', soon, isoInDays(4)]], 'only the rounded start point and the dates are sent');
+  await page.evaluate(()=> renderTripDetail());
+  assert.equal(asked.length, 1, 're-rendering does not ask again');
+  await page.evaluate(()=> showTripDetail('trip_far'));
+  assert.match(await text(page, '#tripWeather'), /^Weather: the forecast reaches 16 days ahead — check back from /);
+  assert.equal(asked.length, 1);
+  assert.deepEqual(errors, []);
+});
+
+test('trips: Share image makes a 1080×1350 picture of the trip (downloaded where sharing files is not offered)', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  await page.click('#tripCompletedGrid .trip-card');
+  await page.waitForSelector('#tripDetailView', { state: 'visible' });
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#tripShareImageBtn')]);
+  assert.match(download.suggestedFilename(), /^[a-z0-9-]+\.png$/);
+  const png = fs.readFileSync(await download.path());
+  assert.equal(png.toString('latin1', 1, 4), 'PNG');
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1080, 1350]);
+  assert.deepEqual(errors, []);
+});
+
+test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.evaluate(()=>{ gearItems[0].name = '=Tent, "two door"'; gearItems[0].tags = ['3-season', 'freestanding']; });
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#gearCsvBtn')]);
+  assert.match(download.suggestedFilename(), /^hike-in-one-gear-\d{4}-\d{2}-\d{2}\.csv$/);
+  const csv = fs.readFileSync(await download.path(), 'utf8').replace(/^﻿/, '');
+  const lines = csv.trim().split('\r\n');
+  assert.equal(lines[0], 'Name,Category,Brand,Model,Weight (g),Quantity,Status,Price,Currency,Purchase date,Condition,Tags,Carried as');
+  assert.equal(lines.length, 1 + GEAR.length, 'wishlist included too');
+  assert.match(lines[1], /^Exos 58,Backpack,Osprey,/, 'categories in Gear Room order');
+  assert.ok(lines.includes(`"'=Tent, ""two door""",Shelter,Big Agnes,,1219,1,active,,,,,"3-season, freestanding",base`), csv);
+  assert.deepEqual(errors, []);
+});
+
+test('gear: Import CSV adds new items from a spreadsheet, skips ones already here, and can be undone', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  const csv = [
+    'Item Name,Category,desc,qty,weight,unit,url,price,worn,consumable',
+    'Exos 58,Backpack,already in the Gear Room,1,1212,g,,,,',
+    'Rain shell,Clothing,,1,7.5,oz,https://example.com/shell,"129.00",Worn,',
+    'Dinner,Meals,,3,0.2,kg,,,,1',
+    ',Other,no name,,,,,,,',
+  ].join('\n');
+  await page.setInputFiles('#gearCsvInput', { name: 'my-list.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await page.waitForSelector('#globalToast:not([hidden])');
+  assert.match(await text(page, '#globalToast'), /^Added 2 items from my-list\.csv \(2 skipped/);
+  const added = await page.evaluate(()=> gearItems.filter(g => ['Rain shell', 'Dinner'].includes(g.name))
+    .map(({ name, category, weightGrams, quantity, packRole, price, productUrl, tags }) => ({ name, category, weightGrams, quantity, packRole, price, productUrl, tags })));
+  assert.deepEqual(added, [
+    { name: 'Rain shell', category: 'Clothing', weightGrams: 213, quantity: 1, packRole: 'worn', price: 129, productUrl: 'https://example.com/shell', tags: [] },
+    { name: 'Dinner', category: 'Other', weightGrams: 200, quantity: 3, packRole: 'consumable', price: null, productUrl: '', tags: ['Meals'] },
+  ]);
+  assert.equal(await page.evaluate(()=> gearItems.length), 7);
+  await page.click('#globalToast .toast-action');
+  await page.waitForFunction(()=> gearItems.length === 5);
+
+  // This app's own download reads back in: on an empty Gear Room it restores everything.
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#gearCsvBtn')]);
+  const own = fs.readFileSync(await download.path());
+  await page.evaluate(async ()=>{ gearItems = []; await saveGear(); refreshGear(); });
+  await page.setInputFiles('#gearCsvInput', { name: 'back.csv', mimeType: 'text/csv', buffer: own });
+  await page.waitForFunction(()=> gearItems.length === 5);
+  assert.deepEqual(await page.evaluate(()=> gearItems.map(g => g.name + '/' + g.status + '/' + g.weightGrams).sort()), [
+    'Copper Spur HV UL2/active/1219', 'Distance Carbon Z/wishlist/298', 'Exos 58/active/1212',
+    'NeoAir XLite NXT/active/370', 'Revelation 20/active/640']);
   assert.deepEqual(errors, []);
 });
 
@@ -536,5 +720,238 @@ test('getting started: three steps on a new device, ticked off as they are done,
     await page.waitForSelector('.nav-tab');
     assert.ok(!(await page.isVisible('#gettingStarted')), 'stays hidden');
   }
+  assert.deepEqual(errors, []);
+});
+
+test('track editor: trim with undo, split, join, rename, download GPX and delete', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  await page.click('.trip-card-timeline:has-text("Eiger trail")');
+  await page.waitForSelector('#tripDetailView', { state: 'visible' });
+  const rows = () => page.$$eval('#tripTrackList .trip-track-row', els => els.map(e => e.textContent));
+  const setRange = (sel, v) => page.$eval(sel, (el, v)=>{ el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); }, v);
+  const before = (await rows())[0];
+  assert.match(before, /4\.3 km/);
+
+  // Trim: cut the first 20 of 40 points.
+  await page.click('.track-edit-btn');
+  await page.waitForSelector('#trackEditModalOverlay', { state: 'visible' });
+  assert.equal(await page.inputValue('#teName'), 'Eiger trail');
+  await setRange('#teTrimStart', 20);
+  assert.match(await text(page, '#teSummary'), /After trimming: 2\.1 km · ↑ 2\d\d m/);
+  assert.match(await text(page, '#teTrimStartVal'), /2\.2 km · \d\d:\d\d/);
+  await page.click('#teSaveBtn');
+  await page.waitForSelector('#trackEditModalOverlay', { state: 'hidden' });
+  assert.match((await rows())[0], /2\.1 km/);
+  assert.match(await text(page, '#tripStatClimb'), /^2\d\d$/);
+  // Undo puts it back.
+  await page.click('#globalToast .toast-action');
+  await page.waitForFunction(()=> /4\.3 km/.test(document.querySelector('#tripTrackList .trip-track-row').textContent));
+
+  // Split in the middle: the second part joins the same trip.
+  await page.click('.track-edit-btn');
+  await page.click('.te-tab[data-tab="split"]');
+  await setRange('#teSplitAt', 25);
+  await page.click('#teSplitBtn');
+  await page.waitForFunction(()=> document.querySelectorAll('#tripTrackList .trip-track-row').length === 2);
+  const parts = await rows();
+  assert.match(parts[0], /Eiger trail.*2\.8 km/);
+  assert.match(parts[1], /Eiger trail \(part 2\).*1\.6 km/);
+
+  // Join them back together (the other part is offered first, being closest in time).
+  await page.click('.track-edit-btn >> nth=1');
+  await page.click('.te-tab[data-tab="join"]');
+  assert.match(await page.$eval('#teJoinSelect option:checked', o => o.textContent), /^Eiger trail ·/);
+  await page.click('#teJoinBtn');
+  await page.waitForFunction(()=> document.querySelectorAll('#tripTrackList .trip-track-row').length === 1);
+  assert.match((await rows())[0], /Eiger trail \(part 2\).*4\.3 km/);
+  assert.match(await text(page, '#tripStatClimb'), /^600$/);
+
+  // Rename, change the activity, and download it as GPX.
+  await page.click('.track-edit-btn');
+  await page.fill('#teName', 'Eiger & back');
+  await page.fill('#teSport', 'Trail run');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#teDownloadBtn')]);
+  assert.equal(download.suggestedFilename(), 'Eiger & back.gpx');
+  const file = fs.readFileSync(await download.path(), 'utf8');
+  assert.match(file, /<name>Eiger &amp; back<\/name>/);
+  assert.match(file, /<type>Trail run<\/type>/);
+  assert.equal((file.match(/<trkpt /g) || []).length, 41, 'both parts, sharing the split point');
+  assert.match(file, /<ele>1600<\/ele><time>2025-07-10T08:39:00.000Z<\/time>/);
+  await page.click('#teSaveBtn');
+  await page.waitForFunction(()=> /Eiger & back.*Trail run/.test(document.querySelector('#tripTrackList .trip-track-row').textContent));
+
+  // The map popup opens the same editor.
+  await page.click('.nav-tab[data-page="map"]');
+  await page.evaluate(()=> trackLayerGroup.getLayers()[0].openPopup());
+  await page.click('.popup-track-edit');
+  await page.waitForSelector('#trackEditModalOverlay', { state: 'visible' });
+
+  // Delete, then Undo brings it back.
+  const count = () => page.evaluate(()=> tracks.length);
+  assert.equal(await count(), 2);
+  await page.click('#teDeleteBtn');
+  await page.waitForFunction(()=> tracks.length === 1);
+  await page.click('#globalToast .toast-action');
+  await page.waitForFunction(()=> tracks.length === 2);
+  assert.deepEqual(errors, []);
+});
+
+test('route planner: draw a route on trails and straight lines, save it to a planned trip, download GPX', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  // Fake BRouter: a three-point line between the two points, climbing
+  // 100 m; "no route" while failRouting is set. Fake Open-Meteo: 1500 m.
+  let failRouting = false, routerCalls = 0, elevationCalls = 0;
+  await page.context().route(/brouter\.de/, r=>{
+    routerCalls++;
+    if(failRouting) return r.fulfill({ status: 400, body: 'target island detected' });
+    const [[lon1, lat1], [lon2, lat2]] = new URL(r.request().url()).searchParams.get('lonlats').split('|').map(s => s.split(',').map(Number));
+    const coords = [[lon1, lat1, 1400], [(lon1 + lon2) / 2 + 0.001, (lat1 + lat2) / 2, 1450], [lon2, lat2, 1500]];
+    r.fulfill({ status: 200, contentType: 'application/geo+json', headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } }] }) });
+  });
+  await page.context().route(/api\.open-meteo\.com/, r=>{
+    elevationCalls++;
+    const n = new URL(r.request().url()).searchParams.get('latitude').split(',').length;
+    r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ elevation: Array(n).fill(1500) }) });
+  });
+
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.click('#addTripBtn');
+  await page.fill('#tripName', 'Haute Route');
+  await page.fill('#tripDate', isoInDays(20));
+  await page.click('#tripForm button[type="submit"]');
+  await page.click('#nextTripCard');
+  await page.waitForSelector('#tripDetailView', { state: 'visible' });
+  await page.click('#tripPlanRouteBtn');
+  await page.waitForSelector('#routePlannerOverlay', { state: 'visible' });
+  assert.equal(await page.inputValue('#rpName'), 'Haute Route');
+  assert.ok(await page.isDisabled('#rpSaveBtn'), 'nothing to save yet');
+  await page.evaluate(()=> rpMap.setView([46.0, 7.5], 13, { animate: false }));
+
+  const tap = (x, y) => page.click('#rpMap', { position: { x, y } });
+  await tap(150, 300);
+  await tap(350, 200);   // follows trails
+  await page.waitForFunction(()=> /km ·/.test(document.getElementById('rpStats').textContent));
+  assert.equal(routerCalls, 1);
+  await page.click('#rpModeToggle [data-mode="line"]');
+  await tap(550, 250);   // a straight line, elevation from Open-Meteo
+  await page.waitForFunction(()=> /km · ↑ 100 m · ↓ 0 m · about \d+ (h|min)/.test(document.getElementById('rpStats').textContent));
+  assert.equal(elevationCalls, 1);
+  assert.equal(await page.locator('#rpProfile .ele-profile').count(), 1);
+
+  // No trail between two points: a straight line instead, and a note.
+  failRouting = true;
+  await page.click('#rpModeToggle [data-mode="trail"]');
+  await tap(600, 400);
+  await page.waitForFunction(()=> /No trail found for one part/.test(document.getElementById('rpError').textContent));
+  await page.click('#rpUndoBtn');
+  await page.waitForFunction(()=> document.getElementById('rpError').textContent === '');
+  assert.equal(await page.locator('#rpMap .rp-wp').count(), 3);
+
+  // Download it, then save it to the trip.
+  await page.fill('#rpName', 'Haute Route day 1');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#rpDownloadBtn')]);
+  assert.equal(download.suggestedFilename(), 'Haute Route day 1.gpx');
+  const file = fs.readFileSync(await download.path(), 'utf8');
+  assert.match(file, /<name>Haute Route day 1<\/name>/);
+  assert.match(file, /<trkpt lat="[\d.]+" lon="[\d.]+"><ele>1400<\/ele><\/trkpt>/);
+  await page.click('#rpSaveBtn');
+  await page.waitForSelector('#routePlannerOverlay', { state: 'hidden' });
+  await page.waitForSelector('#tripTrackList .trip-track-row');
+  assert.match(await text(page, '#tripTrackList .trip-track-row'), /Haute Route day 1Planned route/);
+  assert.match(await text(page, '#tripTrackList .track-climb'), /↑ 100 m · ↓ 0 m · about .* walking/);
+  assert.equal(await text(page, '#tripDetailStatusBadge'), 'Planned', 'a planned route does not complete the trip');
+  assert.notEqual(await text(page, '#tripStatDistance'), '0.0', 'the trip shows the planned distance');
+  await page.click('.nav-tab[data-page="map"]');
+  assert.equal(await text(page, '#statDistance'), '0', 'not counted as walked');
+
+  // Reopen it from the trip: same points, can be changed or deleted.
+  await page.click('.nav-tab[data-page="trips"]');
+  assert.match(await text(page, '#nextTripMeta'), /km/, 'the countdown card shows the planned distance');
+  await page.click('#nextTripCard');
+  await page.click('.track-edit-btn');
+  await page.waitForSelector('#routePlannerOverlay', { state: 'visible' });
+  assert.equal(await text(page, '#rpTitle'), 'Edit planned route');
+  assert.equal(await page.locator('#rpMap .rp-wp').count(), 3);
+  await page.waitForFunction(()=> !document.getElementById('rpSaveBtn').disabled);
+  await page.click('#rpDeleteBtn');
+  await page.waitForFunction(()=> tracks.length === 0);
+  assert.match(await text(page, '#tripTrackList'), /No tracks yet/);
+  assert.deepEqual(errors, []);
+});
+
+test('share with partners: the owner shares a trip route, reads and ticks off suggestions, and stops sharing', { skip: !playwright }, async t=>{
+  const fake = createFakeSupabase({ userId: ME, seed: { userData: { gear: [], trips: [], loadouts: [], google_points: [], tracks: [] } } });
+  const page = await launchWithLocalData(t, fake, {
+    'waypoints-tracks-v1': bigTracks(1, 800),
+    'waypoints-trips-v1': [{ id: 'lt', name: 'Local trip', trackIds: ['local_t0'], gearIds: [], status: 'planned' }],
+    'waypoints-last-modified-v1': String(Date.UTC(2030, 0, 1)),
+  });
+  await page.waitForFunction(()=> /Synced/.test(document.getElementById('navAccount').textContent), null, { timeout: 15000 });
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(()=> showTripDetail('lt'));
+  await page.waitForSelector('#tripShareRouteBtn:not([hidden])');
+  await page.click('#tripShareRouteBtn');
+  await page.waitForSelector('#tripSharePanel:not([hidden])');
+  const row = fake.db.shared_routes[0];
+  assert.equal(row.trip_id, 'lt');
+  assert.equal(row.route.length, 1);
+  assert.ok(row.route[0].points.length <= 400, 'only a light copy of the shape is shared');
+  assert.deepEqual(Object.keys(row.route[0]).sort(), ['distanceKm', 'name', 'planned', 'points', 'profile']);
+  assert.ok((await page.inputValue('#tripShareLink')).endsWith('#shared=' + row.token));
+  assert.ok(await page.isHidden('#tripShareRouteBtn'), 'shared: the panel replaces the button');
+
+  // A partner's suggestion shows up next time the trip opens; the owner ticks it off.
+  fake.db.route_suggestions.push({ id: 'sg1', route_id: row.id, author: 'Sam', body: 'Lower path after the hut?', lat: 46.01, lon: 7.01, done: false, created_at: '2026-10-14T00:00:00Z' });
+  await page.evaluate(()=>{ showTripsList(); showTripDetail('lt'); });
+  await page.waitForSelector('#tripShareSuggestions .share-suggestion');
+  assert.match(await text(page, '#tripShareSuggestions'), /Sam: Lower path after the hut\? · at a spot on the map/);
+  await page.check('#tripShareSuggestions input');
+  await page.waitForFunction(()=> document.querySelector('#tripShareSuggestions .is-done'));
+  await page.waitForTimeout(200);
+  assert.equal(fake.db.route_suggestions[0].done, true);
+
+  page.once('dialog', d => d.accept());
+  await page.click('#tripShareStopBtn');
+  await page.waitForSelector('#tripSharePanel', { state: 'hidden' });
+  assert.equal(fake.db.shared_routes.length, 0);
+  assert.equal(fake.db.route_suggestions.length, 0);
+});
+
+test('share with partners: a partner opens the link without an account and sends a suggestion pinned to a spot', { skip: !playwright }, async t=>{
+  const token = 'abcdef0123456789abcdef0123456789';
+  const fake = createFakeSupabase({ seed: {
+    sharedRoutes: [{ id: 'r1', token, owner_id: ME, trip_id: 'x', name: 'Haute Route', route: [{ name: 'Day 1', planned: true, distanceKm: 12.3, points: [[46.0, 7.5], [46.02, 7.52], [46.05, 7.55]] }] }],
+    suggestions: [{ route_id: 'r1', author: 'Kim', body: 'Start an hour earlier', done: true }],
+  } });
+  const { page, errors } = await launch(t, { width: 390, height: 844 });
+  await page.context().route(new RegExp(SUPABASE_HOST.replace(/\./g, '\\.')), r => fake.handle(r));
+  await page.goto(baseUrl + '/index.html?from=link#shared=' + token);
+  await page.waitForSelector('#sharedRouteOverlay', { state: 'visible' });
+  await page.waitForFunction(()=> document.getElementById('srTitle').textContent === 'Haute Route');
+  assert.equal(await text(page, '#srStats'), '1 track · 12.3 km');
+  assert.match(await text(page, '#srSuggestions'), /Kim: Start an hour earlier \(done\)/);
+  assert.equal(await page.locator('#srMap path.leaflet-interactive').count() >= 1, true, 'route drawn');
+
+  await page.click('#srSendBtn');
+  assert.match(await text(page, '#srError'), /Add your name and a suggestion/);
+  await page.fill('#srAuthor', 'Sam');
+  await page.fill('#srBody', 'Take the ridge after the hut');
+  await page.click('#srMap', { position: { x: 200, y: 120 } });
+  assert.match(await text(page, '#srPoint'), /Spot picked/);
+  await page.click('#srSendBtn');
+  await page.waitForFunction(()=> document.querySelectorAll('#srSuggestions .share-suggestion').length === 2);
+  const sent = fake.db.route_suggestions.find(x => x.author === 'Sam');
+  assert.equal(sent.body, 'Take the ridge after the hut');
+  assert.ok(sent.lat != null && sent.lon != null, 'the picked spot is sent');
+  assert.equal(await page.inputValue('#srBody'), '', 'form cleared');
+  assert.equal(await page.evaluate(()=> localStorage.getItem('hike-shared-author')), 'Sam', 'name remembered for next time');
+
+  // A link to a route that was unshared says so.
+  await page.goto(baseUrl + '/index.html?again=1#shared=' + 'f'.repeat(32));
+  await page.waitForFunction(()=> /no longer exists/.test(document.getElementById('srError').textContent));
+  assert.ok(await page.isHidden('#srForm'));
   assert.deepEqual(errors, []);
 });

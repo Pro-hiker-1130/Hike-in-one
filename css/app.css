@@ -64,6 +64,16 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%;ov
 .page-container{flex:1;position:relative;overflow:hidden;}
 .page-container>.page{position:absolute;inset:0;display:none;}
 .page-container>.page.active{display:flex;}
+/* Switching pages: the new page fades in and rises a few pixels. The map
+   page only fades, so Leaflet never measures a moving container. */
+@keyframes page-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+@keyframes page-fade-in{from{opacity:0;}to{opacity:1;}}
+.page-container>.page.active{animation:page-in 200ms ease-out;}
+.page-container>.app.page.active{animation:page-fade-in 160ms ease-out;}
+.category-view,.garage-view{animation:page-fade-in 160ms ease-out;}
+@media (prefers-reduced-motion: reduce){
+  .page-container>.page.active{animation:page-fade-in 120ms ease-out;}
+}
 
 .app{display:flex;height:100%;width:100%;overflow:hidden;}
 
@@ -277,6 +287,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
 .trip-track-block + .trip-track-block{margin-top:6px;}
 .trip-track-block .trip-track-row{padding:0;border:none;background:none;}
 .track-climb{font-size:12px;color:var(--muted);margin-top:4px;}
+.track-terrain{font-size:12px;color:var(--muted);margin-top:2px;}
 .track-climb-hint{font-size:11.5px;color:var(--muted);margin-top:4px;font-style:italic;}
 .ele-profile{position:relative;margin-top:10px;padding-left:48px;outline:none;border-radius:4px;}
 .ele-profile:focus-visible{outline:2px solid var(--brass);outline-offset:3px;}
@@ -304,6 +315,15 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
 }
 .icon-btn:hover{border-color:var(--brass);}
 .gear-empty{padding:40px 24px;text-align:center;color:var(--muted);font-size:13px;}
+/* Empty states get a small line drawing: two peaks, a dotted trail, a sun.
+   Drawn as a mask so it takes the theme's sage colour. */
+.gear-empty::before,.empty-hint::before{
+  content:"";display:block;width:96px;height:48px;margin:0 auto 12px;
+  background:var(--sage);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 48' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 42 30 12l12 14 10-10 40 26'/%3E%3Cpath d='M25 18l5-6 5 6'/%3E%3Cpath d='M30 42c4-6 12-7 18-9s10-6 16-6' stroke-dasharray='1 5'/%3E%3Ccircle cx='76' cy='10' r='5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 48' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 42 30 12l12 14 10-10 40 26'/%3E%3Cpath d='M25 18l5-6 5 6'/%3E%3Cpath d='M30 42c4-6 12-7 18-9s10-6 16-6' stroke-dasharray='1 5'/%3E%3Ccircle cx='76' cy='10' r='5'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.empty-hint::before{width:72px;height:36px;margin-bottom:8px;}
 
 /* ---- Garage (gear category chooser) ---- */
 .garage-view{flex:1;display:flex;flex-direction:column;overflow-y:auto;width:100%;}
@@ -682,6 +702,79 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
   .import-row{padding:8px 10px;}
 }
 
+.trip-daylight{margin:10px 0 0;padding:0 24px;font-size:13px;color:var(--muted);flex:none;}
+@media (max-width:560px){.trip-daylight{padding:0 12px;}}
+
+/* An elevation profile's first showing sweeps in from left to right. */
+@keyframes ele-draw-in{from{clip-path:inset(0 100% 0 0);}to{clip-path:inset(0 0 0 0);}}
+.ele-draw-in{animation:ele-draw-in 300ms cubic-bezier(0.3,0.7,0.3,1);}
+@media (prefers-reduced-motion: reduce){.ele-draw-in{animation:none;}}
+
+.trip-gear-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+@media (max-width:560px){
+  .trip-detail-section-head:has(.trip-gear-actions){flex-wrap:wrap;gap:10px;}
+  .trip-gear-actions{width:100%;justify-content:flex-start;}
+}
+.garage-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.garage-actions>*{white-space:nowrap;}
+label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
+
+/* Weather forecast at a planned trip's start */
+.trip-weather{margin:10px 24px 0;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;font-size:13px;flex:none;}
+.trip-weather[hidden]{display:none;}
+.trip-weather-title{margin:0 0 6px;}
+.trip-weather-day{display:flex;flex-wrap:wrap;gap:2px 12px;padding:4px 0;}
+.trip-weather-date{font-weight:600;min-width:120px;}
+.trip-weather-text,.trip-weather-note{color:var(--muted);margin:0;}
+.trip-weather-credit{margin:6px 0 0;font-size:11.5px;color:var(--muted);}
+.trip-weather-credit a{color:inherit;}
+@media (max-width:560px){.trip-weather{margin:10px 12px 0;}}
+
+/* Sharing a route with partners */
+.share-panel{margin-top:12px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;}
+.share-panel[hidden]{display:none;}
+.share-panel-title{margin:0 0 8px;}
+.share-link-row{display:flex;gap:8px;}
+.share-link-row input{flex:1;min-width:0;padding:8px 10px;font:inherit;font-size:13px;color:var(--parchment);background:var(--ink);border:1px solid var(--line);border-radius:8px;}
+.share-panel-note{font-size:12.5px;color:var(--muted);margin:8px 0 6px;}
+.share-panel-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:10px;}
+.share-suggestion{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px;}
+.share-suggestion input{margin-top:3px;}
+.share-suggestion.is-done .share-suggestion-text{color:var(--muted);text-decoration:line-through;}
+.share-suggestion-spot{color:var(--muted);font-size:12px;}
+.sr-intro{margin:0;font-size:13px;color:var(--muted);}
+.sr-form{display:flex;flex-direction:column;gap:6px;}
+.sr-form[hidden]{display:none;}
+.sr-point{margin:0;font-size:12.5px;color:var(--muted);}
+#sharedRouteOverlay .rp-map{cursor:pointer;height:min(42vh,380px);}
+
+/* Multi-day plan */
+#tripDaysSection[hidden]{display:none;}
+.days-goal{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}
+.days-goal input{width:64px;padding:6px 8px;font:inherit;color:var(--parchment);background:var(--panel);border:1px solid rgba(52,78,65,0.22);border-radius:8px;}
+.trip-day-row{flex-wrap:wrap;gap:4px 12px;}
+
+/* Base / worn / consumable split of a trip's gear weight. */
+.pack-split{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 10px;font-size:13px;color:var(--parchment);}
+.pack-split[hidden]{display:none;}
+.pack-split-label{color:var(--muted);}
+.pack-split-part::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--fern);}
+.pack-split-worn::before{background:var(--sage);}
+.pack-split-consumable::before{background:#B87333;}
+/* Packing mode: big tap rows with a round tick, and a progress bar. */
+.pack-progress{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-size:13px;color:var(--muted);}
+.pack-progress[hidden]{display:none;}
+.pack-progress-bar{flex:1;height:6px;border-radius:3px;background:var(--sage-soft);overflow:hidden;}
+.pack-progress-bar span{display:block;height:100%;width:0;background:var(--fern);border-radius:3px;transition:width .2s ease-out;}
+.pack-row{width:100%;color:inherit;min-height:52px;font:inherit;text-align:left;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:6px;}
+.pack-row:focus-visible{outline:2px solid var(--fern);outline-offset:2px;}
+.pack-row .trip-track-row-name{font-size:15px;}
+.pack-check{display:inline-block;width:20px;height:20px;margin-right:10px;vertical-align:-5px;border:2px solid var(--sage);border-radius:50%;box-sizing:border-box;transition:background-color .15s,border-color .15s;}
+.is-packed .pack-check{background:var(--fern) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.5l2.6 2.5L12 5.5'/%3E%3C/svg%3E") center/14px no-repeat;border-color:var(--fern);}
+.pack-row.is-packed .trip-track-row-name{color:var(--muted);}
+#tripGearSummaryList:not(.is-packing) .pack-check{width:16px;height:16px;margin-right:8px;vertical-align:-3px;}
+@media (prefers-reduced-motion: reduce){.pack-progress-bar span,.pack-check{transition:none;}}
+
 /* ---- Modal ---- */
 .modal-overlay{
   position:fixed;inset:0;z-index:1000;
@@ -690,6 +783,15 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
 .modal{
   background:var(--panel);border:1px solid var(--line);
   width:100%;max-width:520px;max-height:88vh;max-height:88dvh;overflow-y:auto;
+}
+/* Opening a dialog: overlay fades in, the panel rises slightly and scales up.
+   Display switches none -> flex, which restarts these animations on every open. */
+@keyframes modal-overlay-in{from{opacity:0;}to{opacity:1;}}
+@keyframes modal-in{from{opacity:0;transform:translateY(8px) scale(0.97);}to{opacity:1;transform:none;}}
+.modal-overlay{animation:modal-overlay-in 180ms ease-out;}
+.modal-overlay .modal{animation:modal-in 220ms cubic-bezier(0.2,0.8,0.2,1);}
+@media (prefers-reduced-motion: reduce){
+  .modal-overlay .modal{animation:modal-overlay-in 120ms ease-out;}
 }
 .modal-header{
   display:flex;align-items:center;justify-content:space-between;
@@ -1030,3 +1132,60 @@ body{font-size:15px;}
 .gs-steps li.is-done .gs-text{color:var(--muted);text-decoration:line-through;}
 .gs-text{flex:1;min-width:0;}
 .gs-go{flex:none;padding:6px 12px;font-size:13px;}
+
+/* ---- Track editor ---- */
+.trip-track-row .trip-track-row-meta{margin-left:auto;}
+.track-edit-btn{flex:none;margin-right:-6px;}
+.track-edit-modal{max-width:560px;}
+.te-map{height:220px;border-radius:8px;border:1px solid var(--line);overflow:hidden;background:var(--panel-alt);}
+.te-summary{font-size:12.5px;color:var(--muted);margin-top:-4px;}
+.te-tabs{display:flex;gap:2px;background:var(--panel-alt);border-radius:20px;padding:3px;align-self:flex-start;}
+.te-tab{background:none;border:none;border-radius:16px;padding:6px 16px;font-size:12.5px;color:var(--parchment);cursor:pointer;}
+.te-tab.active{background:var(--brass);color:var(--on-accent);font-weight:600;}
+.te-panel{display:flex;flex-direction:column;gap:6px;}
+.te-panel[hidden]{display:none;}
+.te-panel .ghost-btn{align-self:flex-start;margin-top:6px;}
+.te-help{font-size:12.5px;color:var(--muted);margin:0 0 4px;}
+.te-range-label{font-size:12.5px;font-weight:500;color:var(--muted);display:flex;justify-content:space-between;gap:8px;}
+.te-range-label span{color:var(--parchment);font-variant-numeric:tabular-nums;}
+.te-panel input[type="range"]{width:100%;accent-color:var(--brass);margin:0 0 6px;}
+.global-toast .toast-action{
+  background:none;border:none;color:inherit;font:inherit;font-weight:700;text-decoration:underline;
+  margin-left:12px;padding:2px 4px;cursor:pointer;
+}
+
+/* ---- Route planner ---- */
+.trip-detail-section-head .ghost-btn{flex:none;}
+.planned-route-badge{
+  display:inline-block;margin-left:8px;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;
+  color:var(--brass);background:var(--sage-soft);vertical-align:1px;white-space:nowrap;
+}
+.route-planner-modal{max-width:900px;}
+.rp-body{padding:14px 20px 16px;display:flex;flex-direction:column;gap:10px;}
+.rp-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;}
+.rp-toolbar .view-toggle{flex:none;}
+.rp-toolbar .view-toggle button{padding:6px 14px;font-size:12.5px;white-space:nowrap;flex:none;}
+.rp-toolbar-actions{display:flex;gap:6px;}
+.rp-toolbar-actions .ghost-btn:disabled,.modal-actions .ghost-btn:disabled,.primary-btn:disabled{opacity:.45;cursor:default;}
+.rp-map-wrap{position:relative;}
+.rp-map{height:min(52vh,480px);border-radius:8px;border:1px solid var(--line);overflow:hidden;background:var(--panel-alt);cursor:crosshair;}
+.rp-hint{
+  position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:500;pointer-events:none;
+  background:rgba(255,255,255,.94);color:var(--parchment);font-size:12.5px;padding:6px 12px;border-radius:14px;
+  box-shadow:0 2px 8px rgba(52,78,65,.18);max-width:calc(100% - 90px);text-align:center;
+}
+.rp-hint[hidden]{display:none;}
+.rp-stats{font-size:13.5px;font-weight:600;color:var(--parchment);min-height:1.2em;}
+.rp-profile:empty{display:none;}
+.rp-credit{font-size:11px;color:var(--muted);margin:0;}
+.rp-credit a{color:inherit;}
+.rp-wp{border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);background:#fff;}
+.rp-wp-start{background:#3A5A40;}
+.rp-wp-end{background:#B3261E;}
+.rp-wp-via{background:#fff;border-color:#C4501C;}
+@media (max-width:640px){
+  #routePlannerOverlay,#sharedRouteOverlay{padding:0;}
+  .route-planner-modal{max-height:100vh;max-height:100dvh;height:100%;border-radius:0;}
+  .rp-body{padding:10px 14px 14px;}
+  .rp-map{height:48vh;height:48dvh;}
+}
