@@ -95,3 +95,4 @@ pin down to "Skipped" with a reason.
 - Radix Nutrition Original Chocolate Breakfast: listed weights disagree (90-108 g).
 - Summit To Eat Scrambled Egg with Cheese: listed weights disagree (80-104 g).
 - Sawyer Permethrin 24 oz spray: listings show packaged weights only.
+- Fox 40 Classic whistle: weights only from marketplace listings (9-30 g, versions differ).
