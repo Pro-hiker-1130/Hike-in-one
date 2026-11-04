@@ -293,6 +293,24 @@ test('trips: Share image makes a 1080×1350 picture of the trip (downloaded wher
   assert.deepEqual(errors, []);
 });
 
+test('toast slides up as it appears, fades out, and only fades with reduced motion', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  const state = () => page.evaluate(()=>{
+    const el = document.getElementById('globalToast');
+    return { hidden: el.hidden, anim: getComputedStyle(el).animationName, leaving: el.classList.contains('is-leaving') };
+  });
+  await page.evaluate(()=> showGlobalToast('Saved.'));
+  assert.deepEqual(await state(), { hidden: false, anim: 'toast-in', leaving: false });
+  // A new message while the old one is fading out brings it back fully.
+  await page.evaluate(()=>{ document.getElementById('globalToast').classList.add('is-leaving'); showGlobalToast('Saved again.'); });
+  assert.deepEqual(await state(), { hidden: false, anim: 'toast-in', leaving: false });
+  assert.equal(await text(page, '#globalToast'), 'Saved again.');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.evaluate(()=>{ document.getElementById('globalToast').hidden = true; showGlobalToast('Calm.'); });
+  assert.equal((await state()).anim, 'toast-fade-in');
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');
@@ -933,7 +951,7 @@ test('share with partners: a partner opens the link without an account and sends
   await page.waitForFunction(()=> document.getElementById('srTitle').textContent === 'Haute Route');
   assert.equal(await text(page, '#srStats'), '1 track · 12.3 km');
   assert.match(await text(page, '#srSuggestions'), /Kim: Start an hour earlier \(done\)/);
-  assert.equal(await page.locator('#srMap path.leaflet-interactive').count() >= 1, true, 'route drawn');
+  await page.waitForSelector('#srMap path.leaflet-interactive', { timeout: 3000 });   // route drawn
 
   await page.click('#srSendBtn');
   assert.match(await text(page, '#srError'), /Add your name and a suggestion/);

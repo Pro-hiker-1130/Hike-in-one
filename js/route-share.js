@@ -185,7 +185,10 @@ async function loadSharedRoute(fit){
       .bindTooltip(s.author + ': ' + s.body).addTo(srPins);
   });
   if(fit && all.length){
+    // Set the view now so the route draws at once; refit once the dialog's
+    // layout has settled.
     const b = L.latLngBounds(all);
+    if(b.isValid()) srMap.fitBounds(b, { padding: [30, 30], animate: false });
     setTimeout(()=>{ srMap.invalidateSize(); if(b.isValid()) srMap.fitBounds(b, { padding: [30, 30] }); }, 60);
   }
 }
