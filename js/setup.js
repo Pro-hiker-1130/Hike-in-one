@@ -164,21 +164,83 @@ function setTrailsOverlay(on, persist = true){
   if(persist) storeSet('waypoints-trails-overlay', on ? '1' : '');
 }
 
-// A small Basemap / Hiking routes switcher for the other maps (route
-// planner, track editor), using Leaflet's own layers control.
-function addMapLayerSwitcher(m, startKey, position){
-  const bases = {};
-  let start = null;
-  BASEMAP_KEYS.filter(k => k !== 'dark').forEach(k=>{
-    // Relief only loads MapLibre once it is actually picked.
-    const layer = k === 'relief' ? L.layerGroup() : makeBasemap(k);
-    if(k === 'relief') layer.on('add', ()=>{ if(!layer.getLayers().length) layer.addLayer(makeReliefLayer()); });
-    bases[BASEMAP_LABELS[k]] = layer;
-    if(k === startKey) start = layer;
+// ---- The map picker: one round "layers" button on a map. Tapping it opens
+// a panel with every basemap and the hiking-routes overlay. ----
+// state: {current(), choose(key), overlayOn(), setOverlay(on)}
+const LAYERS_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3 2.5 8 12 13l9.5-5L12 3Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="m2.5 12 9.5 5 9.5-5M2.5 16l9.5 5 9.5-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>';
+function addBasemapPicker(m, state, position){
+  const Picker = L.Control.extend({
+    options: { position: position || 'topright' },
+    onAdd(){
+      const el = L.DomUtil.create('div', 'bm-picker');
+      el.innerHTML =
+        '<button type="button" class="bm-picker-btn" aria-label="Map layers" aria-expanded="false" title="Map layers">' + LAYERS_ICON + '</button>' +
+        '<div class="bm-picker-panel" role="group" aria-label="Map layers" hidden>' +
+          '<p class="bm-picker-title">Map</p>' +
+          '<div class="bm-picker-grid">' +
+            BASEMAP_KEYS.map(k => '<button type="button" class="bm-opt" data-basemap="' + k + '" aria-pressed="false">' +
+              '<span class="bm-swatch bm-swatch-' + k + '"></span><span class="bm-opt-name">' + BASEMAP_LABELS[k] + '</span></button>').join('') +
+          '</div>' +
+          '<label class="bm-picker-overlay"><input type="checkbox"> Marked hiking routes</label>' +
+        '</div>';
+      L.DomEvent.disableClickPropagation(el);
+      L.DomEvent.disableScrollPropagation(el);
+      const btn = el.querySelector('.bm-picker-btn'), panel = el.querySelector('.bm-picker-panel');
+      const overlay = el.querySelector('input');
+      const open = on => { panel.hidden = !on; btn.setAttribute('aria-expanded', on ? 'true' : 'false'); el.classList.toggle('is-open', on); };
+      const refresh = () => {
+        el.querySelectorAll('.bm-opt').forEach(o => {
+          const on = o.dataset.basemap === state.current();
+          o.classList.toggle('active', on);
+          o.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        overlay.checked = !!state.overlayOn();
+      };
+      btn.addEventListener('click', ()=>{ refresh(); open(panel.hidden); });
+      el.querySelectorAll('.bm-opt').forEach(o => o.addEventListener('click', ()=>{
+        state.choose(o.dataset.basemap);
+        refresh();
+        open(false);
+      }));
+      overlay.addEventListener('change', ()=> state.setOverlay(overlay.checked));
+      // Tapping anywhere else, or Escape, closes the panel (and only the
+      // panel: Escape doesn't also close a dialog the map sits in).
+      document.addEventListener('pointerdown', e=>{ if(!panel.hidden && !el.contains(e.target)) open(false); });
+      document.addEventListener('keydown', e=>{
+        if(e.key === 'Escape' && !panel.hidden){ e.preventDefault(); e.stopPropagation(); open(false); btn.focus(); }
+      }, true);
+      this.refresh = refresh;
+      return el;
+    },
   });
-  (start || bases[BASEMAP_LABELS.terrain]).addTo(m);
-  const overlays = { 'Marked hiking routes': makeTrailsOverlay() };
-  L.control.layers(bases, overlays, { position: position || 'bottomleft' }).addTo(m);
+  const picker = new Picker().addTo(m);
+  return picker;
+}
+
+// Basemap and overlay state for a map other than the main one (route
+// planner, track editor), which doesn't remember its choice.
+function addMapLayerSwitcher(m, startKey, position){
+  let key = null, layer = null, trails = null;
+  const state = {
+    current: () => key,
+    choose(k){
+      const tileKey = k === 'dark' ? 'light' : k;
+      const curTileKey = key === 'dark' ? 'light' : key;
+      if(tileKey !== curTileKey){
+        if(layer) m.removeLayer(layer);
+        layer = makeBasemap(tileKey).addTo(m);
+      }
+      key = k;
+      m.getContainer().classList.toggle('dark-tiles', k === 'dark');
+    },
+    overlayOn: () => !!trails,
+    setOverlay(on){
+      if(on && !trails) trails = makeTrailsOverlay().addTo(m);
+      if(!on && trails){ m.removeLayer(trails); trails = null; }
+    },
+  };
+  state.choose(BASEMAP_KEYS.includes(startKey) ? startKey : 'terrain');
+  return addBasemapPicker(m, state, position);
 }
 
 // Startup default only — not a user choice, so don't persist it. (It also

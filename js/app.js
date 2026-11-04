@@ -643,22 +643,23 @@ document.addEventListener('keydown', (e)=>{
   else if(e.key === 'ArrowRight') lightboxStep(1);
 });
 
-document.querySelectorAll('.view-toggle:not(#basemapToggle):not(#gearViewToggle) button').forEach(btn=>{
+// Tracks / Heatmap / Both. (Only buttons with data-view: other toggles,
+// like the route planner's, have their own handlers.)
+document.querySelectorAll('.view-toggle button[data-view]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.view-toggle:not(#basemapToggle):not(#gearViewToggle) button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view-toggle button[data-view]').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     currentView = btn.dataset.view;
     updateLayers();
   });
 });
 
-document.getElementById('trailsOverlayToggle').addEventListener('change', e=> setTrailsOverlay(e.target.checked));
-document.querySelectorAll('#basemapToggle button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('#basemapToggle button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    setBasemap(btn.dataset.basemap);
-  });
+// The map picker: one button on the main map for basemap and overlay.
+const mainBasemapPicker = addBasemapPicker(map, {
+  current: () => currentBasemapKey,
+  choose: key => setBasemap(key),
+  overlayOn: () => !!trailsOverlay,
+  setOverlay: on => setTrailsOverlay(on),
 });
 
 // ---- Getting started wiring ----
@@ -749,14 +750,9 @@ document.getElementById('clearBtn').addEventListener('click', async (e)=>{
   if(savedBasemap === 'swiss') savedBasemap = 'terrain';   // Swiss topo was removed
   if(savedBasemap && BASEMAP_KEYS.includes(savedBasemap)){
     setBasemap(savedBasemap);
-    document.querySelectorAll('#basemapToggle button').forEach(b=>{
-      b.classList.toggle('active', b.dataset.basemap === savedBasemap);
-    });
   }
-  if(await storeGet('waypoints-trails-overlay')){
-    setTrailsOverlay(true, false);
-    document.getElementById('trailsOverlayToggle').checked = true;
-  }
+  if(await storeGet('waypoints-trails-overlay')) setTrailsOverlay(true, false);
+  mainBasemapPicker.refresh();
   try{
     await loadAll();
     await loadGear();

@@ -849,7 +849,11 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.waitForSelector('#routePlannerOverlay', { state: 'visible' });
   assert.equal(await page.inputValue('#rpName'), 'Haute Route');
   assert.ok(await page.isDisabled('#rpSaveBtn'), 'nothing to save yet');
-  assert.equal(await page.locator('#rpMap .leaflet-control-layers').count(), 1, 'the planner can switch maps');
+  assert.equal(await page.locator('#rpMap .bm-picker-btn').count(), 1, 'the planner can switch maps');
+  // Its mode buttons don't touch the main map's Tracks / Heatmap / Both.
+  await page.click('#rpModeToggle [data-mode="line"]');
+  await page.click('#rpModeToggle [data-mode="trail"]');
+  assert.equal(await page.evaluate(()=> currentView), 'tracks');
   await page.evaluate(()=> rpMap.setView([46.0, 7.5], 13, { animate: false }));
 
   const tap = (x, y) => page.click('#rpMap', { position: { x, y } });
@@ -1029,26 +1033,46 @@ test('basemaps: Relief loads MapLibre on demand, Satellite is Esri, hiking route
     map.eachLayer(l => { if(l._url) out.push(l._url); });
     return out.join(' ');
   });
+  const pick = async key => {
+    await page.click('#map .bm-picker-btn');
+    await page.click('#map .bm-opt[data-basemap="' + key + '"]');
+    assert.ok(await page.isHidden('#map .bm-picker-panel'), 'the panel closes after picking');
+  };
   await page.click('.nav-tab[data-page="map"]');
-  assert.deepEqual(await page.$$eval('#basemapToggle button', bs => bs.map(b => b.textContent)), ['Light', 'Terrain', 'Relief', 'Satellite', 'Dark']);
+  assert.equal(await page.locator('.sidebar .bm-opt, #basemapToggle').count(), 0, 'no basemap buttons in the sidebar any more');
+  assert.ok(await page.isHidden('#map .bm-picker-panel'), 'one button, panel closed');
+  await page.click('#map .bm-picker-btn');
+  assert.deepEqual(await page.$$eval('#map .bm-opt', bs => bs.map(b => b.textContent)), ['Light', 'Terrain', 'Relief', 'Satellite', 'Dark']);
+  assert.equal(await page.getAttribute('#map .bm-opt[data-basemap="light"]', 'aria-pressed'), 'true');
+  await page.keyboard.press('Escape');
+  assert.ok(await page.isHidden('#map .bm-picker-panel'), 'Escape closes it');
 
-  await page.click('#basemapToggle [data-basemap="satellite"]');
+  await pick('satellite');
   assert.match(await tileUrls(), /arcgisonline/);
+  await pick('dark');
+  assert.ok(await page.$eval('#map', el => el.classList.contains('dark-tiles')));
 
   assert.equal(await page.evaluate(()=> typeof window.maplibregl), 'undefined', 'MapLibre is not loaded up front');
-  await page.click('#basemapToggle [data-basemap="relief"]');
+  await pick('relief');
   await page.waitForFunction(()=> currentBasemapLayer.getLayers().some(l => L.MaplibreGL && l instanceof L.MaplibreGL));
   assert.equal(await page.evaluate(()=> typeof window.maplibregl), 'object');
+  assert.ok(!(await page.$eval('#map', el => el.classList.contains('dark-tiles'))));
 
-  await page.check('#trailsOverlayToggle');
+  await page.click('#map .bm-picker-btn');
+  await page.check('#map .bm-picker-overlay input');
+  assert.ok(await page.isVisible('#map .bm-picker-panel'), 'the overlay switch leaves the panel open');
   assert.match(await tileUrls(), /waymarkedtrails\.org\/hiking/);
+  await page.mouse.click(700, 500);   // tap the map elsewhere
+  assert.ok(await page.isHidden('#map .bm-picker-panel'));
+
   await page.reload();
   await page.waitForSelector('.nav-tab');
   await page.waitForFunction(()=> currentBasemapKey === 'relief');
-  assert.ok(await page.isChecked('#trailsOverlayToggle'), 'overlay choice remembered');
   assert.match(await tileUrls(), /waymarkedtrails/);
-  assert.equal(await page.getAttribute('#basemapToggle [data-basemap="relief"]', 'class'), 'active');
-  await page.uncheck('#trailsOverlayToggle');
+  await page.click('#map .bm-picker-btn');
+  assert.equal(await page.getAttribute('#map .bm-opt[data-basemap="relief"]', 'aria-pressed'), 'true', 'choice remembered');
+  assert.ok(await page.isChecked('#map .bm-picker-overlay input'), 'overlay remembered');
+  await page.uncheck('#map .bm-picker-overlay input');
   assert.doesNotMatch(await tileUrls(), /waymarkedtrails/);
   assert.deepEqual(errors, []);
 });

@@ -116,10 +116,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%;ov
   transition:background .15s ease,color .15s ease;
 }
 .view-toggle button.active{background:var(--brass);color:var(--ink);font-weight:600;}
-.toggle-grid{display:grid;grid-template-columns:repeat(6,1fr);border-radius:14px;}
-.toggle-grid button{grid-column:span 2;}
-.toggle-grid button:nth-child(n+4){grid-column:span 3;}
-.toggle-grid button{padding:7px 4px;font-size:11.5px;border-radius:11px;white-space:nowrap;}
+
 
 .stats-row{display:flex;gap:10px;}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -185,7 +182,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%;ov
   max-width:min(440px,80%);text-align:center;display:none;
 }
 .tile-warning strong{color:var(--parchment);font-weight:500;}
-#map.dark-tiles .leaflet-tile-pane{
+.dark-tiles .leaflet-tile-pane{
   filter: invert(1) hue-rotate(180deg) brightness(0.88) contrast(0.92) saturate(0.75);
 }
 .empty-hint{
@@ -1245,8 +1242,38 @@ body{font-size:15px;}
 }
 .track-focus-chip button:hover{background:var(--sage);color:var(--deep);}
 
-/* ---- Map: hiking routes overlay switch and the small layers control ---- */
-.map-overlay-switch{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--parchment);cursor:pointer;}
-.map-overlay-switch input{width:16px;height:16px;accent-color:var(--brass);margin:0;}
-.leaflet-control-layers{border-radius:8px !important;font:inherit;font-size:12.5px;}
-.leaflet-control-layers-expanded{padding:8px 10px 8px 8px;}
+/* ---- The map picker: one layers button, a panel with every map ---- */
+.bm-picker{position:relative;}
+.bm-picker-btn{
+  width:40px;height:40px;border:none;border-radius:10px;background:#fff;color:var(--parchment);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.28);
+  transition:background .15s ease,color .15s ease;
+}
+.bm-picker-btn:hover,.bm-picker.is-open .bm-picker-btn{background:var(--brass);color:var(--on-accent);}
+.bm-picker-panel{
+  position:absolute;top:48px;right:0;width:244px;background:#fff;border-radius:12px;padding:12px;
+  box-shadow:0 8px 24px rgba(31,46,38,.25);animation:modal-in 180ms cubic-bezier(0.2,0.8,0.2,1);
+}
+.leaflet-left .bm-picker-panel{right:auto;left:0;}
+.bm-picker-panel[hidden]{display:none;}
+.bm-picker-title{margin:0 0 8px;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.bm-picker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.bm-opt{
+  display:flex;flex-direction:column;align-items:center;gap:4px;padding:0;border:none;background:none;cursor:pointer;
+  font:inherit;font-size:11.5px;color:var(--parchment);
+}
+.bm-swatch{
+  width:64px;height:48px;border-radius:8px;border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(52,78,65,.15);
+  transition:border-color .15s ease,transform .15s ease;
+}
+.bm-opt:hover .bm-swatch{transform:translateY(-1px);}
+.bm-opt.active .bm-swatch{border-color:var(--brass);}
+.bm-opt.active .bm-opt-name{font-weight:700;color:var(--brass);}
+.bm-swatch-light{background:linear-gradient(150deg,#f3f0ea 0 42%,#fff 42% 48%,#f3f0ea 48% 70%,#aad3df 70% 76%,#e9e5dc 76%);}
+.bm-swatch-terrain{background:repeating-linear-gradient(160deg,rgba(150,110,60,.25) 0 1px,transparent 1px 6px),linear-gradient(160deg,#cfe0b0,#ece0ac 55%,#d3b48a);}
+.bm-swatch-relief{background:radial-gradient(circle at 70% 30%,#fbfbf6 0 12%,transparent 34%),linear-gradient(135deg,#dfe9cf,#b9c9a1 45%,#8f9c87 75%,#e7ebe2);}
+.bm-swatch-satellite{background:radial-gradient(circle at 75% 25%,#c9cfc8 0 10%,transparent 30%),linear-gradient(135deg,#2e4628,#56683a 45%,#3a4a39 70%,#7f8a80);}
+.bm-swatch-dark{background:linear-gradient(150deg,#2a2e33 0 42%,#4a5056 42% 48%,#2a2e33 48% 70%,#1d3a4a 70% 76%,#23272b 76%);}
+.bm-picker-overlay{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--parchment);cursor:pointer;}
+.bm-picker-overlay input{width:16px;height:16px;margin:0;accent-color:var(--brass);}
+@media (prefers-reduced-motion: reduce){ .bm-picker-panel{animation:none;} .bm-swatch{transition:none;} }
