@@ -1,4 +1,4 @@
-const CACHE_NAME = 'waypoints-v16';
+const CACHE_NAME = 'waypoints-v21';
 const APP_JS = ['setup', 'activity-files', 'storage-sync', 'strava', 'map', 'trips', 'loadouts', 'trips-ui', 'import', 'gear', 'catalog', 'track-editor', 'route-planner', 'route-share', 'app']
   .map(f => './js/' + f + '.js');
 const APP_SHELL = ['./', './index.html', './css/app.css', './catalog-core.js', './track-core.js', ...APP_JS,
@@ -61,9 +61,12 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   // App shell: network-first, so a redeploy shows up on the next reload;
-  // the cache is only a fallback for offline use.
+  // the cache is only a fallback for offline use. 'no-cache' makes the
+  // browser ask the server whether the file changed (a tiny 304 when it
+  // didn't) instead of reusing its own copy for up to 10 minutes, which is
+  // how long GitHub Pages lets it.
   event.respondWith(
-    fetch(req).then((res) => {
+    fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then((res) => {
       if (res && res.ok) {
         const copy = res.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));

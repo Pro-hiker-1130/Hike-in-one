@@ -101,9 +101,9 @@ function closeRoutePlanner(){
 function rpEnsureMap(){
   if(rpMap) return;
   rpMap = L.map('rpMap', { zoomControl: true, doubleClickZoom: false });
-  L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap', subdomains: 'abc', maxZoom: 17
-  }).addTo(rpMap);
+  // Start on the main map's basemap when it's a hiking one, else Terrain.
+  const start = ['terrain', 'satellite', 'relief'].includes(currentBasemapKey) ? currentBasemapKey : 'terrain';
+  addMapLayerSwitcher(rpMap, start, 'topleft');
   rpLineLayer = L.layerGroup().addTo(rpMap);
   rpMarkerLayer = L.layerGroup().addTo(rpMap);
   rpMap.on('click', e=>{

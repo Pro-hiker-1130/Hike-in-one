@@ -43,6 +43,9 @@ const LIBS = {
   'leaflet.heat/0.2.0/leaflet-heat.js': ['leaflet.heat/dist/leaflet-heat.js', 'application/javascript'],
   '@zxing/library@0.21.3/umd/index.min.js': ['@zxing/library/umd/index.min.js', 'application/javascript'],
   '@supabase/supabase-js@2.108.0/dist/umd/supabase.js': ['@supabase/supabase-js/dist/umd/supabase.js', 'application/javascript'],
+  'maplibre-gl/5.24.0/maplibre-gl.min.js': ['maplibre-gl/dist/maplibre-gl.js', 'application/javascript'],
+  'maplibre-gl/5.24.0/maplibre-gl.min.css': ['maplibre-gl/dist/maplibre-gl.css', 'text/css'],
+  '@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js': ['@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js', 'application/javascript'],
 };
 
 function seedCatalog(){
@@ -70,7 +73,7 @@ async function launch(t, { signedIn, blockCatalogCore = false, fake }){
       route.fulfill({ status: 200, contentType: LIBS[key][1], body: fs.readFileSync(path.join(process.env.HIKE_LIBS_DIR, LIBS[key][0])) });
     });
   }
-  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|microlink|upcitemdb/, r => r.abort());
+  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|geo\.admin\.ch|maps\.eox\.at|waymarkedtrails|maptoolkit|microlink|upcitemdb/, r => r.abort());
   await ctx.route(new RegExp(SUPABASE_HOST.replace(/\./g, '\\.')), r => fake.handle(r));
   if(blockCatalogCore) await ctx.route(/catalog-core\.js$/, r => r.abort());
   await ctx.addInitScript(({ session, key, gear })=>{

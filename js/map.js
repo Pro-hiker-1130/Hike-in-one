@@ -59,13 +59,94 @@ function goToTripPhotosFromMap(tripId){
   if(section) section.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+// ---- How tracks are drawn ----
+// Each track is a coloured line over a white outline (its "casing"), so it
+// stays readable on busy topo maps and satellite photos. Lines are thin and
+// see-through when zoomed out, so many trips overlap like a heatmap, and
+// get bolder as you zoom in. Picking a trip fades the others. From zoom 12,
+// tracks in view get start and finish dots. Everything is drawn on canvas
+// (fast with hundreds of tracks) with a wide tap tolerance for fingers.
+map.createPane('trackCasings').style.zIndex = 390;
+map.createPane('trackEnds').style.zIndex = 420;
+const trackCasingRenderer = L.canvas({pane:'trackCasings', padding:0.3});
+const trackLineRenderer = L.canvas({padding:0.3, tolerance:8});
+const trackEndRenderer = L.canvas({pane:'trackEnds', padding:0.3});
+const trackDrawn = new Map();       // track id -> {t, line, casing}
+const trackEndGroup = L.layerGroup();
+let trackFocus = null;              // {tripId} or {trackId}: the others fade
+let hoveredTrackId = null;
+const TRACK_ENDS_MIN_ZOOM = 12;
+
+function trackZoomStyle(z){
+  if(z <= 6)  return {weight:2,   opacity:0.6,  casing:0};
+  if(z <= 9)  return {weight:2.5, opacity:0.8,  casing:1.5};
+  if(z <= 12) return {weight:3.5, opacity:0.9,  casing:2};
+  return            {weight:4.5, opacity:0.95, casing:2.5};
+}
+
+function trackInFocus(t){
+  if(!trackFocus) return true;
+  if(trackFocus.tripId){
+    const trip = trips.find(tr => tr.id === trackFocus.tripId);
+    return !!trip && (trip.trackIds || []).includes(t.id);
+  }
+  return t.id === trackFocus.trackId;
+}
+
+function styleTracks(){
+  const base = trackZoomStyle(map.getZoom());
+  trackDrawn.forEach(({t, line, casing}, id)=>{
+    const focused = trackInFocus(t);
+    const hovered = id === hoveredTrackId;
+    const weight = base.weight + (hovered ? 2 : 0);
+    const opacity = hovered ? 1 : focused ? base.opacity : 0.28;
+    line.setStyle({ weight, opacity, dashArray: t.planned ? (weight*2)+' '+(weight*1.6) : null });
+    casing.setStyle({ weight: weight + base.casing*2, opacity: base.casing && focused ? 0.85 : 0 });
+  });
+  // Focused tracks on top of the faded ones.
+  if(trackFocus) trackDrawn.forEach(({t, line, casing})=>{ if(trackInFocus(t)){ casing.bringToFront(); line.bringToFront(); } });
+  renderTrackEnds();
+}
+
+function renderTrackEnds(){
+  trackEndGroup.clearLayers();
+  if(map.getZoom() < TRACK_ENDS_MIN_ZOOM) return;
+  const view = map.getBounds().pad(0.2);
+  const dot = (ll, fill, ring) => L.circleMarker(ll, { renderer: trackEndRenderer, interactive: false,
+    radius: 5, weight: 2.5, color: ring, fillColor: fill, fillOpacity: 1 }).addTo(trackEndGroup);
+  trackDrawn.forEach(({t, line})=>{
+    if(!trackInFocus(t) || t.points.length < 2 || !line.getBounds().intersects(view)) return;
+    const start = t.points[0], end = t.points[t.points.length-1];
+    // A loop ends where it started: one dot, green with a red ring.
+    if(haversine(start, end) < 0.05){ dot(start, '#3A5A40', '#B3261E'); return; }
+    dot(end, '#B3261E', '#FFFFFF');
+    dot(start, '#3A5A40', '#FFFFFF');
+  });
+}
+
+function setTrackFocus(focus){
+  trackFocus = focus;
+  const chip = document.getElementById('trackFocusChip');
+  if(chip){
+    let label = '';
+    if(focus && focus.tripId){ const tr = trips.find(x => x.id === focus.tripId); label = tr ? tr.name : ''; }
+    else if(focus && focus.trackId){ const t = tracks.find(x => x.id === focus.trackId); label = t ? t.name : ''; }
+    chip.hidden = !focus;
+    chip.querySelector('.track-focus-name').textContent = label;
+  }
+  styleTracks();
+}
+
 function renderTracks(){
   trackLayerGroup.clearLayers();
+  trackDrawn.clear();
+  hoveredTrackId = null;
   const trackColors = computeTrackColors();
   tracks.forEach((t)=>{
     const color = trackColors[t.id];
+    const casing = L.polyline(t.points, { renderer: trackCasingRenderer, color: '#FFFFFF', interactive: false, lineCap: 'round', lineJoin: 'round' });
     // Planned routes are dashed: drawn, not walked.
-    const line = L.polyline(t.points, {color, weight:2.5, opacity:0.85, dashArray: t.planned ? '6 6' : null});
+    const line = L.polyline(t.points, { renderer: trackLineRenderer, color, lineCap: 'round', lineJoin: 'round', bubblingMouseEvents: false });
     const trip = findTrackTrip(t.id);
     const photoCount = trip ? (trip.photoIds||[]).length : 0;
     let popupHtml =
@@ -88,17 +169,46 @@ function renderTracks(){
       }
     }
     line.bindPopup(popupHtml);
+    // Opening a track's popup puts its trip in focus; closing it lets go.
+    line.on('popupopen', ()=> setTrackFocus(trip ? {tripId: trip.id, fromPopup: true} : {trackId: t.id, fromPopup: true}));
+    line.on('popupclose', ()=>{ if(trackFocus && trackFocus.fromPopup) setTrackFocus(null); });
     // Hover tooltip stays plain text (Leaflet tooltips ignore pointer
     // events by default, so a real clickable link here would vanish
     // before it could be clicked) — it just hints that photos exist;
     // the actual link lives in the click popup above.
     const tooltipText = (trip ? trip.name : t.name) + (photoCount ? ' · \u{1F4F7} '+photoCount : '');
     line.bindTooltip(tooltipText, {sticky:true, direction:'top', opacity:0.92});
-    line.on('mouseover', function(){ this.setStyle({weight:5, opacity:1}); this.bringToFront(); });
-    line.on('mouseout', function(){ this.setStyle({weight:2.5, opacity:0.85}); });
+    line.on('mouseover', ()=>{ hoveredTrackId = t.id; styleTracks(); casing.bringToFront(); line.bringToFront(); });
+    line.on('mouseout', ()=>{ if(hoveredTrackId === t.id){ hoveredTrackId = null; styleTracks(); } });
     trackLayerGroup.addLayer(line);
+    trackLayerGroup.addLayer(casing);
+    trackDrawn.set(t.id, {t, line, casing});
   });
+  trackLayerGroup.addLayer(trackEndGroup);
+  // A focused trip that no longer exists lets go.
+  if(trackFocus && ![...trackDrawn.values()].some(d => trackInFocus(d.t))) trackFocus = null;
+  setTrackFocus(trackFocus);
 }
+
+map.on('zoomend', styleTracks);
+map.on('moveend', renderTrackEnds);
+// Tapping empty map lets go of a trip picked with "View on map".
+map.on('click', ()=>{ if(trackFocus) setTrackFocus(null); });
+
+// "Showing <trip> · Show all", top left under the zoom buttons.
+const TrackFocusControl = L.Control.extend({
+  options: { position: 'topleft' },
+  onAdd(){
+    const el = L.DomUtil.create('div', 'track-focus-chip');
+    el.id = 'trackFocusChip';
+    el.hidden = true;
+    el.innerHTML = '<span>Showing <strong class="track-focus-name"></strong></span><button type="button">Show all</button>';
+    L.DomEvent.disableClickPropagation(el);
+    el.querySelector('button').addEventListener('click', ()=> setTrackFocus(null));
+    return el;
+  },
+});
+new TrackFocusControl().addTo(map);
 
 map.on('popupopen', (e)=>{
   const el = e.popup.getElement();

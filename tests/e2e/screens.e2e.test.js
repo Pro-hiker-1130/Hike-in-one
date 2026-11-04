@@ -38,6 +38,9 @@ const LIBS = {
   'leaflet.heat/0.2.0/leaflet-heat.js': ['leaflet.heat/dist/leaflet-heat.js', 'application/javascript'],
   '@zxing/library@0.21.3/umd/index.min.js': ['@zxing/library/umd/index.min.js', 'application/javascript'],
   '@supabase/supabase-js@2.108.0/dist/umd/supabase.js': ['@supabase/supabase-js/dist/umd/supabase.js', 'application/javascript'],
+  'maplibre-gl/5.24.0/maplibre-gl.min.js': ['maplibre-gl/dist/maplibre-gl.js', 'application/javascript'],
+  'maplibre-gl/5.24.0/maplibre-gl.min.css': ['maplibre-gl/dist/maplibre-gl.css', 'text/css'],
+  '@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js': ['@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js', 'application/javascript'],
 };
 
 const GEAR = [
@@ -87,7 +90,7 @@ async function launch(t, viewport = { width: 1280, height: 900 }, fake = null){
       route.fulfill({ status: 200, contentType: LIBS[key][1], body: fs.readFileSync(path.join(process.env.HIKE_LIBS_DIR, LIBS[key][0])) });
     });
   }
-  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|supabase\.co/, r => r.abort());
+  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|geo\.admin\.ch|maps\.eox\.at|waymarkedtrails|maptoolkit|mapterhorn|supabase\.co/, r => r.abort());
   // Registered last so it wins over the blanket supabase.co block above.
   if(fake) await ctx.route(new RegExp(SUPABASE_HOST.replace(/\./g, '\\.')), r => fake.handle(r));
   await ctx.addInitScript(({ gear, session, key })=>{
@@ -473,7 +476,7 @@ async function launchWithLocalData(t, fake, local){
       route.fulfill({ status: 200, contentType: LIBS[key][1], body: fs.readFileSync(path.join(process.env.HIKE_LIBS_DIR, LIBS[key][0])) });
     });
   }
-  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|supabase\.co/, r => r.abort());
+  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|cartocdn|geo\.admin\.ch|maps\.eox\.at|waymarkedtrails|maptoolkit|mapterhorn|supabase\.co/, r => r.abort());
   await ctx.route(new RegExp(SUPABASE_HOST.replace(/\./g, '\\.')), r => fake.handle(r));
   await ctx.addInitScript(({ local, session, key })=>{
     if(localStorage.getItem('e2e-seeded')) return;
@@ -558,7 +561,7 @@ test('trip colors: pick a swatch or any color, used on the map and the trip card
     await page.waitForSelector('#tripModalOverlay', { state: 'hidden' });
   };
   const cardStroke = ()=> page.$eval('.trip-card-timeline:has-text("Eiger") .trip-card-profile path:last-child', p => p.getAttribute('stroke'));
-  const mapLines = color => page.$$eval('#map path.leaflet-interactive', (ps, c) => ps.filter(p => (p.getAttribute('stroke') || '').toLowerCase() === c).length, color);
+  const mapLines = color => page.evaluate(c => [...trackDrawn.values()].filter(d => d.line.options.color.toLowerCase() === c).length, color);
 
   await editEiger();
   assert.equal(await page.getAttribute('#tripColorPicker .is-auto', 'aria-checked'), 'true', 'new and untouched trips are automatic');
@@ -815,7 +818,7 @@ test('track editor: trim with undo, split, join, rename, download GPX and delete
 
   // The map popup opens the same editor.
   await page.click('.nav-tab[data-page="map"]');
-  await page.evaluate(()=> trackLayerGroup.getLayers()[0].openPopup());
+  await page.evaluate(()=> trackDrawn.values().next().value.line.openPopup());
   await page.click('.popup-track-edit');
   await page.waitForSelector('#trackEditModalOverlay', { state: 'visible' });
 
@@ -860,6 +863,11 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.waitForSelector('#routePlannerOverlay', { state: 'visible' });
   assert.equal(await page.inputValue('#rpName'), 'Haute Route');
   assert.ok(await page.isDisabled('#rpSaveBtn'), 'nothing to save yet');
+  assert.equal(await page.locator('#rpMap .bm-picker-btn').count(), 1, 'the planner can switch maps');
+  // Its mode buttons don't touch the main map's Tracks / Heatmap / Both.
+  await page.click('#rpModeToggle [data-mode="line"]');
+  await page.click('#rpModeToggle [data-mode="trail"]');
+  assert.equal(await page.evaluate(()=> currentView), 'tracks');
   await page.evaluate(()=> rpMap.setView([46.0, 7.5], 13, { animate: false }));
 
   const tap = (x, y) => page.click('#rpMap', { position: { x, y } });
@@ -1002,5 +1010,155 @@ test('share with partners: a partner opens the link without an account and sends
   await page.goto(baseUrl + '/index.html?again=1#shared=' + 'f'.repeat(32));
   await page.waitForFunction(()=> /no longer exists/.test(document.getElementById('srError').textContent));
   assert.ok(await page.isHidden('#srForm'));
+  assert.deepEqual(errors, []);
+});
+
+test('map lines: white outline, bolder when zoomed in, one trip in focus fades the others, start and finish dots', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  const styles = () => page.evaluate(()=> [...trackDrawn.values()].map(d => ({ name: d.t.name, w: d.line.options.weight, o: d.line.options.opacity, casingW: d.casing.options.weight, casingO: d.casing.options.opacity })));
+  await page.click('.nav-tab[data-page="map"]');
+  await page.waitForTimeout(500);   // the map first fits all tracks
+  await page.evaluate(()=> map.setView([46.6, 7.6], 5, { animate: false }));
+  let s = await styles();
+  assert.equal(s.length, 2);
+  assert.ok(s.every(x => x.w === 2 && x.o === 0.6 && x.casingO === 0), 'zoomed out: thin, see-through, no outline');
+  assert.equal(await page.evaluate(()=> trackEndGroup.getLayers().length), 0);
+
+  // View one trip on the map: it is in focus, the other fades.
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.click('.trip-card-timeline:has-text("Eiger trail")');
+  await page.click('#tripViewOnMapBtn');
+  await page.waitForSelector('#trackFocusChip:not([hidden])');
+  assert.match(await text(page, '#trackFocusChip'), /Showing Eiger trail/);
+  s = await styles();
+  const eiger = s.find(x => x.name === 'Eiger trail'), other = s.find(x => x.name !== 'Eiger trail');
+  assert.ok(eiger.w >= 3.5 && eiger.casingO > 0.5 && eiger.casingW > eiger.w, 'zoomed in: bolder, with a white outline');
+  assert.ok(other.o < 0.3 && other.casingO === 0, 'the other trip fades');
+  assert.ok(await page.evaluate(()=> map.getZoom()) >= 12);
+  assert.equal(await page.evaluate(()=> trackEndGroup.getLayers().length), 2, 'start and finish of the trip in view');
+
+  await page.click('#trackFocusChip button');
+  assert.ok(await page.isHidden('#trackFocusChip'));
+  s = await styles();
+  assert.ok(s.every(x => x.o > 0.8), 'Show all brings them back');
+  assert.deepEqual(errors, []);
+});
+
+test('basemaps: Relief loads MapLibre on demand, Satellite is Esri, hiking routes overlay remembered', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  // Relief's style comes from Maptoolkit; here a tiny stand-in style.
+  await page.context().route(/styles\.maptoolkit\.org/, r => r.fulfill({ status: 200, contentType: 'application/json',
+    headers: { 'access-control-allow-origin': '*' },
+    body: JSON.stringify({ version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#e8eadf' } }] }) }));
+  const tileUrls = () => page.evaluate(()=>{
+    const out = [];
+    map.eachLayer(l => { if(l._url) out.push(l._url); });
+    return out.join(' ');
+  });
+  const pick = async key => {
+    await page.click('#map .bm-picker-btn');
+    await page.click('#map .bm-opt[data-basemap="' + key + '"]');
+    assert.ok(await page.isHidden('#map .bm-picker-panel'), 'the panel closes after picking');
+  };
+  await page.click('.nav-tab[data-page="map"]');
+  assert.equal(await page.locator('.sidebar .bm-opt, #basemapToggle').count(), 0, 'no basemap buttons in the sidebar any more');
+  assert.ok(await page.isHidden('#map .bm-picker-panel'), 'one button, panel closed');
+  await page.click('#map .bm-picker-btn');
+  assert.deepEqual(await page.$$eval('#map .bm-opt', bs => bs.map(b => b.textContent)), ['Light', 'Terrain', 'Relief', 'Satellite', 'Dark']);
+  assert.equal(await page.getAttribute('#map .bm-opt[data-basemap="light"]', 'aria-pressed'), 'true');
+  await page.keyboard.press('Escape');
+  assert.ok(await page.isHidden('#map .bm-picker-panel'), 'Escape closes it');
+
+  await pick('satellite');
+  assert.match(await tileUrls(), /arcgisonline/);
+  await pick('dark');
+  assert.ok(await page.$eval('#map', el => el.classList.contains('dark-tiles')));
+
+  assert.equal(await page.evaluate(()=> typeof window.maplibregl), 'undefined', 'MapLibre is not loaded up front');
+  await pick('relief');
+  await page.waitForFunction(()=> currentBasemapLayer.getLayers().some(l => L.MaplibreGL && l instanceof L.MaplibreGL));
+  assert.equal(await page.evaluate(()=> typeof window.maplibregl), 'object');
+  assert.ok(!(await page.$eval('#map', el => el.classList.contains('dark-tiles'))));
+
+  await page.click('#map .bm-picker-btn');
+  await page.check('#map .bm-picker-overlay input');
+  assert.ok(await page.isVisible('#map .bm-picker-panel'), 'the overlay switch leaves the panel open');
+  assert.match(await tileUrls(), /waymarkedtrails\.org\/hiking/);
+  await page.mouse.click(700, 500);   // tap the map elsewhere
+  assert.ok(await page.isHidden('#map .bm-picker-panel'));
+
+  await page.reload();
+  await page.waitForSelector('.nav-tab');
+  await page.waitForFunction(()=> currentBasemapKey === 'relief');
+  assert.match(await tileUrls(), /waymarkedtrails/);
+  await page.click('#map .bm-picker-btn');
+  assert.equal(await page.getAttribute('#map .bm-opt[data-basemap="relief"]', 'aria-pressed'), 'true', 'choice remembered');
+  assert.ok(await page.isChecked('#map .bm-picker-overlay input'), 'overlay remembered');
+  await page.uncheck('#map .bm-picker-overlay input');
+  assert.doesNotMatch(await tileUrls(), /waymarkedtrails/);
+  assert.deepEqual(errors, []);
+});
+
+test('updates: a new version is picked up without reinstalling — "Check for updates" reloads into it, otherwise a Reload message', { skip: !playwright }, async t=>{
+  // A server whose service-worker.js can be swapped for a "new version".
+  let swOverride = null;
+  const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png' };
+  const srv = http.createServer((req, res)=>{
+    const rel = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/+/, '') || 'index.html';
+    if(rel === 'service-worker.js' && swOverride){
+      res.writeHead(200, { 'content-type': 'application/javascript', 'cache-control': 'max-age=600' });
+      return res.end(swOverride);
+    }
+    const file = path.join(ROOT, rel);
+    if(!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()){ res.writeHead(404); return res.end(); }
+    // Like GitHub Pages: browsers may reuse files for 10 minutes.
+    res.writeHead(200, { 'content-type': types[path.extname(file)] || 'application/octet-stream', 'cache-control': 'max-age=600' });
+    fs.createReadStream(file).pipe(res);
+  });
+  await new Promise(r => srv.listen(0, '127.0.0.1', r));
+  t.after(()=> srv.close());
+  const url = 'http://127.0.0.1:' + srv.address().port + '/index.html';
+  const original = fs.readFileSync(path.join(ROOT, 'service-worker.js'), 'utf8');
+  const bump = v => original.replace(/waypoints-v\d+/, 'waypoints-v' + v);
+
+  const browser = await playwright.chromium.launch(Object.assign({ args: ['--no-sandbox'] },
+    process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {}));
+  t.after(()=> browser.close());
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });   // service workers allowed
+  if(process.env.HIKE_LIBS_DIR){
+    await ctx.route(/cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net/, route=>{
+      const key = Object.keys(LIBS).find(k => route.request().url().includes(k));
+      if(!key) return route.abort();
+      route.fulfill({ status: 200, contentType: LIBS[key][1], body: fs.readFileSync(path.join(process.env.HIKE_LIBS_DIR, LIBS[key][0])) });
+    });
+  }
+  await ctx.route(/fonts\.|tile\.openstreetmap|arcgisonline|opentopomap|supabase\.co/, r => r.abort());
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto(url);
+  await page.waitForFunction(()=> !!navigator.serviceWorker.controller, null, { timeout: 20000 });
+  const version = () => page.evaluate(()=> appVersionLabel());
+  const startVersion = await version();
+  assert.match(startVersion, /^version \d+$/);
+
+  // Settings → Check for updates, with nothing new.
+  await page.click('.nav-tab[data-page="settings"]');
+  await page.click('#settingsUpdateBtn');
+  await page.waitForFunction(()=> /latest version/.test(document.getElementById('settingsUpdateStatus').textContent));
+
+  // A new version is deployed; the button reloads straight into it.
+  swOverride = bump(900);
+  await Promise.all([page.waitForEvent('load', { timeout: 20000 }), page.click('#settingsUpdateBtn')]);
+  await page.waitForFunction(()=> appVersionLabel().then(v => v === 'version 900'), null, { timeout: 20000 });
+
+  // Another one, found by the background check (as when the app comes
+  // back to the screen): a message offers to reload.
+  swOverride = bump(901);
+  await page.evaluate(()=> checkForAppUpdate());
+  await page.waitForFunction(()=> /has been updated/.test(document.getElementById('globalToast').textContent), null, { timeout: 20000 });
+  await Promise.all([page.waitForEvent('load'), page.click('#globalToast .toast-action')]);
+  assert.equal(await version(), 'version 901');
   assert.deepEqual(errors, []);
 });
