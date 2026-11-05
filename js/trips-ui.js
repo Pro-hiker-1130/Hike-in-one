@@ -74,7 +74,7 @@ function renderTripCardsUnguarded(){
   renderTripTimeline(filterByDifficulty(completed));
 }
 
-// Completed trips can be narrowed to those with a hike of one difficulty;
+// Completed trips can be searched and narrowed to those with a hike of one difficulty;
 // the chips show once
 // there are a few trips to sort through.
 let tripDifficultyFilter = 'all';
@@ -88,12 +88,26 @@ function filterByDifficulty(completed){
     b.classList.toggle('active', on);
     b.setAttribute('aria-checked', String(on));
   });
-  if(tripDifficultyFilter === 'all') return completed;
+  // Search: every word must appear in the trip's name, notes or hike
+  // names (ignoring case and accents).
+  const search = document.getElementById('tripSearch');
+  search.hidden = box.hidden;
+  if(search.hidden) search.value = '';
+  const fold = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const words = fold(search.value).split(/\s+/).filter(Boolean);
+  let list = completed;
+  if(words.length) list = list.filter(trip => {
+    const hay = fold([trip.name, trip.notes].concat(tripTracks(trip).map(t => t.name)).join(' '));
+    return words.every(w => hay.includes(w));
+  });
   // A trip shows when any of its hikes has the chosen difficulty.
-  const list = completed.filter(trip => tripCountedTracks(trip).some(t => { const d = trackDifficulty(t); return d && d.level === tripDifficultyFilter; }));
-  if(!list.length){
-    const empty = document.getElementById('tripCompletedEmpty');
-    empty.textContent = 'No trips with ' + (tripDifficultyFilter === 'easy' ? 'an' : 'a') + ' ' + DIFFICULTY_LABELS[tripDifficultyFilter].toLowerCase() + ' hike yet.';
+  const level = tripDifficultyFilter;
+  if(level !== 'all') list = list.filter(trip => tripCountedTracks(trip).some(t => { const d = trackDifficulty(t); return d && d.level === level; }));
+  if(!list.length && (words.length || level !== 'all')){
+    const parts = [];
+    if(words.length) parts.push('match \u201c' + search.value.trim() + '\u201d');
+    if(level !== 'all') parts.push('have ' + (level === 'easy' ? 'an' : 'a') + ' ' + DIFFICULTY_LABELS[level].toLowerCase() + ' hike');
+    document.getElementById('tripCompletedEmpty').textContent = 'No trips ' + parts.join(' and ') + ' yet.';
   }
   return list;
 }

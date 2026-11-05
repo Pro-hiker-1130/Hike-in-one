@@ -372,6 +372,7 @@ document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacki
 document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
 document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
 document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
+document.getElementById('tripSearch').addEventListener('input', ()=> renderTripCards());
 document.getElementById('tripDifficultyFilter').addEventListener('click', e=>{
   const b = e.target.closest('button[data-level]');
   if(!b) return;

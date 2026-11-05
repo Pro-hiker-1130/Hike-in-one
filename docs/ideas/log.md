@@ -3,6 +3,25 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-05 — research
+
+Synced: main had one new commit from another session (the track editor
+keeps an estimated time when trimming older hikes). It merged without
+conflicts.
+Looked at: HIIKER (multi-day planner with stages showing daily distance
+and climb, plus waypoints for campsites, resupply and pick-up points) and
+Wanderer (self-hosted trail catalogue with search, filters and custom
+lists). Budget used: 2 searches, 0 fetches.
+Changed: Completed trips get a search box next to the difficulty chips,
+shown once there are 3 or more completed trips. Every word must appear in
+the trip's name, notes or one of its hike names, ignoring case and accents.
+It works together with the difficulty chips, and the empty message says
+what didn't match (e.g. "No trips match “lake week” and have a strenuous
+hike yet."). The search box is full width on phones. Extended the
+difficulty e2e test. Service worker cache `waypoints-v30` (main had already
+used v29). All tests pass: 47 unit, 54 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-04 — polish (3 of 3)
 
 Looked at: screenshots of the Gear Room (phone and desktop) and keyboard
