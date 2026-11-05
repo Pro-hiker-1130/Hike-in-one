@@ -96,3 +96,5 @@ pin down to "Skipped" with a reason.
 - Summit To Eat Scrambled Egg with Cheese: listed weights disagree (80-104 g).
 - Sawyer Permethrin 24 oz spray: listings show packaged weights only.
 - Fox 40 Classic whistle: weights only from marketplace listings (9-30 g, versions differ).
+- Lifesystems Ultralight Survival Shelter (2 person): retailers list 180 g and 215 g.
+- Garmin fenix 8 47mm: weight differs by case material and strap (52-81 g).
