@@ -101,9 +101,9 @@ function closeRoutePlanner(){
 function rpEnsureMap(){
   if(rpMap) return;
   rpMap = L.map('rpMap', { zoomControl: true, doubleClickZoom: false });
-  L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap', subdomains: 'abc', maxZoom: 17
-  }).addTo(rpMap);
+  // Start on the main map's basemap when it's a hiking one, else Terrain.
+  const start = ['terrain', 'satellite', 'relief'].includes(currentBasemapKey) ? currentBasemapKey : 'terrain';
+  addMapLayerSwitcher(rpMap, start, 'topleft');
   rpLineLayer = L.layerGroup().addTo(rpMap);
   rpMarkerLayer = L.layerGroup().addTo(rpMap);
   rpMap.on('click', e=>{
@@ -134,6 +134,7 @@ function rpChanged(){
   rpDrawRoute();
   document.getElementById('rpUndoBtn').disabled = !rp.history.length;
   document.getElementById('rpClearBtn').disabled = !rp.waypoints.length;
+  document.getElementById('rpLoopBtn').disabled = !rpCanLoop();
   document.getElementById('rpHint').hidden = rp.waypoints.length > 1;
   document.getElementById('rpHint').textContent = rp.waypoints.length
     ? 'Now tap where the route goes next.'
@@ -199,6 +200,11 @@ function rpDrawRoute(){
   if(wps.length < 2){ stats.textContent = ''; return; }
   if(!ready){ stats.textContent = 'Finding the route…'; return; }
   stats.textContent = rpRoute.distanceKm.toFixed(1) + ' km · ' + trackClimbSummary(rpRoute);
+  // Distance markers along the route, so it's easy to see where 5 km is.
+  TrackCore.kmMarkers(rpRoute.points).forEach(m => L.marker(m.ll, {
+    interactive: false, keyboard: false,
+    icon: L.divIcon({ className: 'rp-km', html: '<span>' + m.km + '</span>', iconSize: null }),
+  }).addTo(rpLineLayer));
   if(rpRoute.profile && rpRoute.profile.length > 1) profileEl.appendChild(buildElevationProfile(rpRoute));
 }
 
@@ -207,6 +213,17 @@ function rpDrawRoute(){
 function rpUndo(){
   if(!rp || !rp.history.length) return;
   rp.waypoints = rp.history.pop();
+  rpChanged();
+}
+// A round trip: one more leg, drawn the current way, back to the start.
+function rpCanLoop(){
+  const w = rp ? rp.waypoints : [];
+  return w.length > 1 && TrackCore.haversine(w[0].ll, w[w.length-1].ll) > 0.02;
+}
+function rpLoop(){
+  if(!rpCanLoop()) return;
+  rpRemember();
+  rp.waypoints = rp.waypoints.concat({ ll: rp.waypoints[0].ll.slice(), mode: rpMode });
   rpChanged();
 }
 function rpClear(){
@@ -277,7 +294,16 @@ document.getElementById('routePlannerOverlay').addEventListener('click', e=>{
 document.querySelectorAll('#rpModeToggle button').forEach(b=> b.addEventListener('click', ()=> rpSetMode(b.dataset.mode)));
 document.getElementById('rpUndoBtn').addEventListener('click', rpUndo);
 document.getElementById('rpClearBtn').addEventListener('click', rpClear);
+document.getElementById('rpLoopBtn').addEventListener('click', rpLoop);
 document.getElementById('rpSaveBtn').addEventListener('click', saveRoutePlan);
 document.getElementById('rpDeleteBtn').addEventListener('click', deleteRoutePlan);
 document.getElementById('rpDownloadBtn').addEventListener('click', downloadRoutePlan);
 document.getElementById('tripPlanRouteBtn').addEventListener('click', ()=> openRoutePlanner(currentTripId, null));
+// Ctrl+Z / Cmd+Z undoes the last point while the planner is open (but
+// not while typing in the name field, where it undoes the typing).
+document.addEventListener('keydown', e=>{
+  if(!rp || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.key.toLowerCase() !== 'z') return;
+  if(e.target.closest && e.target.closest('input, textarea, select')) return;
+  e.preventDefault();
+  rpUndo();
+});

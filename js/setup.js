@@ -50,21 +50,83 @@ let currentView = 'tracks';
 // ---- Map setup ----
 const map = L.map('map', {worldCopyJump:true}).setView([20,10], 2);
 
-// CARTO's free anonymous raster tiles now require an API key, so "dark" and
-// "light" both use plain OpenStreetMap tiles; "dark" fakes its look with a
-// CSS filter on the tile pane instead of a separate tile server.
-const BASEMAPS = {
-  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors', subdomains:'abc', maxZoom:19
-  }),
-  terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap', subdomains:'abc', maxZoom:17
-  }),
-  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri', maxZoom:19
-  })
-};
-let currentTileKey = null;
+// ---- Basemaps ----
+// All free and keyless. makeBasemap(key) builds a fresh layer for any map
+// (a Leaflet layer can only be on one map at a time).
+//   light / dark  OpenStreetMap ("dark" is a CSS filter on the tiles)
+//   terrain       OpenTopoMap
+//   satellite     Esri World Imagery
+//   relief        Maptoolkit's vector hiking map (shaded relief, contours), drawn by
+//                 MapLibre inside Leaflet; loaded only when picked
+// Plus an overlay of marked hiking routes from Waymarked Trails.
+const BASEMAP_KEYS = ['light', 'terrain', 'relief', 'satellite', 'dark'];
+const BASEMAP_LABELS = { light:'Light', terrain:'Terrain', relief:'Relief', satellite:'Satellite', dark:'Dark' };
+const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+function tiles(url, opts){ const l = L.tileLayer(url, opts); watchTileErrors(l); return l; }
+function osmTiles(){ return tiles('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: OSM_ATTR, maxZoom: 19 }); }
+function topoTiles(){
+  return tiles('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: OSM_ATTR + ', SRTM | Map style: &copy; OpenTopoMap', subdomains: 'abc', maxNativeZoom: 17, maxZoom: 19 });
+}
+function makeBasemap(key){
+  switch(key){
+    case 'terrain': return topoTiles();
+    case 'satellite': return tiles('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri', maxZoom: 19 });
+    case 'relief': return makeReliefLayer();
+    default: return osmTiles();
+  }
+}
+
+function makeTrailsOverlay(){
+  return tiles('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
+    attribution: 'Hiking routes &copy; <a href="https://hiking.waymarkedtrails.org">Waymarked Trails</a>',
+    maxNativeZoom: 17, maxZoom: 19, opacity: 0.85, zIndex: 5 });
+}
+
+// MapLibre (~900 KB) is only downloaded the first time someone picks
+// "Relief". Until it has loaded, OpenTopoMap stands in.
+const MAPLIBRE_JS = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.js';
+const MAPLIBRE_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.css';
+const MAPLIBRE_LEAFLET_JS = 'https://cdn.jsdelivr.net/npm/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js';
+const RELIEF_STYLE = 'https://styles.maptoolkit.org/summer.json';
+let maplibreLoading = null;
+function loadScriptOnce(src){
+  return new Promise((resolve, reject)=>{
+    const el = document.createElement('script');
+    el.src = src; el.onload = resolve; el.onerror = () => reject(new Error('Could not load ' + src));
+    document.head.appendChild(el);
+  });
+}
+function loadMapLibre(){
+  if(!maplibreLoading){
+    const css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = MAPLIBRE_CSS;
+    document.head.appendChild(css);
+    maplibreLoading = loadScriptOnce(MAPLIBRE_JS).then(()=> loadScriptOnce(MAPLIBRE_LEAFLET_JS));
+    maplibreLoading.catch(()=>{ maplibreLoading = null; });
+  }
+  return maplibreLoading;
+}
+function makeReliefLayer(){
+  const group = L.layerGroup();
+  const standIn = topoTiles();
+  group.addLayer(standIn);
+  loadMapLibre().then(()=>{
+    group.removeLayer(standIn);
+    group.addLayer(L.maplibreGL({
+      style: RELIEF_STYLE,
+      attribution: '&copy; <a href="https://www.maptoolkit.com">Maptoolkit</a> ' + OSM_ATTR,
+    }));
+  }).catch(()=>{
+    if(typeof showGlobalToast === 'function') showGlobalToast('The relief map needs an internet connection. Showing Terrain instead.', true);
+  });
+  return group;
+}
+
+let currentBasemapKey = null, currentBasemapLayer = null;
+let trailsOverlay = null;
 
 let tileWarningShown = false;
 function watchTileErrors(layer){
@@ -81,19 +143,106 @@ function watchTileErrors(layer){
     }
   });
 }
-Object.values(BASEMAPS).forEach(watchTileErrors);
 
 function setBasemap(key, persist = true){
-  if(!['dark','light','terrain','satellite'].includes(key)) return;
-  const wantsTile = (key === 'dark' || key === 'light') ? 'osm' : key;
-  if(currentTileKey !== wantsTile){
-    if(currentTileKey) map.removeLayer(BASEMAPS[currentTileKey]);
-    BASEMAPS[wantsTile].addTo(map);
-    currentTileKey = wantsTile;
+  if(!BASEMAP_KEYS.includes(key)) return;
+  // light and dark share the same tiles.
+  const tileKey = key === 'dark' ? 'light' : key;
+  const currentTileKey = currentBasemapKey === 'dark' ? 'light' : currentBasemapKey;
+  if(tileKey !== currentTileKey){
+    if(currentBasemapLayer) map.removeLayer(currentBasemapLayer);
+    currentBasemapLayer = makeBasemap(tileKey).addTo(map);
   }
+  currentBasemapKey = key;
   map.getContainer().classList.toggle('dark-tiles', key === 'dark');
   if(persist) storeSet('waypoints-basemap', key);
 }
+
+function setTrailsOverlay(on, persist = true){
+  if(on && !trailsOverlay) trailsOverlay = makeTrailsOverlay().addTo(map);
+  if(!on && trailsOverlay){ map.removeLayer(trailsOverlay); trailsOverlay = null; }
+  if(persist) storeSet('waypoints-trails-overlay', on ? '1' : '');
+}
+
+// ---- The map picker: one round "layers" button on a map. Tapping it opens
+// a panel with every basemap and the hiking-routes overlay. ----
+// state: {current(), choose(key), overlayOn(), setOverlay(on)}
+const LAYERS_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3 2.5 8 12 13l9.5-5L12 3Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="m2.5 12 9.5 5 9.5-5M2.5 16l9.5 5 9.5-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>';
+function addBasemapPicker(m, state, position){
+  const Picker = L.Control.extend({
+    options: { position: position || 'topright' },
+    onAdd(){
+      const el = L.DomUtil.create('div', 'bm-picker');
+      el.innerHTML =
+        '<button type="button" class="bm-picker-btn" aria-label="Map layers" aria-expanded="false" title="Map layers">' + LAYERS_ICON + '</button>' +
+        '<div class="bm-picker-panel" role="group" aria-label="Map layers" hidden>' +
+          '<p class="bm-picker-title">Map</p>' +
+          '<div class="bm-picker-grid">' +
+            BASEMAP_KEYS.map(k => '<button type="button" class="bm-opt" data-basemap="' + k + '" aria-pressed="false">' +
+              '<span class="bm-swatch bm-swatch-' + k + '"></span><span class="bm-opt-name">' + BASEMAP_LABELS[k] + '</span></button>').join('') +
+          '</div>' +
+          '<label class="bm-picker-overlay"><input type="checkbox"> Marked hiking routes</label>' +
+        '</div>';
+      L.DomEvent.disableClickPropagation(el);
+      L.DomEvent.disableScrollPropagation(el);
+      const btn = el.querySelector('.bm-picker-btn'), panel = el.querySelector('.bm-picker-panel');
+      const overlay = el.querySelector('input');
+      const open = on => { panel.hidden = !on; btn.setAttribute('aria-expanded', on ? 'true' : 'false'); el.classList.toggle('is-open', on); };
+      const refresh = () => {
+        el.querySelectorAll('.bm-opt').forEach(o => {
+          const on = o.dataset.basemap === state.current();
+          o.classList.toggle('active', on);
+          o.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        overlay.checked = !!state.overlayOn();
+      };
+      btn.addEventListener('click', ()=>{ refresh(); open(panel.hidden); });
+      el.querySelectorAll('.bm-opt').forEach(o => o.addEventListener('click', ()=>{
+        state.choose(o.dataset.basemap);
+        refresh();
+        open(false);
+      }));
+      overlay.addEventListener('change', ()=> state.setOverlay(overlay.checked));
+      // Tapping anywhere else, or Escape, closes the panel (and only the
+      // panel: Escape doesn't also close a dialog the map sits in).
+      document.addEventListener('pointerdown', e=>{ if(!panel.hidden && !el.contains(e.target)) open(false); });
+      document.addEventListener('keydown', e=>{
+        if(e.key === 'Escape' && !panel.hidden){ e.preventDefault(); e.stopPropagation(); open(false); btn.focus(); }
+      }, true);
+      this.refresh = refresh;
+      return el;
+    },
+  });
+  const picker = new Picker().addTo(m);
+  return picker;
+}
+
+// Basemap and overlay state for a map other than the main one (route
+// planner, track editor), which doesn't remember its choice.
+function addMapLayerSwitcher(m, startKey, position){
+  let key = null, layer = null, trails = null;
+  const state = {
+    current: () => key,
+    choose(k){
+      const tileKey = k === 'dark' ? 'light' : k;
+      const curTileKey = key === 'dark' ? 'light' : key;
+      if(tileKey !== curTileKey){
+        if(layer) m.removeLayer(layer);
+        layer = makeBasemap(tileKey).addTo(m);
+      }
+      key = k;
+      m.getContainer().classList.toggle('dark-tiles', k === 'dark');
+    },
+    overlayOn: () => !!trails,
+    setOverlay(on){
+      if(on && !trails) trails = makeTrailsOverlay().addTo(m);
+      if(!on && trails){ m.removeLayer(trails); trails = null; }
+    },
+  };
+  state.choose(BASEMAP_KEYS.includes(startKey) ? startKey : 'terrain');
+  return addBasemapPicker(m, state, position);
+}
+
 // Startup default only — not a user choice, so don't persist it. (It also
 // runs before the storage layer below is initialized.)
 setBasemap('light', false);

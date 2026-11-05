@@ -108,6 +108,15 @@
           <div class="stat-label">countries</div>
         </div>
       </div>
+      <div class="year-review" id="yearReview" hidden>
+        <div class="year-review-head">
+          <label class="section-label" for="yearReviewSelect">Year in review</label>
+          <select class="mini-select" id="yearReviewSelect"></select>
+        </div>
+        <p class="year-review-text" id="yearReviewText"></p>
+        <p class="section-label personal-bests-title">Personal bests</p>
+        <ul class="personal-bests" id="personalBests"></ul>
+      </div>
       <button class="row-link" id="mapImportBtn" type="button">
         <span>Import from Strava or Garmin</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
@@ -123,15 +132,6 @@
       </div>
     </div>
 
-    <div class="section">
-      <p class="section-label">Basemap</p>
-      <div class="view-toggle toggle-4" id="basemapToggle">
-        <button data-basemap="light" class="active">Light</button>
-        <button data-basemap="terrain">Terrain</button>
-        <button data-basemap="satellite">Satellite</button>
-        <button data-basemap="dark">Dark</button>
-      </div>
-    </div>
 
   </div>
 
@@ -340,6 +340,13 @@
 
     <div class="section-subhead">
       <p class="section-label" style="margin:0;">Completed trips</p>
+      <div class="view-toggle difficulty-filter" id="tripDifficultyFilter" role="radiogroup" aria-label="Show trips with a hike of this difficulty" hidden>
+        <button type="button" data-level="all" class="active" role="radio" aria-checked="true">All</button>
+        <button type="button" data-level="easy" role="radio" aria-checked="false">Easy</button>
+        <button type="button" data-level="moderate" role="radio" aria-checked="false">Moderate</button>
+        <button type="button" data-level="hard" role="radio" aria-checked="false">Hard</button>
+        <button type="button" data-level="strenuous" role="radio" aria-checked="false">Strenuous</button>
+      </div>
     </div>
     <div class="trip-timeline" id="tripCompletedGrid"></div>
     <div class="gear-empty" id="tripCompletedEmpty" style="display:none;">No completed trips yet.</div>
@@ -431,6 +438,7 @@
         </div>
       </div>
       <p class="pack-split" id="tripPackSplit" hidden></p>
+      <p class="food-plan" id="tripFoodPlan" hidden></p>
       <div class="pack-progress" id="tripPackProgress" hidden>
         <span class="pack-progress-text" id="tripPackProgressText" aria-live="polite"></span>
         <span class="pack-progress-bar"><span id="tripPackProgressFill"></span></span>
@@ -480,6 +488,12 @@
     </section>
 
     <section class="settings-card">
+      <h3>Walking times</h3>
+      <p class="settings-note" id="paceNote"></p>
+      <label class="pace-toggle"><input type="checkbox" id="paceUseMine"> Fit estimates to my own pace</label>
+    </section>
+
+    <section class="settings-card">
       <h3>Backup</h3>
       <p class="settings-note">Save everything on this device — gear, trips, loadouts, tracks and location history — to one file, and bring it back later or on another device. Trip photos aren't included.</p>
       <div class="settings-actions">
@@ -502,6 +516,11 @@
       <p class="settings-note" id="settingsDataSummary"></p>
       <p class="settings-note" id="settingsDeviceSummary"></p>
       <p class="settings-note settings-error" id="settingsLastError" hidden></p>
+      <div class="settings-update">
+        <p class="settings-note">Hike-in-one <span id="settingsAppVersion">version …</span></p>
+        <button type="button" class="ghost-btn" id="settingsUpdateBtn">Check for updates</button>
+        <p class="settings-note" id="settingsUpdateStatus" aria-live="polite"></p>
+      </div>
       <button class="clear-btn" id="clearBtn">Remove all tracks and location history</button>
       <p class="settings-note">Your trips, gear and loadouts stay.</p>
     </section>
@@ -854,35 +873,45 @@
       <button class="modal-close" aria-label="Close" id="rpClose" type="button">&times;</button>
     </div>
     <div class="rp-body">
-      <div class="rp-toolbar">
+      <div class="rp-map-wrap">
+        <div class="rp-map" id="rpMap"></div>
+        <div class="rp-map-tools">
+          <button type="button" class="rp-map-btn" id="rpUndoBtn" disabled title="Undo the last change (Ctrl+Z)" aria-label="Undo the last change">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <span>Undo</span>
+          </button>
+          <button type="button" class="rp-map-btn" id="rpLoopBtn" disabled title="Finish the route where it started" aria-label="Back to start: finish the route where it started">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 17a6 6 0 1 1 5 2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 22.5v-6h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-20 12 19.5)"/></svg>
+            <span>Back to start</span>
+          </button>
+          <button type="button" class="rp-map-btn" id="rpClearBtn" disabled title="Remove all points" aria-label="Remove all points">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <span>Clear</span>
+          </button>
+        </div>
+        <div class="rp-hint" id="rpHint">Tap the map to set the start, then tap where the route goes. Drag a point to move it.</div>
+      </div>
+      <div class="rp-side">
         <div class="view-toggle" id="rpModeToggle" role="radiogroup" aria-label="How to draw the next part">
           <button type="button" data-mode="trail" class="active" role="radio" aria-checked="true">Follow trails</button>
           <button type="button" data-mode="line" role="radio" aria-checked="false">Straight line</button>
         </div>
-        <div class="rp-toolbar-actions">
-          <button type="button" class="ghost-btn" id="rpUndoBtn" disabled>Undo</button>
-          <button type="button" class="ghost-btn" id="rpClearBtn" disabled>Clear</button>
+        <div class="rp-stats" id="rpStats" aria-live="polite"></div>
+        <div class="rp-profile" id="rpProfile"></div>
+        <div class="upload-error" id="rpError"></div>
+        <div class="form-field">
+          <label for="rpName">Route name</label>
+          <input type="text" id="rpName" maxlength="120">
         </div>
-      </div>
-      <div class="rp-map-wrap">
-        <div class="rp-map" id="rpMap"></div>
-        <div class="rp-hint" id="rpHint">Tap the map to set the start, then tap where the route goes. Drag a point to move it.</div>
-      </div>
-      <div class="rp-stats" id="rpStats" aria-live="polite"></div>
-      <div class="rp-profile" id="rpProfile"></div>
-      <div class="upload-error" id="rpError"></div>
-      <div class="form-field">
-        <label for="rpName">Route name</label>
-        <input type="text" id="rpName" maxlength="120">
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="danger-btn" id="rpDeleteBtn" hidden>Delete</button>
-        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
-          <button type="button" class="ghost-btn" id="rpDownloadBtn" disabled>Download GPX</button>
-          <button type="button" class="primary-btn" id="rpSaveBtn" disabled>Save to trip</button>
+        <div class="modal-actions">
+          <button type="button" class="danger-btn" id="rpDeleteBtn" hidden>Delete</button>
+          <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+            <button type="button" class="ghost-btn" id="rpDownloadBtn" disabled>Download GPX</button>
+            <button type="button" class="primary-btn" id="rpSaveBtn" disabled>Save to trip</button>
+          </div>
         </div>
+        <p class="rp-credit">Trail routing by <a href="https://brouter.de" target="_blank" rel="noopener">BRouter</a> on OpenStreetMap data; elevation for straight lines by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>. Times use the rule 4 km per hour plus 1 hour per 600 m of climb, fitted to your own pace once you have a few timed walks (see Settings).</p>
       </div>
-      <p class="rp-credit">Trail routing by <a href="https://brouter.de" target="_blank" rel="noopener">BRouter</a> on OpenStreetMap data; elevation for straight lines by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>. Times use the rule 4 km per hour plus 1 hour per 600 m of climb.</p>
     </div>
   </div>
 </div>

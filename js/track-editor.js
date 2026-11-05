@@ -108,9 +108,7 @@ function teClampSplit(){
 function teEnsureMap(){
   if(teMap) return;
   teMap = L.map('teMap', {zoomControl:true, scrollWheelZoom:false});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors', subdomains:'abc', maxZoom:19
-  }).addTo(teMap);
+  addMapLayerSwitcher(teMap, 'light', 'topright');
   teLayers = L.layerGroup().addTo(teMap);
 }
 
@@ -145,7 +143,7 @@ function teDrawPreview(fit){
   if(climb) parts.push(climb);
   const trimmed = tePreview !== t;
   document.getElementById('teSummary').textContent = (trimmed ? 'After trimming: ' : '') + parts.join(' · ') +
-    (trimmed && t.durationSec && !tePreview.durationSec ? ' · time unknown (imported before track editing)' : '');
+    (trimmed && tePreview.durationEstimated && !t.durationEstimated ? ' (time estimated from distance and climb)' : '');
 }
 
 // The track with everything typed and dragged in the dialog applied, or

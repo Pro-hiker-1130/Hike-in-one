@@ -3,6 +3,189 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-04 — polish (3 of 3)
+
+Looked at: screenshots of the Gear Room (phone and desktop) and keyboard
+focus.
+Changed: the category weight bars in the Gear Room grow in from the left
+(300 ms, 40 ms apart down the list) when the list is drawn or the Gear
+Room is opened. Opening or closing a category re-renders the list without
+replaying it. Off under reduced motion. The Gear Room e2e test checks the
+stagger and that opening a category doesn't replay it. Service worker cache
+`waypoints-v28`. All tests pass: 46 unit, 53 e2e.
+Noticed for later (in the backlog): the "Gear breakdown" donut uses
+different colours from the category dots above it (Shelter has an orange
+dot but a blue slice).
+For the owner: nothing to decide.
+
+## 2026-11-04 — polish (2 of 3)
+
+Looked at: closing dialogs. They opened with a fade-and-scale but
+vanished at once on closing. Every close function hides its dialog
+directly, so the change lives in one place, `onModalClosed`.
+Changed: when a dialog closes, the real one is hidden at once as before,
+and a copy (no ids or names, inert, no pointer events) fades and shrinks
+away for 180 ms, then is removed. Clicks right after closing reach the
+page, never the copy. Off under reduced motion. New e2e test.
+Also fixed the flaky track-editor test. Switching to the Map tab refreshes
+the map layers 50 ms later, which closed a popup the test had opened
+within those 50 ms. People can't click that fast, so the test now waits
+for the refresh first. 3 full runs in a row passed (53/53). Service worker
+cache `waypoints-v27`.
+For the owner: nothing to decide.
+
+## 2026-11-04 — polish (owner asked for some polish days: 1 of 3)
+
+Looked at: packing mode. Ticking an item swapped the circle for a tick
+with no feedback, and the whole list re-renders on each tap, so a plain
+CSS animation would replay on every packed row.
+Changed: only the row just ticked plays a short pop on its circle (240 ms)
+and a brief sage glow on the row (300 ms). Un-ticking stays quiet. Both are
+off under reduced motion. The packing e2e test checks that only the tapped
+row animates. Service worker cache `waypoints-v26`.
+For the owner: nothing to decide.
+
+## 2026-11-04 — owner request: difficulty on hikes, not trips
+
+The owner asked for the difficulty label only on individual hikes, not on
+the whole trip. Changed: the badge moved from trip cards and the trip
+header to each track row on the trip page (walked hikes and planned
+routes alike, from each one's own distance and climb). The Completed
+trips filter now shows trips that contain at least one hike of the chosen
+difficulty, with a message like "No trips with a hard hike yet." when none
+match. The e2e test was rewritten for this (a trip with an easy and a
+strenuous hike shows under both filters). Service worker cache
+`waypoints-v25`. All tests pass: 46 unit, 52 e2e.
+
+## 2026-11-04 — research (7 of 7)
+
+Looked at: hike-log apps (HIKE.SH: personal records for longest
+distance, biggest climb and longest duration plus streaks; SummitLynx:
+badges via a digital hiking passport; APPEAK: summit stamps). Budget used:
+1 search, 0 fetches.
+Changed: under the year in review on the map, a "Personal bests" list
+covers all time: longest walk, biggest climb, longest day out and highest
+point, each with the walk it came from (name shown, name and date on
+hover). Planned routes don't count. `TrackCore.personalBests` has a unit
+test, plus an assertion in the map e2e test. Service worker cache
+`waypoints-v24`.
+For the owner: nothing to decide. Badges and streaks are possible
+follow-ups if you'd like them; they're not in the backlog yet.
+
+## 2026-11-04 — research (6 of 7)
+
+Looked at: Gaia GPS (waypoints with icons, notes and photos for water and
+camps; distance to the next water; markers dropped every 1, 10 or 50 miles
+to break a route into chunks) and CalTopo (markers listed and searchable
+beside the map). Budget used: 1 search, 0 fetches.
+Changed: the route planner shows small kilometre markers along the route.
+The step is picked to give about 5–12 markers (1, 2, 5, 10, 20 or 50 km),
+and none sits right at the end. `TrackCore.kmMarkers` has a unit test; the
+route-planner e2e test checks the markers on the map. Service worker cache
+`waypoints-v23`.
+For the owner: nothing to decide. Water/camp spots along a route stay in
+the backlog as a medium idea.
+
+## 2026-11-04 — research (5 of 7)
+
+Looked at: Hiking Project (community difficulty ratings, line colours by
+difficulty) and AllTrails / other trail apps (filter trails by Easy,
+Moderate, Hard, Strenuous). Budget used: 1 search, 0 fetches.
+Changed: trips get a difficulty badge (Easy, Moderate, Hard or
+Strenuous) on their cards and on the trip page. It uses effort km, our own
+choice of rule: distance plus 1 km per 100 m of climb, with cut-offs at 10,
+20 and 30. Once there are 3 or more completed trips, the Completed trips
+heading gets filter chips (All / Easy / Moderate / Hard / Strenuous), with
+a message like "No hard trips yet." when a level is empty.
+`TrackCore.difficulty` has a unit test, plus an e2e test.
+For the owner: the cut-offs are a judgement call. Say if trips feel rated
+too hard or too easy and I'll shift them.
+
+## 2026-11-04 — research (owner asked for 4 more research days: 4 of 7)
+
+Synced first: main had new commits from other sessions (map lines,
+basemaps, layers button, update handling). Only the service worker cache
+version conflicted, and I set it above both sides. All tests passed on the
+merged code (pushed as its own merge commit).
+Looked at: onX Backcountry (route builder with distance, climb and the
+hardest sections, but no time estimate based on your own pace) and a
+separate paid app that only does pace-based time estimates. Budget used:
+1 search, 0 fetches.
+Changed: walking-time estimates (planned routes, the planner, multi-day
+days) now fit your own pace. It's the median of recorded time ÷ rule
+estimate over timed walks of 2 km or more, needs 3 walks, and is kept
+between 0.5× and 2×. Settings has a "Walking times" card saying how you
+compare ("18 % slower than the rule, breaks included") and a switch back
+to the standard rule. `TrackCore.personalPace` has a unit test, plus an
+e2e test. Service worker cache `waypoints-v22`.
+For the owner: recorded durations include breaks, so estimates come out
+as total time out, not moving time. Say if you'd prefer moving time.
+
+## 2026-11-04 — research (3 of 3)
+
+Looked at: FATMAP / Strava routes (FATMAP was shut down by Strava in
+October 2024 and folded into Strava) and summit-log apps (yearly
+summaries, highest point, busiest months, personal records, progress
+toward peak lists). Budget used: 2 searches, 0 fetches.
+Changed: the map overview has a "Year in review" line with a year picker
+(every year you've walked in, newest first), for example "2 walks on 2 days
+· 22 km · 1,490 m up / Longest: Gornergrat ridge, 14.2 km · Highest:
+3,104 m on Gornergrat ridge · Busiest month: July". Planned routes don't
+count. The numbers come from `TrackCore.yearSummary` (unit test); the
+map e2e test checks the line.
+Note: the first test run broke the whole page because a new global name
+(`MONTHS`) clashed with one in `import.js`. Since all scripts share one
+scope, I fixed it by reusing `MONTHS_LONG`, and checked that no other
+global names are duplicated. All tests pass: 42 unit, 47 e2e.
+For the owner: nothing to decide.
+
+## 2026-11-04 — research (2 of 3)
+
+Looked at: Outdooractive (tour planner with snap-to-path, filters by
+length, ascent and duration) and Packstack / PackWizard (gear closet,
+reusable kits, calorie planning, lighter-gear suggestions from a catalog).
+Budget used: 2 searches, 0 fetches.
+Changed: a planned trip's gear section now shows a food estimate, for
+example "Food for 2 days: about 1.4–1.8 kg. Packed so far: 1 kg, 400 g
+short." It uses the common rule of 700–900 g of food a day, takes the
+number of days from the day split (1 day otherwise), and compares it with
+the trip's Food items. It says "about right" when the packed food is
+within range and "more than you'll likely eat" when it's well over. The
+days e2e test checks all three messages.
+For the owner: the 700–900 g a day rule is a rough guide for full hiking
+days. Say if you'd rather have it in calories, or adjustable.
+
+## 2026-11-04 — research (owner asked for several research days: 1 of 3)
+
+Looked at: Komoot (route planner: one-way or round trip, adjustable pace
+for time estimates, multi-day planner, community highlights) and AllTrails
+(viewpoints, water sources and campsites along trails; custom routes).
+Budget used: 2 searches, 0 fetches.
+Changed: the route planner has a "Back to start" button on the map. It adds
+one more leg, drawn the current way (trail or straight line), back to the
+start point, and can be undone like any other change. It is greyed out until
+there are two points, or once the route already ends at its start. Tested in
+the route-planner e2e test. Service worker cache bumped to `waypoints-v16`.
+For the owner: nothing to decide.
+
+## 2026-11-04 — polish
+
+Looked at: the message bubble at the bottom (toast), which yesterday's
+features now use a lot (CSV import with Undo, route sharing, link copied).
+It popped in and vanished at once.
+Changed: the toast now slides up and fades in (220 ms) and fades out
+(180 ms) before hiding. A new message while one is showing or fading
+replays the slide and cancels the fade. With reduced motion it only fades
+in. New e2e test.
+Also fixed a flaky test from yesterday's route sharing: the partner page
+drew the route only after a 60 ms delayed fit, so the route line appeared
+a moment late and the test sometimes looked too early. The map now sets
+its view at once and refits after layout; the test waits for the line.
+Tests: 41 unit, 47 e2e, all passing. Service worker cache bumped to
+`waypoints-v14`.
+For the owner: nothing to decide. The `004_shared_routes.sql` migration
+still needs running in Supabase if you haven't yet.
+
 ## 2026-11-03 — owner request: build every backlog idea
 
 The owner asked to build all 12 backlog ideas, including the ones that need

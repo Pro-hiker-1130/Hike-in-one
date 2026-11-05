@@ -415,11 +415,22 @@ function buildElevationProfile(t){
 }
 
 // "↑ 820 m · ↓ 790 m · 4 h 05 min" — whatever a track actually has.
+// Walking-time estimates: the standard rule, scaled to your own pace once
+// there are enough timed walks (unless switched off in Settings).
+const PACE_OFF_KEY = 'hike-pace-standard';
+function usePersonalPace(){ try{ return localStorage.getItem(PACE_OFF_KEY) !== '1'; }catch(e){ return true; } }
+function currentPace(){ return usePersonalPace() ? TrackCore.personalPace(tracks) : null; }
+function walkingSec(km, gainM){
+  const pace = currentPace();
+  return Math.round(TrackCore.estimateHikingSec(km, gainM) * (pace ? pace.factor : 1));
+}
+
 function trackClimbSummary(t){
   const parts = [];
   if(t.elevationGainM != null) parts.push('↑ '+t.elevationGainM+' m', '↓ '+t.elevationLossM+' m');
-  if(t.durationSec) parts.push(formatDuration(t.durationSec));
-  else if(t.planned && t.distanceKm) parts.push('about '+formatDuration(TrackCore.estimateHikingSec(t.distanceKm, t.elevationGainM))+' walking');
+  // "about" when the time was shared out by effort after an edit, not recorded.
+  if(t.durationSec) parts.push((t.durationEstimated ? 'about ' : '') + formatDuration(t.durationSec));
+  else if(t.planned && t.distanceKm) parts.push('about '+formatDuration(walkingSec(t.distanceKm, t.elevationGainM))+' walking');
   return parts.join(' · ');
 }
 

@@ -102,20 +102,49 @@ test('merge across days keeps the earlier date and skips the night', () => {
   assert.equal(m.pointEle[m.pointEle.length-1], null);
 });
 
-test('older tracks: elevation read from the profile, duration unknown after edits', () => {
+test('older tracks: elevation read from the profile, time shared out by effort after edits', () => {
   // Imported before per-point data existed: no pointEle / pointTimes.
   const points = [], profile = [];
   for(let i=0;i<11;i++){ points.push([46 + i*0.01, 7.5]); profile.push([+(i*1.112).toFixed(3), 1000 + i*50]); }
-  const old = { id: 't_old', name: 'Old', date: '2020-05-05', startTime: Date.parse('2020-05-05T09:00:00Z'),
+  const start = Date.parse('2020-05-05T09:00:00Z');
+  const old = { id: 't_old', name: 'Old', date: '2020-05-05', startTime: start,
     points, profile, distanceKm: 11.12, elevationGainM: 500, elevationLossM: 0, durationSec: 7200 };
   const s = T.trackSeries(old);
   assert.equal(s.t, null);
   assert.ok(Math.abs(s.ele[5] - 1250) < 2, s.ele[5]);
+
+  // An even climb: the first half took half the time.
   const out = T.trim(old, 0, 5);
   assert.ok(Math.abs(out.elevationGainM - 250) <= 2, out.elevationGainM);
-  assert.equal(out.durationSec, null);
+  assert.ok(Math.abs(out.durationSec - 3600) <= 2, out.durationSec);
+  assert.equal(out.durationEstimated, true);
+  assert.equal(out.startTime, start);
   assert.equal(out.date, '2020-05-05');
-  assert.equal(out.startTime, null);
+  assert.equal(out.pointTimes, null);
+
+  const late = T.trim(old, 5, 10);
+  assert.ok(Math.abs(late.startTime - (start + 3600e3)) <= 2000, 'its start moves with what was cut off');
+
+  const [a, b] = T.split(old, 3, 't_b');
+  assert.equal(a.durationSec + b.durationSec, 7200, 'the parts add up to the whole');
+  assert.ok(a.durationEstimated && b.durationEstimated);
+  assert.equal(T.merge(a, b).durationEstimated, true);
+
+  // A climb costs time: a steep first half takes more of it than a flat second half.
+  const steep = Object.assign({}, old, { profile: profile.map(([km], i) => [km, i <= 5 ? 1000 + i*200 : 2000]) });
+  assert.ok(T.trim(steep, 0, 5).durationSec > T.trim(steep, 5, 10).durationSec * 2);
+
+  // No recorded duration: nothing to share out.
+  const none = T.trim(Object.assign({}, old, { durationSec: null }), 0, 5);
+  assert.equal(none.durationSec, null);
+  assert.equal(none.durationEstimated, undefined);
+});
+
+test('tracks with point times keep a recorded, not estimated, duration', () => {
+  const t = makeTrack(101);
+  const out = T.trim(t, 10, 50);
+  assert.equal(out.durationSec, 40*60);
+  assert.equal(out.durationEstimated, undefined);
 });
 
 test('tracks without any elevation stay without', () => {
@@ -217,4 +246,71 @@ test('splitDays cuts a route into days and folds a short last stretch into the d
   assert.deepEqual(T.splitDays(profile, 10).map(d => d.toKm), [10, 20, 32], 'last 2 km of 10 is under a quarter day');
   assert.deepEqual(T.splitDays(profile, 50).map(d => d.toKm), [32], 'one day');
   assert.deepEqual(T.splitDays(profile, 0), []);
+});
+
+test('yearSummary counts one year of walks, its longest, highest and busiest month', () => {
+  const list = [
+    { name: 'Ridge', date: '2025-07-10', distanceKm: 12, elevationGainM: 900, maxEleM: 2900 },
+    { name: 'Lake', date: '2025-07-10', distanceKm: 5, elevationGainM: 100, maxEleM: 1800 },
+    { name: 'Long valley', date: '2025-09-02', distanceKm: 15, elevationGainM: 300 },
+    { name: 'Plan', date: '2025-10-01', distanceKm: 40, elevationGainM: 3000, maxEleM: 4000, planned: true },
+    { name: 'Old', date: '2024-05-05', distanceKm: 8 },
+  ];
+  const s = T.yearSummary(list, 2025);
+  assert.deepEqual(s, {
+    year: 2025, count: 3, days: 2, distanceKm: 32, gainM: 1300,
+    longest: { name: 'Long valley', distanceKm: 15 },
+    highest: { name: 'Ridge', eleM: 2900 },
+    busiestMonth: 6,   // July: 17 km
+  });
+  assert.equal(T.yearSummary(list, 2023), null);
+  assert.equal(T.yearSummary(list, 2024).highest, null, 'no elevation that year');
+});
+
+test('personalPace compares recorded walks with the standard rule', () => {
+  const walk = (km, gain, factor, extra) => Object.assign({ distanceKm: km, elevationGainM: gain,
+    durationSec: T.estimateHikingSec(km, gain) * factor }, extra);
+  assert.equal(T.personalPace([walk(10, 500, 1.2), walk(8, 300, 1.2)]), null, 'needs 3 walks');
+  const p = T.personalPace([walk(10, 500, 1.2), walk(8, 300, 1.3), walk(12, 800, 1.1), walk(1, 0, 3),
+    walk(20, 0, 0.1, { planned: true }), { distanceKm: 9, elevationGainM: 100 }]);
+  assert.deepEqual(p, { factor: 1.2, walks: 3 }, 'median; short, planned and untimed walks left out');
+  assert.equal(T.personalPace([walk(5, 0, 4), walk(6, 0, 5), walk(7, 0, 6)]).factor, 2, 'capped');
+});
+
+test('difficulty rates a walk by effort km (distance plus 1 km per 100 m up)', () => {
+  assert.deepEqual(T.difficulty(6, 200), { effortKm: 8, level: 'easy' });
+  assert.deepEqual(T.difficulty(8, 200), { effortKm: 10, level: 'moderate' });
+  assert.deepEqual(T.difficulty(12, 900), { effortKm: 21, level: 'hard' });
+  assert.deepEqual(T.difficulty(18, 1500), { effortKm: 33, level: 'strenuous' });
+  assert.equal(T.difficulty(0, 500), null);
+  assert.deepEqual(T.DIFFICULTY_LEVELS, ['easy', 'moderate', 'hard', 'strenuous']);
+});
+
+test('kmMarkers places distance markers along a line at a sensible step', () => {
+  // ~11.1 km straight north, 0.1° of latitude per point.
+  const line = [[46, 7], [46.05, 7], [46.1, 7]];
+  const m = T.kmMarkers(line);
+  assert.deepEqual(m.map(x => x.km), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'every km; none in the last quarter step before the end');
+  assert.ok(Math.abs(m[4].ll[0] - (46 + 5 / 111.19)) < 0.001 && m[4].ll[1] === 7, 'km 5 sits 5 km up the line');
+  assert.deepEqual(T.kmMarkers(line, 5).map(x => x.km), [5], 'km 10 is within a quarter step of the 11.1 km end');
+  const long = [[46, 7], [46.6, 7]];   // ~66.7 km: every 10 km
+  assert.deepEqual(T.kmMarkers(long).map(x => x.km), [10, 20, 30, 40, 50, 60]);
+  assert.deepEqual(T.kmMarkers([[46, 7]]), []);
+});
+
+test('personalBests picks the longest, biggest climb, longest time and highest walk', () => {
+  const list = [
+    { name: 'Ridge', date: '2025-07-10', distanceKm: 12, elevationGainM: 1400, durationSec: 7 * 3600, maxEleM: 3100 },
+    { name: 'Valley', date: '2025-08-02', distanceKm: 22, elevationGainM: 600, durationSec: 8 * 3600, maxEleM: 1500 },
+    { name: 'Plan', distanceKm: 60, elevationGainM: 5000, maxEleM: 4800, planned: true },
+    { name: 'Untimed', distanceKm: 5 },
+  ];
+  assert.deepEqual(T.personalBests(list), {
+    longestKm: { name: 'Valley', value: 22, date: '2025-08-02' },
+    biggestClimbM: { name: 'Ridge', value: 1400, date: '2025-07-10' },
+    longestSec: { name: 'Valley', value: 28800, date: '2025-08-02' },
+    highestM: { name: 'Ridge', value: 3100, date: '2025-07-10' },
+  });
+  assert.equal(T.personalBests([{ name: 'P', planned: true, distanceKm: 3 }]), null);
+  assert.equal(T.personalBests([{ name: 'Flat', distanceKm: 3 }]).biggestClimbM, null);
 });

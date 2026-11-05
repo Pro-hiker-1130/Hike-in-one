@@ -108,7 +108,10 @@
   }
 
   // A new track object from base's metadata and a series, with every
-  // derived number recomputed. opts.durationSec overrides the duration.
+  // derived number recomputed. opts.durationSec overrides the duration,
+  // opts.startTime the start (when the points carry no times), and
+  // opts.durationEstimated marks a duration that was worked out rather
+  // than recorded.
   function buildTrack(base, series, opts){
     opts = opts || {};
     const idx = sampleIndices(series.points.length, MAX_POINTS);
@@ -127,7 +130,7 @@
     }
 
     const known = t ? t.filter(x => x != null) : [];
-    const startTime = known.length ? known[0] : null;
+    const startTime = known.length ? known[0] : (opts.startTime != null ? opts.startTime : null);
     let durationSec;
     if(opts.durationSec !== undefined) durationSec = opts.durationSec;
     else if(known.length >= 2) durationSec = Math.round((known[known.length-1] - known[0]) / 1000);
@@ -145,14 +148,42 @@
       profile,
       durationSec: durationSec > 0 ? durationSec : null,
       pointEle: ele ? ele.map(e => e == null ? null : Math.round(e*10)/10) : null,
-      pointTimes: t && startTime != null ? t.map(x => x == null ? null : Math.round((x - startTime)/1000)) : null,
+      pointTimes: t && known.length ? t.map(x => x == null ? null : Math.round((x - startTime)/1000)) : null,
     });
+    if(opts.durationEstimated && out.durationSec) out.durationEstimated = true;
+    else delete out.durationEstimated;
     // Countries are worked out again by the caller (it needs the map data).
     delete out.countries;
     return out;
   }
 
   function clampIndex(i, n){ return Math.max(0, Math.min(n-1, Math.round(i))); }
+
+  // Hiking effort up to each point, in hours by the 4 km/h + 600 m/h rule.
+  // Used to share out a recorded duration when the points carry no times.
+  function cumulativeEffort(s){
+    const cum = [0];
+    for(let i=1;i<s.points.length;i++){
+      const up = s.ele && s.ele[i] != null && s.ele[i-1] != null ? Math.max(0, s.ele[i] - s.ele[i-1]) : 0;
+      cum.push(cum[i-1] + haversine(s.points[i-1], s.points[i]) / 4 + up / 600);
+    }
+    return cum;
+  }
+
+  // Options for buildTrack for points a..b of a track without point times:
+  // its share of the recorded duration (by effort) and its estimated start.
+  // Nothing when there is no duration to share out.
+  function estimatedTiming(track, s, a, b, effort){
+    if(s.t || !(track.durationSec > 0)) return {};
+    const total = effort[effort.length-1];
+    if(!(total > 0)) return {};
+    const before = Math.round(track.durationSec * effort[a] / total);
+    return {
+      durationSec: Math.round(track.durationSec * (effort[b] - effort[a]) / total),
+      startTime: track.startTime != null ? track.startTime + before*1000 : undefined,
+      durationEstimated: true,
+    };
+  }
 
   // Keep points startIdx..endIdx (inclusive).
   function trim(track, startIdx, endIdx){
@@ -161,7 +192,7 @@
     const a = clampIndex(startIdx, n), b = clampIndex(endIdx, n);
     if(b - a < 1) throw new Error('A track needs at least two points');
     if(a === 0 && b === n-1) return Object.assign({}, track);
-    return buildTrack(track, sliceSeries(s, a, b));
+    return buildTrack(track, sliceSeries(s, a, b), estimatedTiming(track, s, a, b, cumulativeEffort(s)));
   }
 
   // Two tracks that meet at point idx (both keep it). The first keeps the
@@ -171,8 +202,10 @@
     const n = s.points.length;
     const i = clampIndex(idx, n);
     if(i < 1 || i > n-2) throw new Error('Split somewhere between the start and the end');
-    const first = buildTrack(track, sliceSeries(s, 0, i));
-    const second = buildTrack(Object.assign({}, track, { id: newId, sourceKey: null }), sliceSeries(s, i, n-1));
+    const effort = cumulativeEffort(s);
+    const first = buildTrack(track, sliceSeries(s, 0, i), estimatedTiming(track, s, 0, i, effort));
+    const second = buildTrack(Object.assign({}, track, { id: newId, sourceKey: null }), sliceSeries(s, i, n-1),
+      estimatedTiming(track, s, i, n-1, effort));
     second.name = (track.name || 'Track') + ' (part 2)';
     return [first, second];
   }
@@ -199,7 +232,8 @@
     };
     const durationSec = (a.durationSec || b.durationSec) ? (a.durationSec || 0) + (b.durationSec || 0) : null;
     const base = Object.assign({}, a, { date: x.date || a.date || null });
-    const out = buildTrack(base, series, { durationSec });
+    const out = buildTrack(base, series, { durationSec, startTime: x.startTime,
+      durationEstimated: !!(a.durationEstimated || b.durationEstimated) });
     // Point times of the earlier part when only the later one had them
     // would put startTime on the wrong part — the date still comes first.
     if(x.date && out.date && x.date < out.date) out.date = x.date;
@@ -380,10 +414,93 @@
     return days;
   }
 
+  // One year of walked tracks: how many, on how many days, distance,
+  // climb, the longest and the highest, and the busiest month (0–11, by
+  // distance). Tracks are {date:'YYYY-MM-DD', distanceKm, elevationGainM,
+  // maxEleM, name}; planned routes don't count. Null for an empty year.
+  function yearSummary(list, year){
+    const ts = (list || []).filter(t => !t.planned && t.date && String(t.date).slice(0, 4) === String(year));
+    if(!ts.length) return null;
+    const byMonth = Array(12).fill(0);
+    let longest = ts[0], highest = null;
+    ts.forEach(t => {
+      byMonth[Number(String(t.date).slice(5, 7)) - 1] += t.distanceKm || 0;
+      if((t.distanceKm || 0) > (longest.distanceKm || 0)) longest = t;
+      if(t.maxEleM != null && (!highest || t.maxEleM > highest.maxEleM)) highest = t;
+    });
+    return {
+      year: Number(year), count: ts.length, days: new Set(ts.map(t => String(t.date).slice(0, 10))).size,
+      distanceKm: ts.reduce((s, t) => s + (t.distanceKm || 0), 0),
+      gainM: ts.reduce((s, t) => s + (t.elevationGainM || 0), 0),
+      longest: { name: longest.name, distanceKm: longest.distanceKm || 0 },
+      highest: highest ? { name: highest.name, eleM: highest.maxEleM } : null,
+      busiestMonth: byMonth.indexOf(Math.max.apply(null, byMonth)),
+    };
+  }
+
+  // How your own walks compare with the standard rule: the median of
+  // (recorded time / estimated time) over walks of 2 km or more that have
+  // a recorded duration. Needs at least 3 such walks; kept between 0.5 and
+  // 2 so one odd day can't skew every estimate. Null when there's too little.
+  function personalPace(list){
+    const ratios = (list || []).filter(t => !t.planned && t.durationSec > 0 && t.distanceKm >= 2)
+      .map(t => t.durationSec / estimateHikingSec(t.distanceKm, t.elevationGainM))
+      .filter(r => isFinite(r) && r > 0).sort((a, b) => a - b);
+    if(ratios.length < 3) return null;
+    const mid = ratios.length >> 1;
+    const median = ratios.length % 2 ? ratios[mid] : (ratios[mid-1] + ratios[mid]) / 2;
+    return { factor: Math.min(2, Math.max(0.5, Math.round(median * 100) / 100)), walks: ratios.length };
+  }
+
+  // How demanding a walk is, from "effort km": distance plus 1 km for every
+  // 100 m of climb (a common Alpine rule of thumb). Under 10 is easy, under
+  // 20 moderate, under 30 hard, and 30 or more strenuous.
+  const DIFFICULTY_LEVELS = ['easy', 'moderate', 'hard', 'strenuous'];
+  function difficulty(distanceKm, gainM){
+    if(!(distanceKm > 0)) return null;
+    const effortKm = distanceKm + (gainM || 0) / 100;
+    const level = effortKm < 10 ? 'easy' : effortKm < 20 ? 'moderate' : effortKm < 30 ? 'hard' : 'strenuous';
+    return { effortKm: Math.round(effortKm * 10) / 10, level };
+  }
+
+  // Points every `everyKm` along a line of [lat, lon] points, for distance
+  // markers: [{km, ll}], not including the start or a marker right at the
+  // end. everyKm defaults to a step that gives about 5–12 markers.
+  function kmMarkers(points, everyKm){
+    if(!Array.isArray(points) || points.length < 2) return [];
+    const cum = cumulativeKm(points), total = cum[cum.length-1];
+    const step = everyKm || [1, 2, 5, 10, 20, 50].find(s => total / s <= 12) || 100;
+    const out = [];
+    let i = 1;
+    for(let km = step; km < total - step * 0.25; km += step){
+      while(cum[i] < km) i++;
+      const a = points[i-1], b = points[i], f = (km - cum[i-1]) / ((cum[i] - cum[i-1]) || 1);
+      out.push({ km: Math.round(km * 10) / 10, ll: [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f] });
+    }
+    return out;
+  }
+
+  // All-time bests over walked tracks: the longest walk, the biggest
+  // climb, the longest time out and the highest point, each with the
+  // walk it came from ({name, value, date}). Null with no walks.
+  function personalBests(list){
+    const ts = (list || []).filter(t => !t.planned);
+    if(!ts.length) return null;
+    const best = (val) => {
+      let top = null;
+      ts.forEach(t => { const v = val(t); if(v > 0 && (!top || v > top.value)) top = { name: t.name, value: v, date: t.date || null }; });
+      return top;
+    };
+    return {
+      longestKm: best(t => t.distanceKm), biggestClimbM: best(t => t.elevationGainM),
+      longestSec: best(t => t.durationSec), highestM: best(t => t.maxEleM),
+    };
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests,
   };
 });

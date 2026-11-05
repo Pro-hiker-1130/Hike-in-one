@@ -98,8 +98,25 @@ function onModalOpened(id){
   if(el && id !== 'photoLightboxOverlay') el.style.zIndex = String(1000 + openModalOrder.length);
   history.pushState({modal:id}, '', location.pathname + location.search);
 }
+// Closing is instant (the dialog is already hidden when this runs); a
+// copy without ids or clicks fades and shrinks away in its place for
+// 180 ms, so it never gets in the way. Off with reduced motion.
+function playModalExit(id){
+  const el = document.getElementById(id);
+  if(!el || !el.classList.contains('modal-overlay') || REDUCED_MOTION.matches) return;
+  const ghost = el.cloneNode(true);
+  [ghost, ...ghost.querySelectorAll('[id]')].forEach(n => n.removeAttribute('id'));
+  ghost.querySelectorAll('[name]').forEach(n => n.removeAttribute('name'));
+  ghost.classList.add('modal-ghost');
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.inert = true;
+  ghost.style.display = 'flex';
+  document.body.appendChild(ghost);
+  setTimeout(()=> ghost.remove(), 200);
+}
 function onModalClosed(id){
   if(!openModalOrder.includes(id)) return; // wasn't open - e.g. a defensive double-close
+  playModalExit(id);
   openModalOrder = openModalOrder.filter(x=>x!==id);
   if(!closingViaPopstate){
     // Closed by a UI click, not by Back — the history entry this modal
@@ -355,6 +372,18 @@ document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacki
 document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
 document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
 document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
+document.getElementById('tripDifficultyFilter').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-level]');
+  if(!b) return;
+  tripDifficultyFilter = b.dataset.level;
+  renderTripCards();
+});
+document.getElementById('paceUseMine').addEventListener('change', e=>{
+  try{ if(e.target.checked) localStorage.removeItem(PACE_OFF_KEY); else localStorage.setItem(PACE_OFF_KEY, '1'); }catch(err){}
+  renderPaceSettings();
+  if(currentTripId) renderTripDetail();
+});
+document.getElementById('yearReviewSelect').addEventListener('change', e=>{ yearReviewYear = e.target.value; renderYearReview(); });
 document.getElementById('tripShareUpdateBtn').addEventListener('click', publishTripShare);
 document.getElementById('tripShareStopBtn').addEventListener('click', stopTripShare);
 document.getElementById('tripShareCopyBtn').addEventListener('click', copyTripShareLink);
@@ -370,6 +399,7 @@ document.getElementById('tripViewOnMapBtn').addEventListener('click', ()=>{
   setTimeout(()=>{
     const b = L.latLngBounds(tks.flatMap(t=>t.points));
     if(b.isValid()) map.fitBounds(b, {padding:[40,40]});
+    setTrackFocus({tripId: trip.id});
   }, 100);
 });
 document.getElementById('tripModalClose').addEventListener('click', closeTripModal);
@@ -642,21 +672,23 @@ document.addEventListener('keydown', (e)=>{
   else if(e.key === 'ArrowRight') lightboxStep(1);
 });
 
-document.querySelectorAll('.view-toggle:not(#basemapToggle):not(#gearViewToggle) button').forEach(btn=>{
+// Tracks / Heatmap / Both. (Only buttons with data-view: other toggles,
+// like the route planner's, have their own handlers.)
+document.querySelectorAll('.view-toggle button[data-view]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.view-toggle:not(#basemapToggle):not(#gearViewToggle) button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view-toggle button[data-view]').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     currentView = btn.dataset.view;
     updateLayers();
   });
 });
 
-document.querySelectorAll('#basemapToggle button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('#basemapToggle button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    setBasemap(btn.dataset.basemap);
-  });
+// The map picker: one button on the main map for basemap and overlay.
+const mainBasemapPicker = addBasemapPicker(map, {
+  current: () => currentBasemapKey,
+  choose: key => setBasemap(key),
+  overlayOn: () => !!trailsOverlay,
+  setOverlay: on => setTrailsOverlay(on),
 });
 
 // ---- Getting started wiring ----
@@ -743,13 +775,13 @@ document.getElementById('clearBtn').addEventListener('click', async (e)=>{
 // ---- Init ----
 (async function init(){
   trackLayerGroup.addTo(map);
-  const savedBasemap = await storeGet('waypoints-basemap');
-  if(savedBasemap && ['dark','light','terrain','satellite'].includes(savedBasemap)){
+  let savedBasemap = await storeGet('waypoints-basemap');
+  if(savedBasemap === 'swiss') savedBasemap = 'terrain';   // Swiss topo was removed
+  if(savedBasemap && BASEMAP_KEYS.includes(savedBasemap)){
     setBasemap(savedBasemap);
-    document.querySelectorAll('#basemapToggle button').forEach(b=>{
-      b.classList.toggle('active', b.dataset.basemap === savedBasemap);
-    });
   }
+  if(await storeGet('waypoints-trails-overlay')) setTrailsOverlay(true, false);
+  mainBasemapPicker.refresh();
   try{
     await loadAll();
     await loadGear();
@@ -788,8 +820,71 @@ document.getElementById('clearBtn').addEventListener('click', async (e)=>{
   }
 })();
 
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
-  });
+// ---- Updates ----
+// An installed app is often resumed from memory rather than reloaded, so
+// it checks for a new version whenever it comes back to the screen (and
+// every 30 minutes while open). A new version installs itself in the
+// background; once it has taken over, a message offers to reload.
+let swRegistration = null;
+let reloadingForUpdate = false;
+function reloadForUpdate(){
+  if(reloadingForUpdate) return;
+  reloadingForUpdate = true;
+  location.reload();
 }
+function checkForAppUpdate(){
+  return swRegistration ? swRegistration.update().catch(()=>{}) : Promise.resolve();
+}
+async function appVersionLabel(){
+  try{
+    const keys = await caches.keys();
+    const v = keys.map(k => /^waypoints-v(\d+)$/.exec(k)).filter(Boolean).map(m => +m[1]).sort((a,b) => b-a)[0];
+    return v ? 'version ' + v : '';
+  }catch(e){ return ''; }
+}
+async function renderAppVersion(){
+  const el = document.getElementById('settingsAppVersion');
+  if(el) el.textContent = (await appVersionLabel()) || 'version unknown';
+}
+if('serviceWorker' in navigator){
+  // Only an update replaces an existing controller; the very first install
+  // just takes control, and needs no reload.
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(!hadController){ hadController = true; return; }
+    renderAppVersion();
+    if(updateCheckWanted){ reloadForUpdate(); return; }
+    showGlobalToast('Hike-in-one has been updated.', false, { label: 'Reload', fn: reloadForUpdate });
+  });
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).then(reg=>{
+      swRegistration = reg;
+      renderAppVersion();
+    }).catch(()=>{});
+  });
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') checkForAppUpdate(); });
+  setInterval(checkForAppUpdate, 30 * 60 * 1000);
+}
+
+// Settings: "Check for updates" reloads straight into a new version if
+// there is one.
+let updateCheckWanted = false;
+document.getElementById('settingsUpdateBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('settingsUpdateBtn');
+  const status = document.getElementById('settingsUpdateStatus');
+  if(!swRegistration){ status.textContent = 'Updates need the installed app or a recent browser.'; return; }
+  btn.disabled = true;
+  status.textContent = 'Checking…';
+  updateCheckWanted = true;
+  await checkForAppUpdate();
+  const pending = swRegistration.installing || swRegistration.waiting;
+  if(pending){
+    status.textContent = 'Downloading the new version…';
+    // controllerchange reloads; if nothing happens in 15 s, say so.
+    setTimeout(()=>{ if(!reloadingForUpdate){ status.textContent = 'The new version is ready. Close and reopen the app to use it.'; btn.disabled = false; } }, 15000);
+  } else {
+    updateCheckWanted = false;
+    status.textContent = 'You have the latest version.';
+    btn.disabled = false;
+  }
+});

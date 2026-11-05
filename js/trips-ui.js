@@ -71,7 +71,31 @@ function renderTripCardsUnguarded(){
   document.getElementById('tripPlannedLabel').textContent = next ? 'Also planned' : 'Planned trips';
   renderTripSection(otherPlanned, 'tripPlannedGrid', 'tripPlannedEmpty', 'planned');
   if(!showPlanned) document.getElementById('tripPlannedEmpty').style.display = 'none';
-  renderTripTimeline(completed);
+  renderTripTimeline(filterByDifficulty(completed));
+}
+
+// Completed trips can be narrowed to those with a hike of one difficulty;
+// the chips show once
+// there are a few trips to sort through.
+let tripDifficultyFilter = 'all';
+function filterByDifficulty(completed){
+  const box = document.getElementById('tripDifficultyFilter');
+  document.getElementById('tripCompletedEmpty').textContent = 'No completed trips yet.';
+  box.hidden = completed.length < 3;
+  if(box.hidden) tripDifficultyFilter = 'all';
+  box.querySelectorAll('button').forEach(b=>{
+    const on = b.dataset.level === tripDifficultyFilter;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-checked', String(on));
+  });
+  if(tripDifficultyFilter === 'all') return completed;
+  // A trip shows when any of its hikes has the chosen difficulty.
+  const list = completed.filter(trip => tripCountedTracks(trip).some(t => { const d = trackDifficulty(t); return d && d.level === tripDifficultyFilter; }));
+  if(!list.length){
+    const empty = document.getElementById('tripCompletedEmpty');
+    empty.textContent = 'No trips with ' + (tripDifficultyFilter === 'easy' ? 'an' : 'a') + ' ' + DIFFICULTY_LABELS[tripDifficultyFilter].toLowerCase() + ' hike yet.';
+  }
+  return list;
 }
 
 function showTripsList(){
@@ -136,7 +160,7 @@ function renderTripDetail(){
       row.className = 'trip-track-row';
       row.innerHTML =
         '<span class="trip-track-row-name"><span class="track-color-dot" style="background:'+trackColors[t.id]+'"></span>'+escapeHtml(t.name)+
-          (t.planned ? '<span class="planned-route-badge">Planned route</span>' : '')+'</span>'+
+          (t.planned ? '<span class="planned-route-badge">Planned route</span>' : '')+trackDifficultyBadgeHtml(t)+'</span>'+
         '<span class="trip-track-row-meta">'+(t.date?escapeHtml(friendlyDate(t.date))+' · ':'')+(sportLabel(t.sport)?escapeHtml(sportLabel(t.sport))+' · ':'')+t.distanceKm.toFixed(1)+' km</span>'+
         '<button type="button" class="link-btn track-edit-btn" aria-label="Edit track '+escapeHtml(t.name)+'">Edit</button>';
       row.querySelector('.track-edit-btn').addEventListener('click', ()=>openTrackEditor(t.id));
@@ -412,7 +436,7 @@ function renderTripDays(trip, tks){
     row.innerHTML = '<span class="trip-track-row-name"></span><span class="trip-track-row-meta"></span>';
     row.firstChild.textContent = 'Day ' + (i+1) + when;
     row.lastChild.textContent = 'km ' + d.fromKm.toFixed(1) + '–' + d.toKm.toFixed(1) +
-      ' · ↑ ' + d.upM + ' m ↓ ' + d.downM + ' m · about ' + formatDuration(TrackCore.estimateHikingSec(d.distanceKm, d.upM));
+      ' · ↑ ' + d.upM + ' m ↓ ' + d.downM + ' m · about ' + formatDuration(walkingSec(d.distanceKm, d.upM));
     list.appendChild(row);
   });
 }
@@ -424,6 +448,7 @@ function setTripDailyKm(){
   if(v > 0) trip.dailyKm = Math.min(200, v); else delete trip.dailyKm;
   saveTrips();
   renderTripDays(trip, tripTracks(trip));
+  renderTripFoodPlan(trip, tripGearItemsList(trip));
 }
 
 // ---- Trip gear, with a packing mode ----
@@ -452,6 +477,8 @@ function renderTripGear(trip){
   splitEl.innerHTML = PACK_ROLES.map(r =>
     '<span class="pack-split-part pack-split-'+r+'"><span class="pack-split-label">'+
       {base:'Base', worn:'Worn', consumable:'Consumable'}[r]+'</span> '+formatWeight(split[r])+'</span>').join('');
+
+  renderTripFoodPlan(trip, gearList);
 
   const done = gearList.filter(g => packed.has(g.id)).length;
   const progress = document.getElementById('tripPackProgress');
@@ -483,6 +510,24 @@ function renderTripGear(trip){
   });
 }
 
+// "Food for 2 days: about 1.4–1.8 kg. Packed: 1.5 kg, about right."
+// Planned trips with gear or a daily distance; days from the day split.
+function renderTripFoodPlan(trip, gearList){
+  const el = document.getElementById('tripFoodPlan');
+  const tks = tripTracks(trip);
+  const days = trip.dailyKm > 0 ? TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm).length || 1 : 1;
+  el.hidden = tripStatus(trip) !== 'planned' || !(gearList.length || trip.dailyKm > 0);
+  if(el.hidden) return;
+  const f = tripFoodPlan(trip, days);
+  const kg = g => (g / 1000).toFixed(1).replace(/\.0$/, '');
+  el.textContent = 'Food for ' + days + ' day' + (days !== 1 ? 's' : '') + ': about ' + kg(f.low) + '–' + kg(f.high) + ' kg. ' + {
+    none: 'No food in the gear list yet.',
+    short: 'Packed so far: ' + formatWeight(f.packedG) + ', ' + formatWeight(f.low - f.packedG) + ' short.',
+    right: 'Packed: ' + formatWeight(f.packedG) + ', about right.',
+    plenty: 'Packed: ' + formatWeight(f.packedG) + ', more than you\'ll likely eat.',
+  }[f.verdict];
+}
+
 function togglePacked(trip, gearId){
   const packed = tripPackedIds(trip);
   if(packed.has(gearId)) packed.delete(gearId); else packed.add(gearId);
@@ -491,7 +536,11 @@ function togglePacked(trip, gearId){
   renderTripGear(trip);
   const again = document.querySelector('#tripGearSummaryList .pack-row:nth-child(' +
     (tripGearItemsList(trip).findIndex(g => g.id === gearId) + 1) + ')');
-  if(again) again.focus();
+  if(again){
+    again.focus();
+    // Only the row just ticked plays the little pop (CSS: just-packed).
+    if(packed.has(gearId)) again.classList.add('just-packed');
+  }
 }
 
 function toggleTripPacking(){
