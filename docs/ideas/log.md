@@ -3,6 +3,23 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-06 — polish
+
+Looked at: the backlog item "Gear breakdown donut should use the category
+colours". I checked the 13 category colours against the chart background
+(#DAD7CD): Water 2.7, Electronics 2.6, Hygiene 2.4, Food 2.6 and Other
+1.6 are below the 3:1 contrast that chart shapes need. The donut's own
+palette was chosen to stay apart for colour-blind viewers. So switching
+the donut would make it harder to read, and fixing it properly means
+changing the category colours themselves (dots, shelf scene, donut). I
+left it as a question for the owner.
+Changed instead: in the Gear Room list, opening a category makes its items
+fade in and drop into place (200 ms, 30 ms apart). Only the category just
+opened animates; other redraws don't replay it. Off under reduced motion.
+The Gear Room e2e test checks it. Service worker cache `waypoints-v31`.
+All tests pass: 47 unit, 54 e2e.
+For the owner: see the colour question in backlog.md.
+
 ## 2026-11-05 — research
 
 Synced: main had one new commit from another session (the track editor

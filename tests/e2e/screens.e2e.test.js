@@ -490,6 +490,13 @@ test('gear: categories as weight bars that open to their items; Shelves still th
 
   await page.click('.pack-cat:nth-child(3) .pack-cat-head');
   assert.deepEqual((await bars()).map(b => b.split(' ')[0]), ['none', 'none', 'none']);
+  // The opened category's items slide in; opening another doesn't replay the first.
+  const itemAnims = () => page.$$eval('#gearPackList .pack-items', els => els.map(e => e.classList.contains('pack-items-in')));
+  assert.deepEqual(await itemAnims(), [true]);
+  assert.equal(await page.$eval('#gearPackList .pack-item', el => getComputedStyle(el).animationName), 'pack-items-in');
+  await page.click('.pack-cat:nth-child(1) .pack-cat-head');
+  assert.deepEqual(await itemAnims(), [true, false], 'only the newly opened one (Shelter, first) animates');
+  await page.click('.pack-cat:nth-child(1) .pack-cat-head');
   assert.equal(await page.getAttribute('.pack-cat:nth-child(3) .pack-cat-head', 'aria-expanded'), 'true');
   assert.deepEqual(await page.$$eval('.pack-item-name', els => els.map(e => e.textContent)), ['Revelation 20', 'NeoAir XLite NXT']);
   await page.click('.pack-item >> nth=0');

@@ -359,11 +359,14 @@ function setGearView(view){
 // Room is shown (CSS animations restart when a hidden page is shown), but
 // not when a category is just opened or closed.
 let packListQuiet = false;
+let packJustOpened = null;   // the category just opened: its items slide in
 function renderGearPackList(){
   const el = document.getElementById('gearPackList');
   el.innerHTML = '';
   el.classList.toggle('pack-list-grow', !packListQuiet);
   packListQuiet = false;
+  const justOpened = packJustOpened;
+  packJustOpened = null;
   const owned = gearItems.filter(g=>OWNED_STATUSES.includes(g.status));
   const itemWeight = g => (g.weightGrams||0)*(g.quantity||1);
   const cats = GEAR_CATEGORIES.map(cat=>{
@@ -392,14 +395,14 @@ function renderGearPackList(){
       '</span>'+
       '<span class="pack-bar"><span style="width:'+(c.weight / max * 100).toFixed(1)+'%;--i:'+Math.min(i, 8)+'"></span></span>';
     head.addEventListener('click', ()=>{
-      if(openPackCategories.has(c.cat)) openPackCategories.delete(c.cat); else openPackCategories.add(c.cat);
+      if(openPackCategories.has(c.cat)) openPackCategories.delete(c.cat); else { openPackCategories.add(c.cat); packJustOpened = c.cat; }
       packListQuiet = true;
       renderGearPackList();
     });
     row.appendChild(head);
     if(open){
       const list = document.createElement('div');
-      list.className = 'pack-items';
+      list.className = 'pack-items' + (justOpened === c.cat ? ' pack-items-in' : '');
       c.items.forEach(g=>{
         const item = document.createElement('button');
         item.type = 'button';

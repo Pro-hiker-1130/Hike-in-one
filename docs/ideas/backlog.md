@@ -13,12 +13,15 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 ## Polish
 
-- Gear breakdown donut: use the same category colours as the dots in the list above it (they differ now) — S
 
 
 ## Questions for the owner
 
-(none — the owner approved new saved fields, Open-Meteo forecasts and the shared-routes migration on 2026-11-03)
+- Category colours: the donut in the Gear Room uses a different palette from
+  the category dots. 5 of the 13 category colours (Water, Electronics,
+  Hygiene, Food, Other) are too faint on the chart background for the donut.
+  Should I darken those 5 everywhere (dots, shelves, donut) so one set of
+  colours works all over? Or keep the two palettes separate?
 
 ## Done
 
@@ -50,3 +53,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-04 — Dialogs fade and shrink away when closing (polish)
 - 2026-11-04 — Gear Room weight bars grow in (polish)
 - 2026-11-05 — Search completed trips (research, Wanderer idea)
+- 2026-11-06 — Gear Room: a category's items slide in when opened (polish)
