@@ -387,7 +387,19 @@ test('hikes get difficulty badges from effort km (trips don\'t), and trips filte
   assert.deepEqual(await page.$$eval('#tripCompletedGrid .trip-card-name', els => els.map(e => e.textContent)), ['Hut tour']);
   await page.click('#tripDifficultyFilter [data-level="hard"]');
   assert.equal(await page.locator('#tripCompletedGrid .trip-card').count(), 0);
-  assert.equal(await text(page, '#tripCompletedEmpty'), 'No trips with a hard hike yet.');
+  assert.equal(await text(page, '#tripCompletedEmpty'), 'No trips have a hard hike yet.');
+  // Search by trip name, notes or hike name; it works together with the chips.
+  await page.click('#tripDifficultyFilter [data-level="all"]');
+  const names = () => page.$$eval('#tripCompletedGrid .trip-card-name', els => els.map(e => e.textContent));
+  await page.fill('#tripSearch', 'RIDGE');
+  assert.deepEqual(await names(), ['Hut tour'], 'found by a hike name, any case');
+  await page.fill('#tripSearch', 'lake week');
+  assert.deepEqual(await names(), ['Lake weekend'], 'every word must match');
+  await page.click('#tripDifficultyFilter [data-level="strenuous"]');
+  assert.deepEqual(await names(), []);
+  assert.equal(await text(page, '#tripCompletedEmpty'), 'No trips match \u201clake week\u201d and have a strenuous hike yet.');
+  await page.fill('#tripSearch', '');
+  assert.deepEqual(await names(), ['Hut tour']);
   assert.deepEqual(errors, []);
 });
 

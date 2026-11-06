@@ -9,6 +9,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - Kits: a reusable group of items (cook kit) added to a trip in one go — Packstack — faster packing lists — M
 - Peak list: tick off named summits reached on your walks (needs summit data) — summit-log apps — goals to work toward — L
 - Km markers on the trip page map and the shared-route page too — Gaia GPS — same help when reviewing a plan — S
+- Waypoints along a planned route: camp, resupply, water, pick-up (shown on the map and in the day list) — HIIKER/Gaia GPS — planning long hikes — M
 
 ## Polish
 
@@ -48,3 +49,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-04 — Packing tick pops and the row glows (polish)
 - 2026-11-04 — Dialogs fade and shrink away when closing (polish)
 - 2026-11-04 — Gear Room weight bars grow in (polish)
+- 2026-11-05 — Search completed trips (research, Wanderer idea)

@@ -776,6 +776,10 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .difficulty-filter button{padding:5px 12px;font-size:12px;white-space:nowrap;}
 .section-subhead:has(.difficulty-filter){display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;}
 
+.trip-search{flex:1 1 160px;max-width:260px;padding:7px 11px;font:inherit;font-size:13.5px;color:var(--parchment);background:var(--panel);border:1px solid rgba(52,78,65,0.22);border-radius:8px;}
+.trip-search[hidden]{display:none;}
+@media (max-width:560px){.trip-search{max-width:none;flex-basis:100%;}}
+
 /* Year in review under the map overview */
 .year-review{margin-top:12px;}
 .year-review[hidden]{display:none;}
