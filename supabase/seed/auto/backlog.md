@@ -98,3 +98,6 @@ pin down to "Skipped" with a reason.
 - Fox 40 Classic whistle: weights only from marketplace listings (9-30 g, versions differ).
 - Lifesystems Ultralight Survival Shelter (2 person): retailers list 180 g and 215 g.
 - Garmin fenix 8 47mm: weight differs by case material and strap (52-81 g).
+- UCO Titan Stormproof Match Kit: listed weights disagree (57-94 g).
+- Light My Fire Swedish FireSteel Scout: versions listed at 23-38 g, version unclear.
+- Nuun Sport Hydration Tablets (10): 55 g for the tablets vs 64 g with the tube.
