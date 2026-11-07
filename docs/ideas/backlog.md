@@ -8,8 +8,8 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - "Lighter options" on a gear item: catalog products in the same category that weigh less — PackWizard — cutting pack weight — M
 - Kits: a reusable group of items (cook kit) added to a trip in one go — Packstack — faster packing lists — M
 - Peak list: tick off named summits reached on your walks (needs summit data) — summit-log apps — goals to work toward — L
-- Km markers on the trip page map and the shared-route page too — Gaia GPS — same help when reviewing a plan — S
 - Waypoints along a planned route: camp, resupply, water, pick-up (shown on the map and in the day list) — HIIKER/Gaia GPS — planning long hikes — M
+- Live "what's ahead" on a planned route: the next climb and distance to the next day's end — Mapy.com — pacing on the trail — M
 
 ## Polish
 
@@ -54,3 +54,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-04 — Gear Room weight bars grow in (polish)
 - 2026-11-05 — Search completed trips (research, Wanderer idea)
 - 2026-11-06 — Gear Room: a category's items slide in when opened (polish)
+- 2026-11-07 — Km markers on focused trips on the map and on the shared-route page (research, Gaia GPS idea)

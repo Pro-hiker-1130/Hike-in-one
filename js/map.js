@@ -73,6 +73,7 @@ const trackLineRenderer = L.canvas({padding:0.3, tolerance:8});
 const trackEndRenderer = L.canvas({pane:'trackEnds', padding:0.3});
 const trackDrawn = new Map();       // track id -> {t, line, casing}
 const trackEndGroup = L.layerGroup();
+const trackKmGroup = L.layerGroup();   // km markers on the trip or hike in focus
 let trackFocus = null;              // {tripId} or {trackId}: the others fade
 let hoveredTrackId = null;
 const TRACK_ENDS_MIN_ZOOM = 12;
@@ -110,6 +111,7 @@ function styleTracks(){
 
 function renderTrackEnds(){
   trackEndGroup.clearLayers();
+  trackKmGroup.clearLayers();
   if(map.getZoom() < TRACK_ENDS_MIN_ZOOM) return;
   const view = map.getBounds().pad(0.2);
   const dot = (ll, fill, ring) => L.circleMarker(ll, { renderer: trackEndRenderer, interactive: false,
@@ -122,6 +124,18 @@ function renderTrackEnds(){
     dot(end, '#B3261E', '#FFFFFF');
     dot(start, '#3A5A40', '#FFFFFF');
   });
+  // A trip or hike in focus also gets kilometre markers along its route.
+  if(trackFocus) trackDrawn.forEach(({t, line})=>{
+    if(!trackInFocus(t) || t.points.length < 2 || !line.getBounds().intersects(view)) return;
+    TrackCore.kmMarkers(t.points).forEach(m => addKmMarker(m, trackKmGroup));
+  });
+}
+
+// A small "5" label on a route at km 5 (route planner, focused trips on
+// the map, the shared-route page).
+function addKmMarker(m, group){
+  L.marker(m.ll, { interactive: false, keyboard: false,
+    icon: L.divIcon({ className: 'km-marker', html: '<span>' + m.km + '</span>', iconSize: null }) }).addTo(group);
 }
 
 function setTrackFocus(focus){
@@ -185,6 +199,7 @@ function renderTracks(){
     trackDrawn.set(t.id, {t, line, casing});
   });
   trackLayerGroup.addLayer(trackEndGroup);
+  trackLayerGroup.addLayer(trackKmGroup);
   // A focused trip that no longer exists lets go.
   if(trackFocus && ![...trackDrawn.values()].some(d => trackInFocus(d.t))) trackFocus = null;
   setTrackFocus(trackFocus);

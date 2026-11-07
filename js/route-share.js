@@ -170,6 +170,7 @@ async function loadSharedRoute(fit){
   route.forEach(t=>{
     if(!Array.isArray(t.points) || t.points.length < 2) return;
     L.polyline(t.points, { color: '#C4501C', weight: 4, opacity: 0.9, dashArray: t.planned ? '8 8' : null }).addTo(srLines);
+    TrackCore.kmMarkers(t.points).forEach(m => addKmMarker(m, srLines));
     all.push(...t.points);
   });
   const list = document.getElementById('srSuggestions');

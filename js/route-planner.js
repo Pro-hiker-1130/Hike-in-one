@@ -201,10 +201,7 @@ function rpDrawRoute(){
   if(!ready){ stats.textContent = 'Finding the route…'; return; }
   stats.textContent = rpRoute.distanceKm.toFixed(1) + ' km · ' + trackClimbSummary(rpRoute);
   // Distance markers along the route, so it's easy to see where 5 km is.
-  TrackCore.kmMarkers(rpRoute.points).forEach(m => L.marker(m.ll, {
-    interactive: false, keyboard: false,
-    icon: L.divIcon({ className: 'rp-km', html: '<span>' + m.km + '</span>', iconSize: null }),
-  }).addTo(rpLineLayer));
+  TrackCore.kmMarkers(rpRoute.points).forEach(m => addKmMarker(m, rpLineLayer));
   if(rpRoute.profile && rpRoute.profile.length > 1) profileEl.appendChild(buildElevationProfile(rpRoute));
 }
 

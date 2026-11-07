@@ -3,6 +3,24 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-07 — research
+
+Looked at: Mapy.com (A-to-B and round-trip planning with time, distance
+and climb; custom speeds; users asking for a "terrain profile ahead") and
+bergfex (tap start and end for distance, climb and time; intermediate
+stops; GPX in and out). Most of this the app already has (round trips,
+your own pace, GPX). Budget used: 2 searches, 0 fetches.
+Changed: kilometre markers, until now only in the route planner, also
+show on the main map for the trip or hike in focus (from "View on map" or
+a track's popup), once zoomed in as far as the start and finish dots, and
+on the shared-route page partners open. They sit in their own map layer
+(`trackKmGroup`), so the start/finish dots layer is unchanged. The marker
+style is now one shared class (`km-marker`). E2e tests cover the map
+(markers only while something is in focus) and the shared page. Service
+worker cache `waypoints-v32`. All tests pass: 47 unit, 54 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-06 — polish
 
 Looked at: the backlog item "Gear breakdown donut should use the category

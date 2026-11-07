@@ -145,6 +145,15 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   assert.equal(await page.getAttribute('#personalBests li:has-text("Highest point") .pb-walk', 'title'), 'Eiger trail, 10 Jul 2025');
   assert.deepEqual(bests.find(b => b[0] === 'Biggest climb'), ['Biggest climb', '600 m up', 'Eiger trail']);
   assert.deepEqual(bests.find(b => b[0] === 'Highest point'), ['Highest point', '1,600 m', 'Eiger trail']);
+  // A hike in focus gets km markers once zoomed in; none without focus.
+  const kmShown = () => page.locator('#map .km-marker').count();
+  await page.evaluate(()=>{ const t = tracks[0]; map.setView(t.points[Math.floor(t.points.length / 2)], 13, { animate: false }); });
+  assert.equal(await kmShown(), 0, 'nothing in focus');
+  const want = await page.evaluate(()=>{ setTrackFocus({ trackId: tracks[0].id }); return TrackCore.kmMarkers(tracks[0].points).length; });
+  assert.ok(want > 0);
+  assert.equal(await kmShown(), want);
+  await page.evaluate(()=> setTrackFocus(null));
+  assert.equal(await kmShown(), 0);
   // A change while the map is showing counts up, then lands on the new value.
   const counting = await page.evaluate(()=>{
     trips.push({ id: 'trip_x', name: 'X', trackIds: [], gearIds: [], status: 'planned', createdAt: 2 });
@@ -995,7 +1004,7 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   assert.equal(elevationCalls, 1);
   assert.equal(await page.locator('#rpProfile .ele-profile').count(), 1);
   // Distance markers along the route.
-  const km = await page.evaluate(()=> ({ shown: [...document.querySelectorAll('#rpMap .rp-km')].map(e => e.textContent),
+  const km = await page.evaluate(()=> ({ shown: [...document.querySelectorAll('#rpMap .km-marker')].map(e => e.textContent),
     want: TrackCore.kmMarkers(rpRoute.points).map(m => String(m.km)), total: rpRoute.distanceKm }));
   assert.ok(km.total > 1.5 ? km.want.length > 0 : true, 'a route over 1.5 km gets markers: ' + km.total);
   assert.deepEqual(km.shown, km.want);
@@ -1110,6 +1119,8 @@ test('share with partners: a partner opens the link without an account and sends
   assert.equal(await text(page, '#srStats'), '1 track · 12.3 km');
   assert.match(await text(page, '#srSuggestions'), /Kim: Start an hour earlier \(done\)/);
   await page.waitForSelector('#srMap path.leaflet-interactive', { timeout: 3000 });   // route drawn
+  assert.equal(await page.locator('#srMap .km-marker').count(),
+    await page.evaluate(()=> TrackCore.kmMarkers([[46.0, 7.5], [46.02, 7.52], [46.05, 7.55]]).length), 'km markers on the shared route');
 
   await page.click('#srSendBtn');
   assert.match(await text(page, '#srError'), /Add your name and a suggestion/);
