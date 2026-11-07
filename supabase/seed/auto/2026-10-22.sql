@@ -1,0 +1,10 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Osprey', 'Kyte 46', 'Women''s S/M', 'Backpack', 1540, '{"volume_l":46}', 'Women''s backpacking pack. Listed weight is for size S/M; XS/S is about 1470 g.', 'https://www.cotswoldoutdoor.com/p/osprey-womens-kyte-46-rucksack-E1114240.html', 'seed'),
+('Osprey', 'Rook 65', 'Men''s', 'Backpack', 1678, '{"volume_l":65}', 'Value frame pack with adjustable suspension. Listed weight is one size (3 lb 11.2 oz); retailers list 1600-1630 g.', 'https://www.rei.com/product/231463/osprey-rook-65-pack-mens', 'seed'),
+('Deuter', 'Trail 30', 'Men''s', 'Backpack', 1180, '{"volume_l":30}', 'Ventilated day pack. Listed weight is 1180 g; some sellers list 1120 g.', 'https://www.speck-sports.com/en/trekking-backpacks/30511-backpack-deuter-trail-30-marine-shale-4046051113159.html', 'seed'),
+('ULA', 'Ohm', '2023', 'Backpack', 958, '{}', 'Lightweight frame pack for ultralight backpackers. Listed weight is the brand''s 33.8 oz.', 'https://www.ula-equipment.com/product/ohm-2023', 'seed'),
+('Mystery Ranch', 'Bridger 45', 'Men''s S', 'Backpack', 1996, '{"volume_l":45}', 'Durable zip-access pack. Listed weight is about 4.4 lb (retailers list 4 lb 6 oz).', 'https://Backcountry.Com/mystery-ranch-bridger-45l-backpack', 'seed'),
+('Salomon', 'X Ultra 5 GTX', 'Men''s Low', 'Footwear', 760, '{"waterproof":true}', 'Waterproof low hiking shoe. Weight per pair (about 380 g per shoe).', 'https://www.gearx.com/products/salomon-x-ultra-5-gtx-m-ua4ry', 'seed'),
+('Montane', 'Spirit Jacket', 'Men''s M', 'Clothing', 365, '{"waterproof":true}', 'Light waterproof GORE-TEX shell. Listed weight is the brand''s 365 g for size M; a retailer lists the 75D version at 395 g.', 'https://montane.com/products/montane-mens-spirit-waterproof-jacket', 'seed'),
+('Nemo', 'Tensor Alpine', 'Regular Mummy', 'Sleep system', 555, '{"r_value":4.8}', 'Insulated air pad for cold seasons. Listed weight is 1 lb 4 oz packed with stuff sack (about 475 g without).', 'https://Trailspace.com/gear/nemo/tensor-alpine-ultralight/', 'seed')
+on conflict (normalized_key) do nothing;
