@@ -101,3 +101,8 @@ pin down to "Skipped" with a reason.
 - UCO Titan Stormproof Match Kit: listed weights disagree (57-94 g).
 - Light My Fire Swedish FireSteel Scout: versions listed at 23-38 g, version unclear.
 - Nuun Sport Hydration Tablets (10): 55 g for the tablets vs 64 g with the tube.
+- Leukotape P (1.5 in x 15 yd): roll weights disagree (91-159 g).
+- Compeed Anti-Blister Stick 8 ml: listings give 0.58 g or 30 g, no clear figure.
+- Compeed Medium Blister Plasters (5): listings show 20 g and 30 g.
+- BodyGlide Original Anti-Chafe Balm 0.8 oz: only the label contents (22.7 g) is clear, not the tube weight.
+- Ursack Allmitey: weights disagree (269 g vs 369 g).
