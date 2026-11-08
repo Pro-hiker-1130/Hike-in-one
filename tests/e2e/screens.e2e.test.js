@@ -1299,3 +1299,60 @@ test('track editor: trimming a hike imported before point times existed keeps an
   assert.equal(saved.line, '↑ 300 m · ↓ 0 m · about 1 h 00 min');
   assert.deepEqual(errors, []);
 });
+
+test('planned trip: Download GPX for the whole route (one course) and per day; on a phone it goes through the share sheet', { skip: !playwright }, async t=>{
+  const seedPlannedTrip = page => page.evaluate(async ()=>{
+    const mk = (id, name, lat0) => TrackCore.buildTrack({ id, name, sport: 'Hike', planned: true, date: '2027-07-01' }, {
+      points: Array.from({ length: 21 }, (_, i) => [lat0 + i*0.005, 7.6]), ele: Array.from({ length: 21 }, (_, i) => 1000 + i*20), t: null });
+    tracks.push(mk('p1', 'Stage 1', 46.0), mk('p2', 'Stage 2', 46.1));
+    trips.push({ id: 'trip_plan', name: 'Haute Route', status: 'planned', date: '2027-07-01', trackIds: ['p1', 'p2'], gearIds: [] });
+    await saveTracks(); await saveTrips();
+    refreshEverything();
+  });
+
+  // Desktop: an ordinary download.
+  const { page, errors } = await launch(t);
+  await seedPlannedTrip(page);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(()=> showTripDetail('trip_plan'));
+  await page.waitForSelector('#tripDownloadRouteBtn:not([hidden])');
+  const [whole] = await Promise.all([page.waitForEvent('download'), page.click('#tripDownloadRouteBtn')]);
+  assert.equal(whole.suggestedFilename(), 'Haute Route.gpx');
+  const gpx = fs.readFileSync(await whole.path(), 'utf8');
+  assert.equal((gpx.match(/<trk>/g) || []).length, 1, 'both stages as one course');
+  assert.equal((gpx.match(/<trkpt /g) || []).length, 41, 'the shared point once');
+  assert.match(gpx, /xsi:schemaLocation="http:\/\/www\.topografix\.com\/GPX\/1\/1 http:\/\/www\.topografix\.com\/GPX\/1\/1\/gpx\.xsd"/);
+  assert.match(await text(page, '#globalToast'), /Garmin Connect/);
+
+  // Split into days of ~11 km: day 2 as its own file.
+  await page.fill('#tripDailyKm', '11');
+  await page.dispatchEvent('#tripDailyKm', 'change');
+  await page.waitForFunction(()=> document.querySelectorAll('#tripDaysList .trip-day-gpx').length === 2);
+  const [day2] = await Promise.all([page.waitForEvent('download'), page.click('#tripDaysList .trip-day-row:nth-child(2) .trip-day-gpx')]);
+  assert.equal(day2.suggestedFilename(), 'Haute Route - Day 2.gpx');
+  const pts = (fs.readFileSync(await day2.path(), 'utf8').match(/<trkpt /g) || []).length;
+  assert.ok(pts > 10 && pts < 30, 'about half the route: ' + pts);
+
+  // A planned route shows the button; a trip with only walked tracks doesn't.
+  await page.evaluate(async ()=>{ trips.find(x => x.id === 'trip_plan').trackIds = []; await saveTrips(); renderTripDetail(); });
+  assert.ok(await page.isHidden('#tripDownloadRouteBtn'));
+  assert.deepEqual(errors, []);
+
+  // Phone: the file goes to the share sheet.
+  const phone = await launch(t, { width: 390, height: 844, touch: true });
+  await phone.page.evaluate(()=>{
+    window.__shared = null;
+    navigator.canShare = d => !!(d && d.files && d.files.length);
+    navigator.share = async d => { window.__shared = { name: d.files[0].name, type: d.files[0].type, size: d.files[0].size }; };
+  });
+  await seedPlannedTrip(phone.page);
+  await phone.page.click('.nav-tab[data-page="trips"]');
+  await phone.page.evaluate(()=> showTripDetail('trip_plan'));
+  await phone.page.click('#tripDownloadRouteBtn');
+  await phone.page.waitForFunction(()=> !!window.__shared);
+  const shared = await phone.page.evaluate(()=> window.__shared);
+  assert.equal(shared.name, 'Haute Route.gpx');
+  assert.equal(shared.type, 'application/gpx+xml');
+  assert.ok(shared.size > 1000);
+  assert.deepEqual(phone.errors, []);
+});

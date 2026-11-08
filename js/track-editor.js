@@ -268,16 +268,7 @@ async function deleteTrackFromEditor(){
 
 function downloadTrackGpx(){
   const edited = teEditedTrack();
-  if(!edited) return;
-  const blob = new Blob([TrackCore.toGpx(edited)], {type:'application/gpx+xml'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = TrackCore.gpxFileName(edited);
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  if(edited) saveTrackGpx(edited);
 }
 
 document.getElementById('trackEditClose').addEventListener('click', closeTrackEditor);
