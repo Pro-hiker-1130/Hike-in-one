@@ -1,0 +1,8 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('MSR', 'Quick 2 Cook Set', null, 'Cooking', 800, '{}', 'Two-person pot, lid and bowls set. Listed weight is 0.80 kg; retailers list 780-806 g.', 'https://cascadedesigns.com/products/quick-2-cook-set', 'seed'),
+('Snow Peak', 'Titanium Multi Compact Cookset', 'SCS-020T', 'Cooking', 330, '{}', 'Nesting titanium pot and pan set. Listed weight is 11.6 oz (330 g).', 'https://ascentoutdoors.com/products/snow-peak-titanium-multi-compact-cookset', 'seed'),
+('Stanley', 'Wildfare Core Fry Pan Cookset', '0.94 L', 'Cooking', 1040, '{"capacity_ml":940}', 'Stainless steel camp cook set with a fry pan. Listed weight is 1040 g; one retailer lists 1.03 kg.', 'https://uk.stanley1913.com/products/core-fry-pan-cookset-0-94-l', 'seed'),
+('Fenix', 'HM55R Renegade', null, 'Electronics', 105, '{}', 'Rechargeable headlamp, 1200 lumens. Listed weight is the brand''s 105 g including battery and headband.', 'https://fenixlighting.com/products/fenix-hm55r-renegade-headlamp', 'seed'),
+('Coast', 'XPH30R', null, 'Electronics', 159, '{}', 'Rechargeable dual-power headlamp, 1200 lumens. Listed weight is 5.6 oz (159 g) for the headlamp.', 'https://toolup.com/products/coast-30325-xph30r-headlamp-rechargeable-dual-power-1200-lumens-185m-beam-28h', 'seed'),
+('Black Diamond', 'Storm 400', null, 'Electronics', 120, '{}', 'Waterproof headlamp, 400 lumens. Listed weight is 120 g with four AAA batteries.', 'https://www.trailspace.com/gear/black-diamond/storm-400/', 'seed')
+on conflict (normalized_key) do nothing;
