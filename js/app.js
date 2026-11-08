@@ -384,7 +384,13 @@ document.getElementById('paceUseMine').addEventListener('change', e=>{
   renderPaceSettings();
   if(currentTripId) renderTripDetail();
 });
-document.getElementById('yearReviewSelect').addEventListener('change', e=>{ yearReviewYear = e.target.value; renderYearReview(); });
+document.getElementById('yearReviewSelect').addEventListener('change', e=>{
+  yearReviewYear = e.target.value;
+  renderYearReview();
+  // The new year's numbers fade in (CSS: year-review-swap), replayed per change.
+  const text = document.getElementById('yearReviewText');
+  text.classList.remove('year-review-swap'); void text.offsetWidth; text.classList.add('year-review-swap');
+});
 document.getElementById('tripShareUpdateBtn').addEventListener('click', publishTripShare);
 document.getElementById('tripShareStopBtn').addEventListener('click', stopTripShare);
 document.getElementById('tripShareCopyBtn').addEventListener('click', copyTripShareLink);

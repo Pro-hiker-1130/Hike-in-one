@@ -55,3 +55,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-05 — Search completed trips (research, Wanderer idea)
 - 2026-11-06 — Gear Room: a category's items slide in when opened (polish)
 - 2026-11-07 — Km markers on focused trips on the map and on the shared-route page (research, Gaia GPS idea)
+- 2026-11-08 — Year in review: exact km and a fade when switching years (polish)

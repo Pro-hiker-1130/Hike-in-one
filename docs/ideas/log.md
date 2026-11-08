@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-08 — polish
+
+Looked at: screenshots (phone) of a trip page, Settings and the map
+sidebar. In the Year in review, the summary rounded distance to whole
+kilometres ("10 km"), while the line under it and Personal bests showed
+"9.6 km" for the same walk. Switching years swapped the text abruptly.
+Changed: the year summary shows one decimal under 100 km (e.g. "9.6 km";
+larger totals stay short like "1.2k"). Picking another year fades the new
+numbers in (200 ms), replayed on each change and off under reduced motion.
+The map e2e test checks the decimal and the fade. Service worker cache
+`waypoints-v33`. All tests pass: 47 unit, 54 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-07 — research
 
 Looked at: Mapy.com (A-to-B and round-trip planning with time, distance

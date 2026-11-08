@@ -137,7 +137,7 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   // Year in review: both test hikes are in 2025.
   assert.equal(await page.inputValue('#yearReviewSelect'), '2025');
   assert.match(await text(page, '#yearReviewText'),
-    /^2 walks on 2 days · [\d.]+ km · 900 m upLongest: .+, [\d.]+ km · Highest: 1,600 m on Eiger trail · Busiest month: (July|August)$/);
+    /^2 walks on 2 days · \d+\.\d km · 900 m upLongest: .+, [\d.]+ km · Highest: 1,600 m on Eiger trail · Busiest month: (July|August)$/);
   // Personal bests, all time.
   const bests = await page.$$eval('#personalBests li', els => els.map(li => [...li.children].map(c => c.textContent)));
   assert.equal(bests[0][0], 'Longest walk');
@@ -145,6 +145,13 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   assert.equal(await page.getAttribute('#personalBests li:has-text("Highest point") .pb-walk', 'title'), 'Eiger trail, 10 Jul 2025');
   assert.deepEqual(bests.find(b => b[0] === 'Biggest climb'), ['Biggest climb', '600 m up', 'Eiger trail']);
   assert.deepEqual(bests.find(b => b[0] === 'Highest point'), ['Highest point', '1,600 m', 'Eiger trail']);
+  // Picking another year: its numbers, with a short fade.
+  await page.evaluate(()=>{ tracks.push({ id: 'y24', name: 'Old walk', date: '2024-09-01', distanceKm: 7.25, elevationGainM: 300, points: [[45, 7], [45.01, 7]] }); renderStats(); });
+  await page.selectOption('#yearReviewSelect', '2024');
+  assert.match(await text(page, '#yearReviewText'), /^1 walk on 1 day · 7\.3 km · 300 m up/);
+  assert.equal(await page.$eval('#yearReviewText', el => getComputedStyle(el).animationName), 'year-review-swap');
+  await page.selectOption('#yearReviewSelect', '2025');
+  await page.evaluate(()=>{ tracks.pop(); yearReviewYear = null; renderStats(); });
   // A hike in focus gets km markers once zoomed in; none without focus.
   const kmShown = () => page.locator('#map .km-marker').count();
   await page.evaluate(()=>{ const t = tracks[0]; map.setView(t.points[Math.floor(t.points.length / 2)], 13, { animate: false }); });

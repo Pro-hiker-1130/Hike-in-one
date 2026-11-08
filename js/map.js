@@ -330,7 +330,7 @@ function renderYearReview(){
   const s = TrackCore.yearSummary(tracks, yearReviewYear);
   const n = (v, one, many) => v.toLocaleString('en-US') + ' ' + (v === 1 ? one : many);
   const lines = [
-    n(s.count, 'walk', 'walks') + ' on ' + n(s.days, 'day', 'days') + ' · ' + compactNumber(s.distanceKm) + ' km · ' + compactNumber(s.gainM) + ' m up',
+    n(s.count, 'walk', 'walks') + ' on ' + n(s.days, 'day', 'days') + ' · ' + (s.distanceKm < 100 ? s.distanceKm.toFixed(1) : compactNumber(s.distanceKm)) + ' km · ' + compactNumber(s.gainM) + ' m up',
     'Longest: ' + s.longest.name + ', ' + s.longest.distanceKm.toFixed(1) + ' km' +
       (s.highest ? ' · Highest: ' + s.highest.eleM.toLocaleString('en-US') + ' m on ' + s.highest.name : '') +
       ' · Busiest month: ' + MONTHS_LONG[s.busiestMonth],

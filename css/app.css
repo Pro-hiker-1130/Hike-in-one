@@ -788,6 +788,9 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .year-review-text{margin:0;font-size:13px;color:var(--muted);line-height:1.45;}
 .year-review-text span{display:block;}
 .year-review-text span:first-child{color:var(--parchment);font-weight:600;}
+@keyframes year-review-swap{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+.year-review-swap{animation:year-review-swap 200ms ease-out;}
+@media (prefers-reduced-motion: reduce){.year-review-swap{animation:none;}}
 
 /* Multi-day plan */
 #tripDaysSection[hidden]{display:none;}
