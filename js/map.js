@@ -383,6 +383,7 @@ function renderStats(){
   renderPaceSettings();
   renderDeviceSummary();
   renderGettingStarted();
+  if(typeof scheduleGrProgress === "function") scheduleGrProgress();
 }
 
 // What this device holds and the last error it hit — enough to tell,

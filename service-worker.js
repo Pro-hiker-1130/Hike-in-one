@@ -1,7 +1,7 @@
-const CACHE_NAME = 'waypoints-v32';
-const APP_JS = ['setup', 'activity-files', 'storage-sync', 'strava', 'map', 'trips', 'loadouts', 'trips-ui', 'import', 'gear', 'catalog', 'track-editor', 'route-planner', 'route-share', 'app']
+const CACHE_NAME = 'waypoints-v33';
+const APP_JS = ['setup', 'activity-files', 'storage-sync', 'strava', 'map', 'trips', 'loadouts', 'trips-ui', 'import', 'gear', 'catalog', 'track-editor', 'gr-routes', 'route-planner', 'route-share', 'app']
   .map(f => './js/' + f + '.js');
-const APP_SHELL = ['./', './index.html', './css/app.css', './catalog-core.js', './track-core.js', ...APP_JS,
+const APP_SHELL = ['./', './index.html', './css/app.css', './catalog-core.js', './track-core.js', './gr-core.js', ...APP_JS,
   './manifest.json', './icon-192.png', './icon-512.png', './countries-50m.geo.json'];
 
 // The app can't boot without these (index.html calls L.map() immediately),

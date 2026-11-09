@@ -11,7 +11,7 @@ const BROUTER_URL = 'https://brouter.de/brouter';
 const BROUTER_PROFILE = 'hiking-mountain';
 const ELEVATION_URL = 'https://api.open-meteo.com/v1/elevation';
 
-let rpMap = null, rpLineLayer = null, rpMarkerLayer = null;
+let rpMap = null, rpLineLayer = null, rpMarkerLayer = null, rpGrOverlay = null;
 let rp = null;                 // {tripId, trackId, waypoints: [{ll, mode}], history: []}
 let rpMode = 'trail';
 let rpRoute = null;            // the route as a track, once every part is known
@@ -103,7 +103,16 @@ function rpEnsureMap(){
   rpMap = L.map('rpMap', { zoomControl: true, doubleClickZoom: false });
   // Start on the main map's basemap when it's a hiking one, else Terrain.
   const start = ['terrain', 'satellite', 'relief'].includes(currentBasemapKey) ? currentBasemapKey : 'terrain';
-  addMapLayerSwitcher(rpMap, start, 'topleft');
+  // GR routes: on unless switched off before (remembered on this device).
+  rpGrOverlay = makeGrOverlay(rpMap);
+  addMapLayerSwitcher(rpMap, start, 'topleft', [{
+    key: 'gr', label: 'GR routes',
+    on: () => rpGrOverlay.on(),
+    set: on => { rpGrOverlay.set(on); try{ localStorage.setItem('hio-planner-gr', on ? '1' : '0'); }catch(e){} },
+  }]);
+  let grWanted = true;
+  try{ grWanted = localStorage.getItem('hio-planner-gr') !== '0'; }catch(e){}
+  rpGrOverlay.set(grWanted);
   addLocateControl(rpMap, 'topleft');
   rpLineLayer = L.layerGroup().addTo(rpMap);
   rpMarkerLayer = L.layerGroup().addTo(rpMap);
