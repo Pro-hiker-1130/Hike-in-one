@@ -530,10 +530,22 @@
     };
   }
 
+  // Where a track reaches its highest point: {ll, eleM, km}, from its
+  // per-point elevation or, for older tracks, its profile. Null without
+  // elevation.
+  function highestPoint(track){
+    const s = trackSeries(track);
+    if(!s.ele || s.points.length < 2) return null;
+    let top = -1;
+    s.ele.forEach((e, i) => { if(e != null && (top < 0 || e > s.ele[top])) top = i; });
+    if(top < 0) return null;
+    return { ll: s.points[top], eleM: Math.round(s.ele[top]), km: Math.round(cumulativeKm(s.points)[top] * 10) / 10 };
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName, joinTracks, sliceKm,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint,
   };
 });

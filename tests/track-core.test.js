@@ -336,3 +336,13 @@ test('GPX for a GPS watch: full GPX 1.1 header, a trip\'s routes joined, one day
   assert.deepEqual(day2.points[day2.points.length-1], [46.04, 7.5]);
   assert.equal(day2.elevationLossM, 100);
 });
+
+test('highestPoint finds where a track tops out, from point elevations or the profile', () => {
+  const pts = [[46, 7], [46.01, 7], [46.02, 7], [46.03, 7]];
+  assert.deepEqual(T.highestPoint({ points: pts, pointEle: [1000, 1450.4, null, 1200] }), { ll: [46.01, 7], eleM: 1450, km: 1.1 });
+  // An older track: only a [km, ele] profile along it.
+  const old = T.highestPoint({ points: pts, profile: [[0, 1000], [2.2, 1800], [3.3, 1500]] });
+  assert.equal(old.eleM, 1800);
+  assert.deepEqual(old.ll, [46.02, 7]);
+  assert.equal(T.highestPoint({ points: pts }), null);
+});

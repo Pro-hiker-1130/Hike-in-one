@@ -128,6 +128,10 @@ function renderTrackEnds(){
   if(trackFocus) trackDrawn.forEach(({t, line})=>{
     if(!trackInFocus(t) || t.points.length < 2 || !line.getBounds().intersects(view)) return;
     TrackCore.kmMarkers(t.points).forEach(m => addKmMarker(m, trackKmGroup));
+    // Its high point, unless the walk is about flat.
+    const top = TrackCore.highestPoint(t);
+    if(top && !(t.maxEleM - t.minEleM < 30)) L.marker(top.ll, { interactive: false, keyboard: false,
+      icon: L.divIcon({ className: 'summit-marker', html: '<span>\u25B2 ' + top.eleM.toLocaleString('en-US') + ' m</span>', iconSize: null }) }).addTo(trackKmGroup);
   });
 }
 

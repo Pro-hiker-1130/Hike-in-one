@@ -159,8 +159,12 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   const want = await page.evaluate(()=>{ setTrackFocus({ trackId: tracks[0].id }); return TrackCore.kmMarkers(tracks[0].points).length; });
   assert.ok(want > 0);
   assert.equal(await kmShown(), want);
+  // ...and its high point (the Eiger trail test hike climbs to 1,600 m).
+  assert.deepEqual(await page.$$eval('#map .summit-marker', els => els.map(e => e.textContent)),
+    [await page.evaluate(()=> '\u25B2 ' + TrackCore.highestPoint(tracks[0]).eleM.toLocaleString('en-US') + ' m')]);
   await page.evaluate(()=> setTrackFocus(null));
   assert.equal(await kmShown(), 0);
+  assert.equal(await page.locator('#map .summit-marker').count(), 0);
   // A change while the map is showing counts up, then lands on the new value.
   const counting = await page.evaluate(()=>{
     trips.push({ id: 'trip_x', name: 'X', trackIds: [], gearIds: [], status: 'planned', createdAt: 2 });

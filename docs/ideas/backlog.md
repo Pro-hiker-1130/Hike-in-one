@@ -10,6 +10,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - Peak list: tick off named summits reached on your walks (needs summit data) — summit-log apps — goals to work toward — L
 - Waypoints along a planned route: camp, resupply, water, pick-up (shown on the map and in the day list) — HIIKER/Gaia GPS — planning long hikes — M
 - Live "what's ahead" on a planned route: the next climb and distance to the next day's end — Mapy.com — pacing on the trail — M
+- Trail notes pinned to a spot on a hike ("muddy after the bridge"), shown on the map — Trailforks — remembering conditions for next time — M (new saved field)
 
 ## Polish
 
@@ -56,3 +57,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-06 — Gear Room: a category's items slide in when opened (polish)
 - 2026-11-07 — Km markers on focused trips on the map and on the shared-route page (research, Gaia GPS idea)
 - 2026-11-08 — Year in review: exact km and a fade when switching years (polish)
+- 2026-11-09 — High point label on the trip in focus (research, summit-log apps idea)

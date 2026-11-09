@@ -3,6 +3,26 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-09 — research
+
+Synced: main had a new commit from another session (Download GPX for
+Garmin, whole route or per day). Only the service worker cache version
+conflicted; I set it above both sides. All tests passed on the merge,
+which was pushed as its own commit.
+Looked at: Peakbagger (log ascents, filter peaks by climbed or not,
+custom peak lists), Trailforks (trail reports with photos pinned to a
+spot) and Wikiloc (waypoints and photos along recorded routes). Budget
+used: 2 searches, 0 fetches.
+Changed: on the main map, the trip or hike in focus also marks where it
+tops out, with a small "▲ 2,412 m" label at its highest point. Walks with
+under 30 m between their lowest and highest points get no label. It uses
+the track's per-point elevation, or the profile for older tracks
+(`TrackCore.highestPoint`, unit test; the map e2e test checks the label).
+A small step toward the peak-list idea without needing summit data.
+Service worker cache `waypoints-v35`. All tests pass: 49 unit, 55 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-08 — polish
 
 Looked at: screenshots (phone) of a trip page, Settings and the map
