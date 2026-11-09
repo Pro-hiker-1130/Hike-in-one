@@ -1356,3 +1356,62 @@ test('planned trip: Download GPX for the whole route (one course) and per day; o
   assert.ok(shared.size > 1000);
   assert.deepEqual(phone.errors, []);
 });
+
+test('my location: tap to show a blue dot and follow; dragging stops following, a tap comes back, another tap turns it off; blocked location says so', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation({ latitude: 46.6244, longitude: 8.0414, accuracy: 25 });
+  await page.click('.nav-tab[data-page="map"]');
+  const state = () => page.getAttribute('#map .locate-btn', 'data-state');
+  const center = () => page.evaluate(()=> { const c = map.getCenter(); return [+c.lat.toFixed(4), +c.lng.toFixed(4)]; });
+  const dotAt = () => page.evaluate(()=> { let ll = null; map.eachLayer(l => { if(l.options && l.options.icon && l.options.icon.options.className === 'locate-dot'){ const p = l.getLatLng(); ll = [+p.lat.toFixed(4), +p.lng.toFixed(4)]; } }); return ll; });
+
+  assert.equal(await state(), 'off');
+  assert.equal(await page.locator('#map .locate-dot').count(), 0, 'nothing until asked');
+  await page.click('#map .locate-btn');
+  await page.waitForSelector('#map .locate-dot');
+  assert.ok(await page.isHidden('#emptyHint'), 'the empty-map card does not cover the dot');
+  assert.deepEqual(await dotAt(), [46.6244, 8.0414]);
+  assert.equal(await state(), 'following');
+  assert.ok(await page.evaluate(()=> map.getZoom()) >= 15);
+  await page.waitForFunction(()=> Math.abs(map.getCenter().lat - 46.6244) < 0.0005);
+
+  // Walking on: the dot moves and the map follows.
+  await page.context().setGeolocation({ latitude: 46.6300, longitude: 8.0500, accuracy: 10 });
+  await page.waitForFunction(()=> { let ok = false; map.eachLayer(l => { if(l.options && l.options.icon && l.options.icon.options.className === 'locate-dot') ok = Math.abs(l.getLatLng().lat - 46.63) < 1e-4; }); return ok; });
+  await page.waitForFunction(()=> Math.abs(map.getCenter().lat - 46.63) < 0.0005);
+
+  // Dragging the map stops following; the dot stays.
+  const box = await page.locator('#map').boundingBox();
+  await page.mouse.move(box.x + box.width/2, box.y + box.height/2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width/2 - 200, box.y + box.height/2 - 120, { steps: 8 });
+  await page.mouse.up();
+  assert.equal(await state(), 'on');
+  await page.waitForTimeout(800);   // let the drag's glide finish
+  const away = await center();
+  await page.context().setGeolocation({ latitude: 46.6310, longitude: 8.0510, accuracy: 10 });
+  await page.waitForTimeout(600);
+  assert.deepEqual(await center(), away, 'not pulled back while looking around');
+
+  // A tap comes back to the position, another turns it off.
+  await page.click('#map .locate-btn');
+  assert.equal(await state(), 'following');
+  await page.waitForFunction(()=> Math.abs(map.getCenter().lat - 46.631) < 0.001);
+  await page.click('#map .locate-btn');
+  assert.equal(await state(), 'off');
+  assert.equal(await page.locator('#map .locate-dot').count(), 0);
+  assert.deepEqual(errors, []);
+
+  // Location blocked: a clear message, and the button stays off.
+  const blocked = await launch(t);
+  // As when the user has said no: the browser answers 'permission denied'.
+  await blocked.page.evaluate(()=>{
+    navigator.geolocation.watchPosition = (ok, fail) => { setTimeout(()=> fail({ code: 1, message: 'denied' }), 50); return 1; };
+    navigator.geolocation.clearWatch = () => {};
+  });
+  await blocked.page.click('.nav-tab[data-page="map"]');
+  await blocked.page.click('#map .locate-btn');
+  await blocked.page.waitForFunction(()=> /Location is blocked/.test(document.getElementById('globalToast').textContent), null, { timeout: 15000 });
+  assert.equal(await blocked.page.getAttribute('#map .locate-btn', 'data-state'), 'off');
+});

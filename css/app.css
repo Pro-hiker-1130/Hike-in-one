@@ -1297,7 +1297,7 @@ body{font-size:15px;}
 .track-focus-chip button:hover{background:var(--sage);color:var(--deep);}
 
 /* ---- The map picker: one layers button, a panel with every map ---- */
-.bm-picker{position:relative;}
+.bm-picker{position:relative;z-index:2;}
 .bm-picker-btn{
   width:40px;height:40px;border:none;border-radius:10px;background:#fff;color:var(--parchment);cursor:pointer;
   display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.28);
@@ -1335,3 +1335,28 @@ body{font-size:15px;}
 .settings-update .settings-note{margin:0;}
 .settings-update #settingsUpdateStatus:empty{display:none;}
 .settings-update #settingsUpdateStatus{flex-basis:100%;}
+
+/* ---- "Show my location" button and the blue dot ---- */
+.locate-btn{
+  width:40px;height:40px;border:none;border-radius:10px;background:#fff;color:var(--parchment);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.28);
+  transition:background .15s ease,color .15s ease;
+}
+.locate-btn:hover{background:var(--sage-soft);}
+.locate-btn[data-state="on"]{color:#2F80ED;}
+.locate-btn[data-state="following"]{background:#2F80ED;color:#fff;}
+.locate-btn[data-state="searching"] svg{animation:locate-search 1.1s ease-in-out infinite;}
+@keyframes locate-search{0%,100%{opacity:1;}50%{opacity:.3;}}
+.locate-dot{
+  border-radius:50%;background:#2F80ED;border:3px solid #fff;box-sizing:border-box;
+  box-shadow:0 0 0 1px rgba(0,0,0,.15),0 1px 4px rgba(0,0,0,.35);
+}
+.locate-dot::after{
+  content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid #2F80ED;
+  animation:locate-pulse 2s ease-out infinite;
+}
+@keyframes locate-pulse{from{transform:scale(1);opacity:.7;}to{transform:scale(2.6);opacity:0;}}
+@media (prefers-reduced-motion: reduce){
+  .locate-dot::after,.locate-btn[data-state="searching"] svg{animation:none;}
+}
+.is-locating > #emptyHint{display:none !important;}

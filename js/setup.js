@@ -302,3 +302,98 @@ async function saveTrackGpx(track){
   }
   return how;
 }
+
+// ---- "Show my location" button ----
+// Asks for the position only when tapped. A blue dot with a light circle
+// for the fix's accuracy; the map follows until it is dragged, and a tap
+// brings it back (a tap while following turns it off). The GPS is paused
+// while the map is off screen or the app is in the background. The
+// position stays on the device.
+const LOCATE_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+function addLocateControl(m, position){
+  let watchId = null, wanted = false, following = false, first = true;
+  let dot = null, ring = null, btn = null;
+  let onScreen = true;
+  const setState = st => {
+    if(btn){ btn.dataset.state = st; btn.setAttribute('aria-pressed', st === 'off' ? 'false' : 'true'); }
+    // Lets the page hide things that would cover the dot (the empty-map card).
+    const host = m.getContainer().parentElement;
+    if(host) host.classList.toggle('is-locating', st !== 'off');
+  };
+  const clearMarker = () => { if(dot){ m.removeLayer(dot); dot = null; } if(ring){ m.removeLayer(ring); ring = null; } };
+  const pause = () => { if(watchId != null){ navigator.geolocation.clearWatch(watchId); watchId = null; } };
+  const onFix = pos => {
+    const ll = [pos.coords.latitude, pos.coords.longitude];
+    const acc = Math.max(0, pos.coords.accuracy || 0);
+    if(!dot){
+      ring = L.circle(ll, { radius: acc, interactive: false, color: '#2F80ED', weight: 1, opacity: 0.4, fillColor: '#2F80ED', fillOpacity: 0.12 }).addTo(m);
+      dot = L.marker(ll, { interactive: false, keyboard: false, zIndexOffset: 1000,
+        icon: L.divIcon({ className: 'locate-dot', iconSize: [18, 18] }) }).addTo(m);
+    } else { dot.setLatLng(ll); ring.setLatLng(ll).setRadius(acc); }
+    if(first){ first = false; m.setView(ll, Math.max(m.getZoom(), 15)); }
+    else if(following) m.panTo(ll, { animate: true });
+    setState(following ? 'following' : 'on');
+  };
+  // Only a blocked permission turns it off. A lost fix (a forest, a
+  // tunnel, a slow first fix) is temporary: the watch keeps going.
+  let toldStillLooking = false;
+  const onError = err => {
+    if(err && err.code === 1){
+      pause();
+      wanted = false; following = false;
+      clearMarker();
+      setState('off');
+      if(typeof showGlobalToast === 'function') showGlobalToast('Location is blocked. Allow location for this app in your phone or browser settings, then tap again.', true);
+      return;
+    }
+    if(!dot && !toldStillLooking && typeof showGlobalToast === 'function'){
+      toldStillLooking = true;
+      showGlobalToast('Still looking for your location… This is quicker outdoors.');
+    }
+  };
+  const resume = () => {
+    if(!wanted || watchId != null || !onScreen || document.visibilityState === 'hidden') return;
+    watchId = navigator.geolocation.watchPosition(onFix, onError, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+  };
+  const start = () => {
+    if(!('geolocation' in navigator)){
+      if(typeof showGlobalToast === 'function') showGlobalToast('This browser cannot show your location.', true);
+      return;
+    }
+    toldStillLooking = false;
+    wanted = true; following = true; first = !dot;
+    if(dot) m.setView(dot.getLatLng(), Math.max(m.getZoom(), 15));
+    setState(dot ? 'following' : 'searching');
+    resume();
+  };
+  const stop = () => { wanted = false; following = false; pause(); clearMarker(); setState('off'); };
+
+  const Locate = L.Control.extend({
+    options: { position: position || 'topright' },
+    onAdd(){
+      const el = L.DomUtil.create('div', 'locate-control');
+      el.innerHTML = '<button type="button" class="locate-btn" data-state="off" aria-pressed="false" aria-label="Show my location" title="Show my location">' + LOCATE_ICON + '</button>';
+      L.DomEvent.disableClickPropagation(el);
+      btn = el.firstChild;
+      btn.addEventListener('click', ()=>{
+        if(!wanted) start();
+        else if(!following) start();     // back to my position
+        else stop();
+      });
+      return el;
+    },
+  });
+  const control = new Locate().addTo(m);
+  // Dragging the map stops following (the dot stays).
+  m.on('dragstart', ()=>{ if(following){ following = false; setState(dot ? 'on' : 'searching'); } });
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') pause(); else resume(); });
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(entries=>{
+      onScreen = entries.some(e => e.isIntersecting);
+      if(onScreen) resume(); else pause();
+    }).observe(m.getContainer());
+  }
+  control.stop = stop;
+  control.isOn = () => wanted;
+  return control;
+}

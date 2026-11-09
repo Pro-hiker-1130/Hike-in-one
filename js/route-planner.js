@@ -104,6 +104,7 @@ function rpEnsureMap(){
   // Start on the main map's basemap when it's a hiking one, else Terrain.
   const start = ['terrain', 'satellite', 'relief'].includes(currentBasemapKey) ? currentBasemapKey : 'terrain';
   addMapLayerSwitcher(rpMap, start, 'topleft');
+  addLocateControl(rpMap, 'topleft');
   rpLineLayer = L.layerGroup().addTo(rpMap);
   rpMarkerLayer = L.layerGroup().addTo(rpMap);
   rpMap.on('click', e=>{
