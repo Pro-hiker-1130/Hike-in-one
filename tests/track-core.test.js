@@ -165,6 +165,8 @@ test('toGpx writes points with elevation and time, escaped names', () => {
   assert.equal((gpx.match(/<trkpt /g) || []).length, 3);
   assert.match(gpx, /<trkpt lat="46" lon="7.5"><ele>1000<\/ele><time>2025-07-01T08:00:00.000Z<\/time><\/trkpt>/);
   assert.equal(T.gpxFileName({ name: 'a/b: c?' }), 'a b c .gpx'.replace('c .', 'c.'));
+  assert.equal(T.gpxFileName({ name: 'Tour du Mont Blanc – Étape 2' }), 'Tour du Mont Blanc - Etape 2.gpx');
+  assert.equal(T.gpxFileName({ name: '⛰️' }), 'track.gpx');
 });
 
 test('route planning: straight lines get evenly spaced points for elevation', () => {
@@ -313,4 +315,24 @@ test('personalBests picks the longest, biggest climb, longest time and highest w
   });
   assert.equal(T.personalBests([{ name: 'P', planned: true, distanceKm: 3 }]), null);
   assert.equal(T.personalBests([{ name: 'Flat', distanceKm: 3 }]).biggestClimbM, null);
+});
+
+test('GPX for a GPS watch: full GPX 1.1 header, a trip\'s routes joined, one day sliced out', () => {
+  const r1 = T.buildTrack({ id: 'r1', name: 'Day A', planned: true }, { points: [[46,7.5],[46.01,7.5],[46.02,7.5]], ele: [1000, 1100, 1200], t: null });
+  const r2 = T.buildTrack({ id: 'r2', name: 'Day B', planned: true }, { points: [[46.02,7.5],[46.03,7.5],[46.04,7.5]], ele: [1200, 1150, 1100], t: null });
+  const route = T.joinTracks([r1, r2], { name: 'Haute Route', planned: true });
+  assert.equal(route.points.length, 5, 'the shared point once');
+  assert.equal(route.name, 'Haute Route');
+  assert.equal(route.sport, 'Hike');
+  assert.ok(Math.abs(route.distanceKm - (r1.distanceKm + r2.distanceKm)) < 1e-9);
+  const gpx = T.toGpx(route);
+  assert.match(gpx, /<gpx version="1\.1" creator="Hike-in-one" xmlns="http:\/\/www\.topografix\.com\/GPX\/1\/1" xmlns:xsi="http:\/\/www\.w3\.org\/2001\/XMLSchema-instance" xsi:schemaLocation="http:\/\/www\.topografix\.com\/GPX\/1\/1 http:\/\/www\.topografix\.com\/GPX\/1\/1\/gpx\.xsd">/);
+  assert.equal((gpx.match(/<trk>/g) || []).length, 1, 'one track: one course');
+  assert.doesNotMatch(gpx, /<time>/, 'a plan has no times');
+
+  // The second half, measured against a profile 10% longer than the points.
+  const day2 = T.sliceKm(route, route.distanceKm * 1.1 / 2, route.distanceKm * 1.1, route.distanceKm * 1.1);
+  assert.deepEqual(day2.points[0], [46.02, 7.5]);
+  assert.deepEqual(day2.points[day2.points.length-1], [46.04, 7.5]);
+  assert.equal(day2.elevationLossM, 100);
 });

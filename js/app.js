@@ -372,6 +372,7 @@ document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacki
 document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
 document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
 document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
+document.getElementById('tripDownloadRouteBtn').addEventListener('click', downloadTripRoute);
 document.getElementById('tripSearch').addEventListener('input', ()=> renderTripCards());
 document.getElementById('tripDifficultyFilter').addEventListener('click', e=>{
   const b = e.target.closest('button[data-level]');
@@ -721,12 +722,8 @@ function setBackupStatus(msg, isError){
 }
 document.getElementById('backupDownloadBtn').addEventListener('click', async ()=>{
   const data = await buildBackup();
-  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'hike-in-one-backup-' + new Date().toISOString().slice(0, 10) + '.json';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=> URL.revokeObjectURL(a.href), 10000);
+  const file = new File([JSON.stringify(data)], 'hike-in-one-backup-' + new Date().toISOString().slice(0, 10) + '.json', { type: 'application/json' });
+  if(await saveFile(file, 'Hike-in-one backup') === 'cancelled') return;
   setBackupStatus('Backup saved: ' + backupSummary(readBackup(data)) + '.');
 });
 document.getElementById('backupRestoreInput').addEventListener('change', async e=>{

@@ -135,6 +135,7 @@ function renderTripDetail(){
   const trip = trips.find(t=>t.id===currentTripId);
   if(!trip){ showTripsList(); return; }
   const tks = tripTracks(trip);
+  document.getElementById('tripDownloadRouteBtn').hidden = !tks.some(t => t.planned);
   const dist = tripDistanceKm(trip);
   const gearList = tripGearItemsList(trip);
   const weight = tripGearWeight(trip);
@@ -428,6 +429,28 @@ function tripPlannedProfile(tks){
   return out;
 }
 
+// A trip's planned route as one track: its planned routes joined in the
+// trip's order, named after the trip (or the route itself if just one).
+function tripPlannedRoute(trip){
+  const planned = tripTracks(trip).filter(t => t.planned && t.points && t.points.length > 1);
+  if(!planned.length) return null;
+  if(planned.length === 1) return planned[0];
+  return TrackCore.joinTracks(planned, { name: trip.name, planned: true, date: tripDisplayDate(trip) || null });
+}
+function downloadTripRoute(){
+  const trip = trips.find(t => t.id === currentTripId);
+  const route = trip && tripPlannedRoute(trip);
+  if(route) saveTrackGpx(route);
+}
+// One day of a split route, as its own GPX (one course per day on a watch).
+function downloadTripDay(trip, day, index, profileKm){
+  const route = tripPlannedRoute(trip);
+  if(!route) return;
+  const part = TrackCore.sliceKm(route, day.fromKm, day.toKm, profileKm);
+  part.name = trip.name + ' – Day ' + (index + 1);
+  saveTrackGpx(part);
+}
+
 function renderTripDays(trip, tks){
   const profile = tripPlannedProfile(tks);
   const section = document.getElementById('tripDaysSection');
@@ -447,10 +470,14 @@ function renderTripDays(trip, tks){
     const row = document.createElement('div');
     row.className = 'trip-track-row trip-day-row';
     const when = day0 ? ' · ' + friendlyDate(new Date(day0.getTime() + i*86400000).toISOString().slice(0,10)) : '';
-    row.innerHTML = '<span class="trip-track-row-name"></span><span class="trip-track-row-meta"></span>';
-    row.firstChild.textContent = 'Day ' + (i+1) + when;
-    row.lastChild.textContent = 'km ' + d.fromKm.toFixed(1) + '–' + d.toKm.toFixed(1) +
+    row.innerHTML = '<span class="trip-track-row-name"></span><span class="trip-track-row-meta"></span>' +
+      '<button type="button" class="link-btn trip-day-gpx">GPX</button>';
+    row.children[0].textContent = 'Day ' + (i+1) + when;
+    row.children[1].textContent = 'km ' + d.fromKm.toFixed(1) + '–' + d.toKm.toFixed(1) +
       ' · ↑ ' + d.upM + ' m ↓ ' + d.downM + ' m · about ' + formatDuration(walkingSec(d.distanceKm, d.upM));
+    const gpx = row.children[2];
+    gpx.setAttribute('aria-label', 'Download day ' + (i+1) + ' as GPX');
+    gpx.addEventListener('click', ()=> downloadTripDay(trip, d, i, profile[profile.length-1][0] - profile[0][0]));
     list.appendChild(row);
   });
 }

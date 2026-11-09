@@ -250,7 +250,10 @@
     const name = xmlEscape(track.name || 'Track');
     const lines = [
       '<?xml version="1.0" encoding="UTF-8"?>',
-      '<gpx version="1.1" creator="Hike-in-one" xmlns="http://www.topografix.com/GPX/1/1">',
+      // The full GPX 1.1 header, which Garmin Connect and Garmin devices expect.
+      '<gpx version="1.1" creator="Hike-in-one" xmlns="http://www.topografix.com/GPX/1/1"' +
+        ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
+        ' xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">',
       '  <metadata><name>'+name+'</name>'+(s.t && s.t[0] != null ? '<time>'+new Date(s.t[0]).toISOString()+'</time>' : '')+'</metadata>',
       '  <trk>',
       '    <name>'+name+'</name>',
@@ -267,9 +270,39 @@
     return lines.join('\n');
   }
 
+  // Several tracks (a trip's planned routes, in order) as one continuous
+  // track, e.g. to send to a GPS watch as a single course.
+  function joinTracks(list, base){
+    const series = joinSegments(list.map(t => { const x = trackSeries(t); return { points: x.points, ele: x.ele }; }));
+    return buildTrack(Object.assign({ id: 'route', sport: 'Hike' }, base), series);
+  }
+
+  // The part of a track between two distances (km), e.g. one day of a
+  // multi-day route. ofKm is the length those distances are measured
+  // against (a profile can be a little longer or shorter than the points).
+  function sliceKm(track, fromKm, toKm, ofKm){
+    const cum = cumulativeKm(track.points);
+    const n = cum.length, total = cum[n-1];
+    const f = ofKm > 0 ? total / ofKm : 1;
+    const nearest = km => {
+      let best = 0;
+      for(let i = 1; i < n; i++) if(Math.abs(cum[i] - km*f) < Math.abs(cum[best] - km*f)) best = i;
+      return best;
+    };
+    let a = nearest(fromKm), b = nearest(toKm);
+    if(b <= a){ if(a >= n-1) a = n-2; b = a + 1; }
+    return trim(track, a, b);
+  }
+
   // A safe file name for a download.
+  // Plain ASCII (accents and dashes simplified), which every browser keeps
+  // as a download name and every GPS device can store.
   function gpxFileName(track){
-    const base = String(track.name || 'track').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || 'track';
+    const base = String(track.name || 'track')
+      .replace(/[\u2010-\u2015]/g, '-')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\x20-\x7E]+/g, ' ')
+      .replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || 'track';
     return base + '.gpx';
   }
 
@@ -500,7 +533,7 @@
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
-    trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName,
+    trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName, joinTracks, sliceKm,
     densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests,
   };
 });

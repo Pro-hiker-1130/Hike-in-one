@@ -611,12 +611,7 @@ function gearListCsv(items){
 }
 function downloadGearCsv(){
   // The byte-order mark makes Excel read accents and ° correctly.
-  const blob = new Blob(['\ufeff' + gearListCsv(gearItems)], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'hike-in-one-gear-' + new Date().toISOString().slice(0, 10) + '.csv';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=> URL.revokeObjectURL(a.href), 10000);
+  saveFile(new File(['\ufeff' + gearListCsv(gearItems)], 'hike-in-one-gear-' + new Date().toISOString().slice(0, 10) + '.csv', { type: 'text/csv' }), 'Gear list');
 }
 
 // ---- Gear from a spreadsheet (CSV) ----
