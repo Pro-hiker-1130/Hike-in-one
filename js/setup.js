@@ -265,3 +265,40 @@ function downsample(points, max){
   for(let i=0;i<points.length;i+=stride) out.push(points[i]);
   return out;
 }
+
+// ---- Saving a file ----
+// A plain download link does nothing in an app installed to an iPhone's
+// home screen, so on phones and tablets the file goes through the share
+// sheet ("Save to Files", or straight to another app) when the browser can
+// share it. Computers, and phones that can't share the file type, get an
+// ordinary download. Resolves to 'shared', 'downloaded' or 'cancelled'.
+async function saveFile(file, title){
+  const touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  if(touch && navigator.canShare && navigator.share){
+    let canShare = false;
+    try{ canShare = navigator.canShare({ files: [file] }); }catch(e){}
+    if(canShare){
+      try{ await navigator.share({ files: [file], title: title || file.name }); return 'shared'; }
+      catch(e){ if(e && e.name === 'AbortError') return 'cancelled'; }
+    }
+  }
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 10000);
+  return 'downloaded';
+}
+
+// A track as a .gpx file, saved or shared, with a hint for GPS watches.
+async function saveTrackGpx(track){
+  const file = new File([TrackCore.toGpx(track)], TrackCore.gpxFileName(track), { type: 'application/gpx+xml' });
+  const how = await saveFile(file, track.name);
+  if(how !== 'cancelled' && typeof showGlobalToast === 'function'){
+    showGlobalToast('GPX saved. For a Garmin: in Garmin Connect, open Courses, choose Import, then send the course to your device.');
+  }
+  return how;
+}
