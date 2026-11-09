@@ -106,3 +106,5 @@ pin down to "Skipped" with a reason.
 - Compeed Medium Blister Plasters (5): listings show 20 g and 30 g.
 - BodyGlide Original Anti-Chafe Balm 0.8 oz: only the label contents (22.7 g) is clear, not the tube weight.
 - Ursack Allmitey: weights disagree (269 g vs 369 g).
+- Platypus SoftBottle 1L: listed weights disagree (24-40 g) by cap and listing.
+- Sawyer Mini: listings give 41-65 g, filter alone vs full kit.
