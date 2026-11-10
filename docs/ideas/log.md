@@ -3,6 +3,25 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-10 — polish
+
+Synced: main had a new commit from another session (show my location on
+the map, following until the map is dragged). Only the service worker
+cache version conflicted; I set it above both sides. All tests passed on
+the merge, which was pushed as its own commit.
+Looked at: focusing a trip on the map ("View on map" or a track's popup).
+The "Showing … · Show all" chip, the kilometre markers and the high-point
+label all popped in at once.
+Changed: the chip slides in from the left (200 ms) whenever what's in
+focus changes. The markers and the high-point label fade in once (220 ms)
+the first time they show for a new focus. The map redraws them on every
+pan and zoom, so they don't fade again then. Off under reduced motion. The
+map e2e test checks the fade, that panning doesn't replay it, and the chip
+animation. Service worker cache `waypoints-v37`. All tests pass: 49 unit,
+56 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-09 — research
 
 Synced: main had a new commit from another session (Download GPX for

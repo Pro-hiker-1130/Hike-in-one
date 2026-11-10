@@ -159,6 +159,12 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   const want = await page.evaluate(()=>{ setTrackFocus({ trackId: tracks[0].id }); return TrackCore.kmMarkers(tracks[0].points).length; });
   assert.ok(want > 0);
   assert.equal(await kmShown(), want);
+  // They fade in when the focus changes, not again on a pan; the chip slides in.
+  assert.equal(await page.locator('#map .km-marker.is-fresh').count(), want);
+  assert.equal(await page.$eval('#trackFocusChip', el => getComputedStyle(el).animationName), 'chip-in');
+  await page.evaluate(()=> new Promise(r => { map.once('moveend', r); map.panBy([30, 0], { animate: false }); }));
+  assert.equal(await kmShown(), want);
+  assert.equal(await page.locator('#map .km-marker.is-fresh').count(), 0, 'no replay after panning');
   // ...and its high point (the Eiger trail test hike climbs to 1,600 m).
   assert.deepEqual(await page.$$eval('#map .summit-marker', els => els.map(e => e.textContent)),
     [await page.evaluate(()=> '\u25B2 ' + TrackCore.highestPoint(tracks[0]).eleM.toLocaleString('en-US') + ' m')]);

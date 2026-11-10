@@ -58,3 +58,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-07 — Km markers on focused trips on the map and on the shared-route page (research, Gaia GPS idea)
 - 2026-11-08 — Year in review: exact km and a fade when switching years (polish)
 - 2026-11-09 — High point label on the trip in focus (research, summit-log apps idea)
+- 2026-11-10 — Focus chip slides in, its markers fade in once (polish)
