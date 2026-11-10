@@ -1,0 +1,6 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Black Diamond', 'Distance 22', 'Unisex', 'Backpack', 412, '{"volume_l":22}', 'Frameless vest-style day pack for fast hiking. Listed weight is 412 g; the women''s version is about 406 g.', 'https://trail.nl/en/products/black-diamond-distance-22-backpack-22-liter-unisex', 'seed'),
+('Fjällräven', 'Kajka 55', 'S/M', 'Backpack', 2880, '{"volume_l":55}', 'Heavy-duty trekking pack with a rigid frame. Listed weight is 2880 g for S/M; some listings say 2810-2860 g.', 'https://scandinavianoutdoor.com/fjallraven/gear/backpacks-and-bags/large-backpacks/kajka-55-sm', 'seed'),
+('REI Co-op', 'Flash 55', 'Men''s M', 'Backpack', 1276, '{"volume_l":55}', 'Lightweight backpacking pack. Listed weight is 2 lb 13 oz for size M, as listed by the brand and one independent review.', 'https://www.rei.com/product/236975', 'seed'),
+('ULA', 'Catalyst', '75L', 'Backpack', 1259, '{"volume_l":75}', 'Large lightweight frame pack. Listed weight is 44.4 oz; the exact figure depends on the options fitted.', 'https://shop.atlantatrails.com/collections/backpacks/products/ula-catalyst-pack', 'seed')
+on conflict (normalized_key) do nothing;
