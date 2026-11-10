@@ -692,6 +692,8 @@ const mainBasemapPicker = addBasemapPicker(map, {
   overlayOn: () => !!trailsOverlay,
   setOverlay: on => setTrailsOverlay(on),
 });
+// "Show my location", under the layers button.
+const mainLocateControl = addLocateControl(map, 'topright');
 
 // ---- Getting started wiring ----
 document.getElementById('gsDismiss').addEventListener('click', ()=>{
