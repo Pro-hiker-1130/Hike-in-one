@@ -108,3 +108,7 @@ pin down to "Skipped" with a reason.
 - Ursack Allmitey: weights disagree (269 g vs 369 g).
 - Platypus SoftBottle 1L: listed weights disagree (24-40 g) by cap and listing.
 - Sawyer Mini: listings give 41-65 g, filter alone vs full kit.
+- Aquamira Water Treatment Drops 2 oz: listings give 56.7 g (the nominal 2 oz) or 21 g, no confirmed weight.
+- Aquatabs 50 tablets: listings give 17 g and 29 g, unclear which.
+- Travellunch Chili con Carne: the 125 g single-portion weight comes from one retailer.
+- Lyofood Chicken Tikka Masala: 95 g from one retailer, 128 g from another.
