@@ -862,6 +862,8 @@ test('backup: download everything, restore it on an empty device; a wrong file i
   const page = second.page;
   await page.click('.nav-tab[data-page="settings"]');
   await page.setInputFiles('#backupRestoreInput', { name: 'notes.json', mimeType: 'application/json', buffer: Buffer.from('{"hello":1}') });
+  // The file is read asynchronously: wait for the message rather than reading at once.
+  await page.waitForFunction(()=> document.getElementById('backupStatus').textContent !== '');
   assert.match(await page.textContent('#backupStatus'), /isn't a Hike-in-one backup/);
   assert.ok(!(await page.isVisible('#backupConfirm')));
   await page.setInputFiles('#backupRestoreInput', file);
@@ -1449,4 +1451,84 @@ test('my location: tap to show a blue dot and follow; dragging stops following, 
   await blocked.page.click('#map .locate-btn');
   await blocked.page.waitForFunction(()=> /Location is blocked/.test(document.getElementById('globalToast').textContent), null, { timeout: 15000 });
   assert.equal(await blocked.page.getAttribute('#map .locate-btn', 'data-state'), 'off');
+});
+
+test('GR routes: shown in the route planner, and how much of each you walked in the overview', { skip: !playwright }, async t=>{
+  const G = require('../../gr-core.js');
+  const part = require('../fixtures/wmt-gr561-part.json');
+  const umbrella = require('../fixtures/wmt-gr5-umbrella.json');
+  const route = G.detailsToRoute(part);
+  // A hike along the first 60 points of GR 561, 15 m beside it.
+  const walkPts = route.lines[0].slice(0, 60).map(([la, lo]) => [la + 0.0001, lo + 0.0001]);
+  const trkpts = walkPts.map(([la, lo], i) => '<trkpt lat="' + la.toFixed(6) + '" lon="' + lo.toFixed(6) + '"><ele>40</ele><time>' +
+    new Date(Date.parse('2025-05-01T08:00:00Z') + i * 20000).toISOString() + '</time></trkpt>').join('');
+  const gpxBuf = Buffer.from('<?xml version="1.0"?><gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>Kempen walk</name><type>hiking</type><trkseg>' + trkpts + '</trkseg></trk></gpx>');
+
+  const { page, errors } = await launch(t);
+  const calls = { area: 0, details: [] };
+  await page.context().route(/hiking\.waymarkedtrails\.org\/api/, r=>{
+    const u = new URL(r.request().url());
+    const json = body => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(body) });
+    if(u.pathname.endsWith('/list/by_area')){
+      calls.area++;
+      return json({ results: [
+        { type: 'relation', id: 144503, ref: 'GR 561', name: 'GR 561 Kempen - Maaspad', group: 'NAT' },
+        { type: 'relation', id: 4580796, ref: 'GR 5', group: 'INT' },
+        { type: 'relation', id: 1696127, ref: 'GRP 563', name: 'GRP 563 Tour du Pays de Herve', group: 'REG' },
+      ] });
+    }
+    const m = /\/details\/relation\/(\d+)$/.exec(u.pathname);
+    if(m){
+      calls.details.push(+m[1]);
+      if(+m[1] === 144503) return json(part);
+      if(+m[1] === 4580796) return json(umbrella);
+    }
+    r.fulfill({ status: 404, body: '{}' });
+  });
+
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.click('#importActivitiesBtn');
+  await page.setInputFiles('#importInput', [{ name: 'kempen.gpx', mimeType: 'application/gpx+xml', buffer: gpxBuf }]);
+  await page.waitForSelector('#importStepReview', { state: 'visible' });
+  await page.click('#importConfirmBtn');
+  await page.waitForSelector('#importStepDone', { state: 'visible' });
+  await page.click('#importViewTripsBtn');
+  await page.click('.nav-tab[data-page="map"]');
+
+  // The overview: one GR route, partly walked; the umbrella and the GR de Pays left out.
+  await page.waitForSelector('#grProgressList .gr-progress-row', { timeout: 20000 });
+  assert.equal(await page.locator('#grProgressList .gr-progress-row').count(), 1);
+  assert.equal(await text(page, '#grProgressList .gr-badge'), 'GR 561');
+  assert.equal(await text(page, '#grProgressList .gr-progress-name'), 'Kempen - Maaspad');
+  const pct = Number((await text(page, '#grProgressList .gr-progress-pct')).replace(/[<%]/g, ''));
+  const walkedKm = Number((await text(page, '#grProgressList .gr-progress-km')).split(' ')[0]);
+  const expectKm = G.lineKm(route.lines[0].slice(0, 60));
+  assert.ok(Math.abs(walkedKm - expectKm) < 0.6, walkedKm + ' km walked vs ' + expectKm.toFixed(1) + ' km of route');
+  assert.ok(pct >= 1 && pct <= 10, 'a few percent of 223 km: ' + pct);
+  assert.match(await text(page, '#grProgressTotal'), /of the 1 GR route you have set foot on/);
+  assert.deepEqual([...new Set(calls.details)].sort(), [144503, 4580796], 'GRP 563 is never downloaded');
+
+  // Reloading uses the saved result: nothing downloaded again.
+  const before = calls.area + calls.details.length;
+  await page.reload();
+  await page.waitForSelector('.nav-tab');
+  await page.waitForSelector('#grProgressList .gr-progress-row', { timeout: 20000 });
+  assert.equal(calls.area + calls.details.length, before);
+
+  // The route planner draws GR routes once zoomed in.
+  await page.evaluate(()=> openRoutePlanner(null, null));
+  await page.waitForSelector('#routePlannerOverlay', { state: 'visible' });
+  await page.evaluate(()=> rpMap.setView([51.2, 5.2], 7, { animate: false }));
+  await page.waitForFunction(()=> /Zoom in to see GR routes/.test(document.querySelector('#rpMap .gr-map-note').textContent));
+  const [la, lo] = route.lines[0][30];
+  await page.evaluate(([a, b])=> rpMap.setView([a, b], 13, { animate: false }), [la, lo]);
+  const grLines = () => page.evaluate(()=> { let n = 0; rpMap.eachLayer(l => { if(l.options && l.options.grRoute) n++; }); return n; });
+  await page.waitForFunction(()=> { let n = 0; rpMap.eachLayer(l => { if(l.options && l.options.grRoute) n++; }); return n >= 1; }, null, { timeout: 15000 });
+  assert.ok(await page.isHidden('#rpMap .gr-map-note'));
+  // Switch it off in the layers panel; remembered.
+  await page.click('#rpMap .bm-picker-btn');
+  await page.uncheck('#rpMap .bm-picker-extra input[data-overlay="gr"]');
+  assert.equal(await grLines(), 0);
+  assert.equal(await page.evaluate(()=> localStorage.getItem('hio-planner-gr')), '0');
+  assert.deepEqual(errors, []);
 });

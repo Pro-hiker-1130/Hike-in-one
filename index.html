@@ -117,6 +117,12 @@
         <p class="section-label personal-bests-title">Personal bests</p>
         <ul class="personal-bests" id="personalBests"></ul>
       </div>
+      <div class="gr-progress" id="grProgress" hidden>
+        <p class="section-label">GR routes</p>
+        <p class="gr-progress-total" id="grProgressTotal"></p>
+        <ul class="gr-progress-list" id="grProgressList"></ul>
+        <p class="gr-progress-credit">Routes from <a href="https://hiking.waymarkedtrails.org" target="_blank" rel="noopener">Waymarked Trails</a> (OpenStreetMap). A part counts as walked where a hike passed within 60 m.</p>
+      </div>
       <button class="row-link" id="mapImportBtn" type="button">
         <span>Import from Strava or Garmin</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
@@ -1312,6 +1318,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/dist/umd/supabase.js"></script>
 <script src="catalog-core.js"></script>
 <script src="track-core.js"></script>
+<script src="gr-core.js"></script>
 <script src="js/setup.js"></script>
 <script src="js/activity-files.js"></script>
 <script src="js/storage-sync.js"></script>
@@ -1324,6 +1331,7 @@
 <script src="js/gear.js"></script>
 <script src="js/catalog.js"></script>
 <script src="js/track-editor.js"></script>
+<script src="js/gr-routes.js"></script>
 <script src="js/route-planner.js"></script>
 <script src="js/route-share.js"></script>
 <script src="js/app.js"></script>

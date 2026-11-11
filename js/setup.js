@@ -181,12 +181,14 @@ function addBasemapPicker(m, state, position){
             BASEMAP_KEYS.map(k => '<button type="button" class="bm-opt" data-basemap="' + k + '" aria-pressed="false">' +
               '<span class="bm-swatch bm-swatch-' + k + '"></span><span class="bm-opt-name">' + BASEMAP_LABELS[k] + '</span></button>').join('') +
           '</div>' +
-          '<label class="bm-picker-overlay"><input type="checkbox"> Marked hiking routes</label>' +
+          '<label class="bm-picker-overlay"><input type="checkbox" data-overlay="trails"> Marked hiking routes</label>' +
+          (state.extras || []).map(x => '<label class="bm-picker-overlay bm-picker-extra"><input type="checkbox" data-overlay="' + x.key + '"> ' + x.label + '</label>').join('') +
         '</div>';
       L.DomEvent.disableClickPropagation(el);
       L.DomEvent.disableScrollPropagation(el);
       const btn = el.querySelector('.bm-picker-btn'), panel = el.querySelector('.bm-picker-panel');
-      const overlay = el.querySelector('input');
+      const overlay = el.querySelector('input[data-overlay="trails"]');
+      const extras = [...el.querySelectorAll('.bm-picker-extra input')];
       const open = on => { panel.hidden = !on; btn.setAttribute('aria-expanded', on ? 'true' : 'false'); el.classList.toggle('is-open', on); };
       const refresh = () => {
         el.querySelectorAll('.bm-opt').forEach(o => {
@@ -195,6 +197,7 @@ function addBasemapPicker(m, state, position){
           o.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
         overlay.checked = !!state.overlayOn();
+        extras.forEach(i => { i.checked = !!state.extraOn(i.dataset.overlay); });
       };
       btn.addEventListener('click', ()=>{ refresh(); open(panel.hidden); });
       el.querySelectorAll('.bm-opt').forEach(o => o.addEventListener('click', ()=>{
@@ -203,6 +206,7 @@ function addBasemapPicker(m, state, position){
         open(false);
       }));
       overlay.addEventListener('change', ()=> state.setOverlay(overlay.checked));
+      extras.forEach(i => i.addEventListener('change', ()=> state.setExtra(i.dataset.overlay, i.checked)));
       // Tapping anywhere else, or Escape, closes the panel (and only the
       // panel: Escape doesn't also close a dialog the map sits in).
       document.addEventListener('pointerdown', e=>{ if(!panel.hidden && !el.contains(e.target)) open(false); });
@@ -219,9 +223,13 @@ function addBasemapPicker(m, state, position){
 
 // Basemap and overlay state for a map other than the main one (route
 // planner, track editor), which doesn't remember its choice.
-function addMapLayerSwitcher(m, startKey, position){
+// extras: more overlay switches, [{key, label, on(), set(on)}].
+function addMapLayerSwitcher(m, startKey, position, extras){
   let key = null, layer = null, trails = null;
   const state = {
+    extras: extras || [],
+    extraOn: k => { const x = (extras || []).find(e => e.key === k); return x ? x.on() : false; },
+    setExtra: (k, on) => { const x = (extras || []).find(e => e.key === k); if(x) x.set(on); },
     current: () => key,
     choose(k){
       const tileKey = k === 'dark' ? 'light' : k;
