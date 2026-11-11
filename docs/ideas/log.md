@@ -3,6 +3,29 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-11 — research
+
+Synced: main had a new commit from another session (GR routes in the
+route planner and the overview). The service worker conflicted on both the
+cache version and the app's file list. main added `gr-routes`, and my
+first resolution dropped the file-list line. The updates e2e test caught
+it, and I restored main's list exactly (cache `waypoints-v38`). A second
+run then hit an intermittent failure in the backup test: it read the
+"isn't a backup" message before the file had been read. The test now waits
+for the message. 2 full runs in a row passed (57/57).
+Looked at: Locus Map (planner with elevation profile, surfaces and way
+types; route line coloured by steepness to avoid steep climbs; share a
+route by link) and OsmAnd (split a track by time, distance, or
+uphill/downhill/flat; track analysis on the map). Budget used: 2 searches,
+0 fetches.
+Changed: each hike on a trip page gets a line saying how its distance
+splits between climbing, descending and about level ground, e.g. "4.0 km
+up · 5.6 km down". It's judged over 100 m stretches, with ±3 % counting as
+flat. `TrackCore.gradeBreakdown` has a unit test, plus the trips e2e test.
+Service worker cache `waypoints-v39`. All tests pass: 56 unit, 57 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-10 — polish
 
 Synced: main had a new commit from another session (show my location on

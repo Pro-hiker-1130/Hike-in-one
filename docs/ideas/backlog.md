@@ -11,6 +11,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - Waypoints along a planned route: camp, resupply, water, pick-up (shown on the map and in the day list) — HIIKER/Gaia GPS — planning long hikes — M
 - Live "what's ahead" on a planned route: the next climb and distance to the next day's end — Mapy.com — pacing on the trail — M
 - Trail notes pinned to a spot on a hike ("muddy after the bridge"), shown on the map — Trailforks — remembering conditions for next time — M (new saved field)
+- Route planner: colour the planned line by steepness (green flat → red steep) — Locus Map — spotting and avoiding steep bits while planning — M
 
 ## Polish
 
@@ -59,3 +60,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-08 — Year in review: exact km and a fade when switching years (polish)
 - 2026-11-09 — High point label on the trip in focus (research, summit-log apps idea)
 - 2026-11-10 — Focus chip slides in, its markers fade in once (polish)
+- 2026-11-11 — Up / down / flat km for each hike (research, OsmAnd idea)

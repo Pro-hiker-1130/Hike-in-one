@@ -194,13 +194,13 @@ function renderTripDetail(){
         c.textContent = 'Added before elevation tracking — re-add this GPX to see its profile.';
         block.appendChild(c);
       }
-      const terrain = trackTerrainSummary(t);
-      if(terrain){
+      [trackTerrainSummary(t), trackGradeLine(t)].forEach(line=>{
+        if(!line) return;
         const c = document.createElement('div');
         c.className = 'track-terrain';
-        c.textContent = terrain;
+        c.textContent = line;
         block.appendChild(c);
-      }
+      });
       if(t.profile && t.profile.length > 1){
         const prof = buildElevationProfile(t);
         prof.style.setProperty('--ele-color', trackColors[t.id]);

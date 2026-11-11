@@ -229,6 +229,8 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
   assert.deepEqual(sweeps, [1, 0]);
   // Each walked track says how steep it gets (the test hikes climb steadily north).
   assert.match(await text(page, '#tripTrackList .track-terrain'), /^Steepest climb \d+ % at km \d+\.\d · top [\d,]+ m/);
+  // ...and how its distance splits between up, down and flat (the test hikes only climb).
+  assert.match(await page.$eval('#tripTrackList .track-terrain + .track-terrain', el => el.textContent), /^\d+\.\d km up( · \d+\.\d km flat)?$/);
   assert.deepEqual(errors, []);
 });
 

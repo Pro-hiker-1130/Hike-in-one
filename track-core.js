@@ -542,10 +542,27 @@
     return { ll: s.points[top], eleM: Math.round(s.ele[top]), km: Math.round(cumulativeKm(s.points)[top] * 10) / 10 };
   }
 
+  // How much of a profile goes up, down or stays about flat: km per kind,
+  // judged over 100 m stretches with a ±3 % line between flat and slope.
+  function gradeBreakdown(profile){
+    if(!Array.isArray(profile) || profile.length < 2) return null;
+    const x0 = profile[0][0], total = profile[profile.length-1][0] - x0;
+    if(!(total > 0)) return null;
+    const step = Math.min(0.1, total);
+    const out = { upKm: 0, downKm: 0, flatKm: 0 };
+    for(let a = 0; a < total - 1e-9; a += step){
+      const b = Math.min(total, a + step);
+      const g = (profileEleAt(profile, x0 + b) - profileEleAt(profile, x0 + a)) / ((b - a) * 1000) * 100;
+      out[g > 3 ? 'upKm' : g < -3 ? 'downKm' : 'flatKm'] += b - a;
+    }
+    Object.keys(out).forEach(k => { out[k] = Math.round(out[k] * 10) / 10; });
+    return out;
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName, joinTracks, sliceKm,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint, gradeBreakdown,
   };
 });

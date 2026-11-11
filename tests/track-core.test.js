@@ -346,3 +346,11 @@ test('highestPoint finds where a track tops out, from point elevations or the pr
   assert.deepEqual(old.ll, [46.02, 7]);
   assert.equal(T.highestPoint({ points: pts }), null);
 });
+
+test('gradeBreakdown splits a profile into uphill, downhill and flat km', () => {
+  // 2 km up at 10 %, 1 km flat, 1.5 km down at 8 %.
+  const p = [[0, 1000], [2, 1200], [3, 1200], [4.5, 1080]];
+  assert.deepEqual(T.gradeBreakdown(p), { upKm: 2, downKm: 1.5, flatKm: 1 });
+  assert.deepEqual(T.gradeBreakdown([[0, 500], [3, 520]]), { upKm: 0, downKm: 0, flatKm: 3 }, 'under 3 % counts as flat');
+  assert.equal(T.gradeBreakdown([[0, 500]]), null);
+});

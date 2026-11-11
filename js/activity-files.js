@@ -447,6 +447,15 @@ function trackTerrainSummary(t){
   return parts.join(' · ');
 }
 
+// "2.0 km up · 1.5 km down · 1.0 km flat": how a hike's distance splits
+// between climbing, descending and about level ground (over ±3 %).
+function trackGradeLine(t){
+  const g = t.profile && TrackCore.gradeBreakdown(t.profile);
+  if(!g || (g.upKm < 0.1 && g.downKm < 0.1)) return '';
+  return [[g.upKm, 'up'], [g.downKm, 'down'], [g.flatKm, 'flat']]
+    .filter(([km]) => km >= 0.1).map(([km, w]) => km.toFixed(1) + ' km ' + w).join(' · ');
+}
+
 // ---- Country detection (offline point-in-polygon against a bundled,
 // simplified world map) so "visited countries" works with no network calls
 // and no API keys. ----
