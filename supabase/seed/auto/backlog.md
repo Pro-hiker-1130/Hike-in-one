@@ -112,3 +112,5 @@ pin down to "Skipped" with a reason.
 - Aquatabs 50 tablets: listings give 17 g and 29 g, unclear which.
 - Travellunch Chili con Carne: the 125 g single-portion weight comes from one retailer.
 - Lyofood Chicken Tikka Masala: 95 g from one retailer, 128 g from another.
+- Petzl Swift RL: Petzl's own pages disagree by region (92-110 g) and by lumen version.
+- Esbit Pocket Stove: weight depends on how many fuel tablets are counted (170-360 g); the 11 g titanium stove has a single source.
