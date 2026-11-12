@@ -61,3 +61,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-09 — High point label on the trip in focus (research, summit-log apps idea)
 - 2026-11-10 — Focus chip slides in, its markers fade in once (polish)
 - 2026-11-11 — Up / down / flat km for each hike (research, OsmAnd idea)
+- 2026-11-12 — Cards lift on hover, press in, and show a focus ring (polish)

@@ -456,6 +456,26 @@ test('closing a dialog: it is gone at once, and a copy without ids fades away br
   assert.deepEqual(errors, []);
 });
 
+test('trip cards lift on hover, show a focus ring for the keyboard, and stay still with reduced motion', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  const card = '#tripCompletedGrid .trip-card';
+  const style = () => page.$eval(card, el => { const s = getComputedStyle(el); return { transform: s.transform, outline: s.outlineStyle }; });
+  await page.hover(card);
+  await page.waitForTimeout(250);
+  assert.notEqual((await style()).transform, 'none', 'lifts on hover');
+  await page.mouse.move(0, 0);
+  await page.evaluate(sel => document.querySelector(sel).blur(), card);
+  await page.keyboard.press('Tab');
+  await page.evaluate(sel => document.querySelector(sel).focus({ focusVisible: true }), card);
+  assert.equal((await style()).outline, 'solid', 'keyboard focus ring');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.hover(card);
+  await page.waitForTimeout(250);
+  assert.equal((await style()).transform, 'none', 'no movement with reduced motion');
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-12 — polish
+
+Looked at: trip cards and the next-trip card. They act as buttons (open a
+trip, reachable by Tab), but only their border colour changed on hover.
+There was no press feedback and no clear focus ring for keyboard users.
+Changed (CSS only): trip cards, the next-trip card and the full-width row
+links lift by 1 px with a soft shadow on hover (pointer devices only), press
+in slightly when tapped, and show a green focus ring for keyboard focus.
+With reduced motion, only the colour and shadow change, with no movement. New
+e2e test (hover lift, focus ring, reduced motion). Service worker cache
+`waypoints-v40`. All tests pass: 56 unit, 58 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-11 — research
 
 Synced: main had a new commit from another session (GR routes in the

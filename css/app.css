@@ -1006,6 +1006,18 @@ body{font-size:15px;}
   font:inherit;text-align:left;cursor:pointer;box-shadow:0 1px 2px rgba(52,78,65,0.05);max-width:620px;
 }
 .next-trip:hover{border-color:var(--brass);}
+/* Cards you can open: a slight lift on hover (pointer devices only), a
+   press-in when tapped, and a clear ring for keyboard focus. */
+.trip-card,.next-trip,.row-link{transition:border-color .15s ease,box-shadow .18s ease,transform .18s ease;}
+@media (hover:hover){
+  .trip-card:hover,.next-trip:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(52,78,65,0.12);}
+}
+.trip-card:active,.next-trip:active,.row-link:active{transform:scale(0.99);box-shadow:0 1px 2px rgba(52,78,65,0.05);transition-duration:.08s;}
+.trip-card:focus-visible,.next-trip:focus-visible,.row-link:focus-visible{outline:2px solid var(--fern);outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){
+  .trip-card,.next-trip,.row-link{transition:border-color .15s ease,box-shadow .18s ease;}
+  .trip-card:hover,.next-trip:hover,.trip-card:active,.next-trip:active,.row-link:active{transform:none;}
+}
 .next-trip-count{
   flex:none;width:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:12px 6px;background:var(--brass);color:var(--on-accent);text-align:center;
