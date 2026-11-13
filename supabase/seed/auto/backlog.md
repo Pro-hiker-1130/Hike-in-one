@@ -114,3 +114,7 @@ pin down to "Skipped" with a reason.
 - Lyofood Chicken Tikka Masala: 95 g from one retailer, 128 g from another.
 - Petzl Swift RL: Petzl's own pages disagree by region (92-110 g) and by lumen version.
 - Esbit Pocket Stove: weight depends on how many fuel tablets are counted (170-360 g); the 11 g titanium stove has a single source.
+- LifeStraw Go 650 ml: retailers list 221 g and 247 g (different versions).
+- Outdoor Research Crocodile Gaiters: weight depends on model and size (219-343 g).
+- Exped Fold Drybag L 13L: retailers list 60 g and 74 g.
+- Sea to Summit Lightweight Dry Bag 13L: listings give 2.9 oz and 3.3 oz.
