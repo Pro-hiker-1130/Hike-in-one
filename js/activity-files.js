@@ -334,7 +334,9 @@ function formatDuration(sec){
 // Track ids whose profile has been drawn this session: only the first
 // showing sweeps in from the left, re-renders appear at once.
 const drawnProfiles = new Set();
-function buildElevationProfile(t){
+// onPoint (optional): called with the km under the pointer or keyboard
+// cursor as it moves, and with null when it leaves, so a map can follow.
+function buildElevationProfile(t, onPoint){
   const pts = t.profile;
   const totalKm = pts[pts.length-1][0] || t.distanceKm || 1;
   let lo = t.minEleM, hi = t.maxEleM;
@@ -384,8 +386,9 @@ function buildElevationProfile(t){
       clientX = r.left + r.width/2; clientY = r.top;
     }
     showChartTooltip(clientX, clientY, ele+' m', 'at '+km.toFixed(1)+' km', null);
+    if(onPoint) onPoint(km);
   }
-  function hide(){ cursor.hidden = dot.hidden = true; hideChartTooltip(); }
+  function hide(){ cursor.hidden = dot.hidden = true; hideChartTooltip(); if(onPoint) onPoint(null); }
   function nearestIndex(km){
     let best = 0;
     for(let i=1;i<pts.length;i++) if(Math.abs(pts[i][0]-km) < Math.abs(pts[best][0]-km)) best = i;

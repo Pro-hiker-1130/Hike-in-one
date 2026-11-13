@@ -559,10 +559,26 @@
     return out;
   }
 
+  // The spot `km` along a line of [lat, lon] points (clamped to its ends),
+  // for following an elevation profile on the map. fullKm, when given, is
+  // the length the km are measured against (a profile measured along the
+  // full-resolution track is a little longer than its downsampled points).
+  function pointAtKm(points, km, fullKm){
+    if(!Array.isArray(points) || !points.length) return null;
+    if(points.length < 2) return points[0].slice();
+    const cum = cumulativeKm(points), total = cum[cum.length-1];
+    let k = fullKm > 0 ? km * total / fullKm : km;
+    k = Math.max(0, Math.min(total, k));
+    let i = 1;
+    while(i < cum.length - 1 && cum[i] < k) i++;
+    const a = points[i-1], b = points[i], f = (k - cum[i-1]) / ((cum[i] - cum[i-1]) || 1);
+    return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName, joinTracks, sliceKm,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint, gradeBreakdown,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint, gradeBreakdown, pointAtKm,
   };
 });

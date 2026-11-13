@@ -1,4 +1,4 @@
-const CACHE_NAME = 'waypoints-v40';
+const CACHE_NAME = 'waypoints-v41';
 const APP_JS = ['setup', 'activity-files', 'storage-sync', 'strava', 'map', 'trips', 'loadouts', 'trips-ui', 'import', 'gear', 'catalog', 'track-editor', 'gr-routes', 'route-planner', 'route-share', 'app']
   .map(f => './js/' + f + '.js');
 const APP_SHELL = ['./', './index.html', './css/app.css', './catalog-core.js', './track-core.js', './gr-core.js', ...APP_JS,

@@ -1044,6 +1044,13 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.waitForFunction(()=> /km · ↑ 100 m · ↓ 0 m · about \d+ (h|min)/.test(document.getElementById('rpStats').textContent));
   assert.equal(elevationCalls, 1);
   assert.equal(await page.locator('#rpProfile .ele-profile').count(), 1);
+  // Pointing at the profile shows that spot on the map; moving away hides it.
+  const plot = await page.$('#rpProfile .ele-plot');
+  const pb = await plot.boundingBox();
+  await page.mouse.move(pb.x + pb.width / 2, pb.y + pb.height / 2);
+  assert.equal(await page.locator('#rpMap .rp-probe').count(), 1);
+  await page.mouse.move(pb.x + pb.width / 2, pb.y - 80);
+  assert.equal(await page.locator('#rpMap .rp-probe').count(), 0);
   // Distance markers along the route.
   const km = await page.evaluate(()=> ({ shown: [...document.querySelectorAll('#rpMap .km-marker')].map(e => e.textContent),
     want: TrackCore.kmMarkers(rpRoute.points).map(m => String(m.km)), total: rpRoute.distanceKm }));

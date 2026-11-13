@@ -354,3 +354,15 @@ test('gradeBreakdown splits a profile into uphill, downhill and flat km', () => 
   assert.deepEqual(T.gradeBreakdown([[0, 500], [3, 520]]), { upKm: 0, downKm: 0, flatKm: 3 }, 'under 3 % counts as flat');
   assert.equal(T.gradeBreakdown([[0, 500]]), null);
 });
+
+test('pointAtKm finds a spot along a line, scaled to the profile length when given', () => {
+  const line = [[46, 7], [46.1, 7]];   // ~11.12 km north
+  const total = T.cumulativeKm(line)[1];
+  const mid = T.pointAtKm(line, total / 2);
+  assert.ok(Math.abs(mid[0] - 46.05) < 1e-9 && mid[1] === 7);
+  // A profile measured as 12 km long: its km 6 is the middle of the line.
+  assert.ok(Math.abs(T.pointAtKm(line, 6, 12)[0] - 46.05) < 1e-9);
+  assert.deepEqual(T.pointAtKm(line, 99), [46.1, 7], 'clamped to the end');
+  assert.deepEqual(T.pointAtKm(line, -1), [46, 7]);
+  assert.equal(T.pointAtKm([], 1), null);
+});

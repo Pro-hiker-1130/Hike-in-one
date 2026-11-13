@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-13 — research
+
+Looked at: Footpath (draw a route with your finger, snapped to trails;
+slope colouring; distance and climb at any point along the route;
+adjustable speed) and Relive (animated recap videos; photos pinned where
+they were taken). Budget used: 2 searches, 0 fetches.
+Changed: in the route planner, pointing at the elevation profile (mouse,
+touch or the arrow keys) shows that spot as a dot on the map; moving away
+removes it. `buildElevationProfile` takes an optional callback with the km
+under the cursor. `TrackCore.pointAtKm` finds the spot, scaled to the
+profile's length, and has a unit test. The route-planner e2e test checks
+the dot. Service worker cache `waypoints-v41`. All tests pass: 57 unit,
+58 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-12 — polish
 
 Looked at: trip cards and the next-trip card. They act as buttons (open a

@@ -15,6 +15,7 @@ let rpMap = null, rpLineLayer = null, rpMarkerLayer = null, rpGrOverlay = null;
 let rp = null;                 // {tripId, trackId, waypoints: [{ll, mode}], history: []}
 let rpMode = 'trail';
 let rpRoute = null;            // the route as a track, once every part is known
+let rpProbe = null;            // the map dot following the pointer on the profile
 const rpSegPromise = new Map();  // segment key -> Promise of {points, ele, routed, failed}
 const rpSegDone = new Map();     // segment key -> the same, once it has arrived
 
@@ -175,6 +176,7 @@ function rpDrawMarkers(){
 function rpDrawRoute(){
   if(!rp) return;
   rpLineLayer.clearLayers();
+  if(rpProbe){ rpMap.removeLayer(rpProbe); rpProbe = null; }
   const wps = rp.waypoints;
   const segs = [];
   let pending = 0, failed = 0;
@@ -212,7 +214,15 @@ function rpDrawRoute(){
   stats.textContent = rpRoute.distanceKm.toFixed(1) + ' km · ' + trackClimbSummary(rpRoute);
   // Distance markers along the route, so it's easy to see where 5 km is.
   TrackCore.kmMarkers(rpRoute.points).forEach(m => addKmMarker(m, rpLineLayer));
-  if(rpRoute.profile && rpRoute.profile.length > 1) profileEl.appendChild(buildElevationProfile(rpRoute));
+  if(rpRoute.profile && rpRoute.profile.length > 1){
+    // Pointing at the profile shows that spot on the map.
+    const route = rpRoute, fullKm = route.profile[route.profile.length-1][0];
+    profileEl.appendChild(buildElevationProfile(route, km => {
+      if(rpProbe){ rpMap.removeLayer(rpProbe); rpProbe = null; }
+      if(km == null || rpRoute !== route) return;
+      rpProbe = L.circleMarker(TrackCore.pointAtKm(route.points, km, fullKm), { radius: 7, weight: 3, color: '#FFFFFF', fillColor: '#C4501C', fillOpacity: 1, interactive: false, className: 'rp-probe' }).addTo(rpMap);
+    }));
+  }
 }
 
 // rp.waypoints is replaced (not changed in place) on Undo and Clear, which
