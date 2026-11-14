@@ -118,3 +118,4 @@ pin down to "Skipped" with a reason.
 - Outdoor Research Crocodile Gaiters: weight depends on model and size (219-343 g).
 - Exped Fold Drybag L 13L: retailers list 60 g and 74 g.
 - Sea to Summit Lightweight Dry Bag 13L: listings give 2.9 oz and 3.3 oz.
+- Opinel No. 7 stainless: listed weights run 34-40 g, with some outliers up to 52 g.
