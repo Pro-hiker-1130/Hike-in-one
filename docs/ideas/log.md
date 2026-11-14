@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-14 — polish
+
+Looked at: the forecast card on a planned trip page while it loads. It
+showed a plain "Loading the forecast…" line, and the card jumped in size
+when the forecast arrived.
+Changed: while loading, the card shows its heading and two placeholder
+rows shaped like forecast lines, with a soft sheen passing over them. They
+are announced to screen readers as "Loading the forecast". The sheen loops
+(1.2 s) until the forecast arrives, which is longer than the 150–300 ms
+guideline for transitions but never blocks input. Reduced motion shows
+still bars. The weather e2e test now holds back the mocked forecast to
+check the placeholders, then that they are replaced. Service worker cache
+`waypoints-v42`. All tests pass: 57 unit, 58 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-13 — research
 
 Looked at: Footpath (draw a route with your finger, snapped to trails;

@@ -303,7 +303,9 @@ test('trips: a planned route splits into days of about the chosen distance', { s
 test('trips: a planned trip within 16 days shows the forecast at its start, further out says when to check', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   const asked = [];
-  await page.context().route(/api\.open-meteo\.com\/v1\/forecast/, r=>{
+  let release; const answered = new Promise(r => { release = r; });   // the forecast waits until the test lets it through
+  await page.context().route(/api\.open-meteo\.com\/v1\/forecast/, async r=>{
+    await answered;
     const q = new URL(r.request().url()).searchParams;
     asked.push([q.get('latitude'), q.get('longitude'), q.get('start_date'), q.get('end_date')]);
     const from = q.get('start_date');
@@ -321,7 +323,13 @@ test('trips: a planned trip within 16 days shows the forecast at its start, furt
     await saveTrips();
     showTripDetail('trip_wx');
   }, { soon, later });
+  // While it loads: placeholder rows, announced as loading.
+  await page.waitForSelector('#tripWeather .trip-weather-skeleton');
+  assert.equal(await page.getAttribute('#tripWeather .trip-weather-skeleton', 'aria-label'), 'Loading the forecast');
+  assert.equal(await page.locator('#tripWeather .trip-weather-skeleton span').count(), 2);
+  release();
   await page.waitForSelector('#tripWeather .trip-weather-day');
+  assert.equal(await page.locator('#tripWeather .trip-weather-skeleton').count(), 0, 'placeholders replaced');
   const days = await page.$$eval('#tripWeather .trip-weather-day', els => els.map(e => e.textContent));
   assert.equal(days.length, 2, 'two days at 15 km a day');
   assert.match(days[0], /Partly cloudy · 4–15 °C · rain 10 % · wind up to 18 km\/h$/);

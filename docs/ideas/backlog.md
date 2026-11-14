@@ -65,3 +65,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-11 — Up / down / flat km for each hike (research, OsmAnd idea)
 - 2026-11-12 — Cards lift on hover, press in, and show a focus ring (polish)
 - 2026-11-13 — Route planner: pointing at the profile shows the spot on the map (research, Footpath idea)
+- 2026-11-14 — Loading placeholders for the trip forecast (polish)

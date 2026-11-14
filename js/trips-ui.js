@@ -388,7 +388,9 @@ function renderTripWeather(trip, tks){
   const key = trip.id + '|' + [lat, lon, from, to].join('|');
   if(el.dataset.key === key && el.dataset.state !== 'error') return;
   el.dataset.key = key; el.dataset.state = 'loading';
-  el.innerHTML = '<p class="trip-weather-note">Loading the forecast…</p>';
+  // Placeholder rows shaped like the forecast while it loads.
+  el.innerHTML = '<p class="section-label trip-weather-title">Forecast at the start</p>' +
+    '<div class="trip-weather-skeleton" role="status" aria-label="Loading the forecast"><span></span><span></span></div>';
   fetchForecast(lat, lon, from, to).then(data=>{
     if(el.dataset.key !== key) return;
     el.dataset.state = 'done';
