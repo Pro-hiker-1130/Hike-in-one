@@ -141,6 +141,7 @@ function renderTripDetail(){
   const weight = tripGearWeight(trip);
 
   document.getElementById('tripDetailTitle').textContent = trip.name;
+  document.getElementById('tripPlanTextBtn').hidden = !(tripStatus(trip) === 'planned' && tks.some(t => t.points && t.points.length > 1));
   document.getElementById('tripDetailSubtitle').textContent = trip.notes || '';
   const status = tripStatus(trip);
   const badge = document.getElementById('tripDetailStatusBadge');
@@ -213,6 +214,45 @@ function renderTripDetail(){
   renderTripGear(trip);
 
   renderTripPhotoGrid(trip);
+}
+
+// ---- A trip plan to leave with someone at home ----
+// Plain text from what the trip already knows (route, days, distance,
+// climb, walking time, start point), with blanks for what it can't know:
+// who goes, when you'll be back and when to call for help.
+function tripPlanText(trip){
+  const tks = tripTracks(trip).filter(t => t.points && t.points.length > 1);
+  const planned = tks.filter(t => t.planned);
+  const route = planned.length ? planned : tks;
+  const km = route.reduce((s, t) => s + (t.distanceKm || 0), 0);
+  const up = route.reduce((s, t) => s + (t.elevationGainM || 0), 0);
+  const date = tripDisplayDate(trip);
+  const start = tripStartPoint(tks);
+  const lines = ['Trip plan: ' + trip.name];
+  if(date) lines.push('When: ' + friendlyDate(date));
+  lines.push('Route: ' + route.map(t => t.name).join(', ') + ' — ' + km.toFixed(1) + ' km, ' + up.toLocaleString('en-US') + ' m up, about ' +
+    formatDuration(walkingSec(km, up)) + ' of walking plus breaks');
+  if(start) lines.push('Start: https://www.openstreetmap.org/?mlat=' + start[0].toFixed(5) + '&mlon=' + start[1].toFixed(5) + '#map=14/' + start[0].toFixed(5) + '/' + start[1].toFixed(5));
+  if(trip.dailyKm > 0){
+    const days = TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm);
+    if(days.length > 1) days.forEach((d, i) => lines.push('Day ' + (i + 1) + ': km ' + d.fromKm.toFixed(1) + '–' + d.toKm.toFixed(1) +
+      ', ' + d.upM + ' m up, about ' + formatDuration(walkingSec(d.distanceKm, d.upM))));
+  }
+  if(trip.notes) lines.push('Notes: ' + trip.notes);
+  lines.push('', 'Who is going (names, phone numbers):', 'Back by (day and time):', 'If you haven\'t heard from us by then, wait until … and then call …');
+  return lines.join('\n');
+}
+
+async function shareTripPlan(id){
+  const trip = trips.find(t => t.id === id);
+  if(!trip) return;
+  const text = tripPlanText(trip);
+  if(navigator.share && (!navigator.canShare || navigator.canShare({ text }))){
+    try{ await navigator.share({ title: 'Trip plan: ' + trip.name, text }); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  try{ await navigator.clipboard.writeText(text); showGlobalToast('Trip plan copied — paste it into a message and fill in the blanks.'); }
+  catch(e){ showGlobalToast('Couldn\'t copy the trip plan here.', true); }
 }
 
 // ---- A trip as a picture to send to friends ----

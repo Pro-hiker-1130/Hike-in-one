@@ -371,6 +371,7 @@ document.getElementById('tripGearEditBtn').addEventListener('click', ()=> openGe
 document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacking);
 document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
 document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
+document.getElementById('tripPlanTextBtn').addEventListener('click', ()=> shareTripPlan(currentTripId));
 document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
 document.getElementById('tripDownloadRouteBtn').addEventListener('click', downloadTripRoute);
 document.getElementById('tripSearch').addEventListener('input', ()=> renderTripCards());

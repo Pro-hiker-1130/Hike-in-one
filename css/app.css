@@ -800,6 +800,9 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .year-review-swap{animation:year-review-swap 200ms ease-out;}
 @media (prefers-reduced-motion: reduce){.year-review-swap{animation:none;}}
 
+.trip-detail-actions{margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;}
+.trip-detail-actions>*{white-space:nowrap;}
+
 /* Multi-day plan */
 #tripDaysSection[hidden]{display:none;}
 .days-goal{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}

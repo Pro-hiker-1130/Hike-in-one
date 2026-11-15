@@ -3,6 +3,27 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-15 — research
+
+Looked at: Cairn (trail-safety app: a trip plan with where, what and when
+you'll be back, sent to emergency contacts, alerts if you're overdue, live
+location) and trip-plan guidance from park services and trail groups
+(route with a map, distance, climb, time, return time with a buffer, and
+when your contact should call for help). Budget used: 2 searches, 0
+fetches.
+Changed: planned trips with a route get a "Trip plan" button. It shares
+(or copies) a plain-text plan to leave with someone at home: the trip name
+and date, the route with distance, climb and walking time (fitted to your
+pace), the start as an OpenStreetMap link, each day when the trip is split
+into days, and the notes. It ends with blanks to fill in: who's going,
+when you'll be back, and when to call for help. Nothing new is saved or
+sent anywhere by the app. Overdue alerts and live tracking would need a
+server, so they're left out. The trip page's buttons now wrap neatly on
+phones. New e2e test reads the copied plan. Service worker cache
+`waypoints-v43`. All tests pass: 57 unit, 59 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-14 — polish
 
 Looked at: the forecast card on a planned trip page while it loads. It

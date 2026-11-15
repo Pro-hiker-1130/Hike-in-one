@@ -484,6 +484,35 @@ test('trip cards lift on hover, show a focus ring for the keyboard, and stay sti
   assert.deepEqual(errors, []);
 });
 
+test('trips: "Trip plan" copies a plan to leave with someone — route, days, walking time, start link and blanks to fill in', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    tracks.push({ id: 't_plan2', name: 'Hut to hut', planned: true, distanceKm: 32, elevationGainM: 500, elevationLossM: 300, minEleM: 1000, maxEleM: 1500,
+      points: [[46.02345, 7.74912], [46.3, 7.5]], profile: [[0, 1000], [10, 1500], [20, 1200], [32, 1200]] });
+    trips.push({ id: 'trip_plan2', name: 'Three huts', trackIds: ['t_plan2'], gearIds: [], status: 'planned', date: '2030-07-05', dailyKm: 15, notes: 'Huts booked', createdAt: 1 });
+    trips.push({ id: 'trip_done2', name: 'Old one', trackIds: ['t_plan2'], gearIds: [], status: 'completed', createdAt: 2 });
+    await saveTrips();
+    showTripDetail('trip_done2');
+  });
+  assert.ok(await page.isHidden('#tripPlanTextBtn'), 'only for planned trips');
+  await page.evaluate(()=> showTripDetail('trip_plan2'));
+  await page.click('#tripPlanTextBtn');
+  await page.waitForSelector('#globalToast:not([hidden])');
+  assert.match(await text(page, '#globalToast'), /^Trip plan copied/);
+  const plan = (await page.evaluate(()=> navigator.clipboard.readText())).split('\n');
+  assert.equal(plan[0], 'Trip plan: Three huts');
+  assert.equal(plan[1], 'When: Fri 5 Jul 2030');
+  assert.match(plan[2], /^Route: Hut to hut — 32\.0 km, 500 m up, about .+ of walking plus breaks$/);
+  assert.equal(plan[3], 'Start: https://www.openstreetmap.org/?mlat=46.02345&mlon=7.74912#map=14/46.02345/7.74912');
+  assert.match(plan[4], /^Day 1: km 0\.0–15\.0, 500 m up, about /);
+  assert.match(plan[5], /^Day 2: km 15\.0–32\.0, 0 m up, about /);
+  assert.equal(plan[6], 'Notes: Huts booked');
+  assert.deepEqual(plan.slice(7), ['', 'Who is going (names, phone numbers):', 'Back by (day and time):', 'If you haven\'t heard from us by then, wait until … and then call …']);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');
