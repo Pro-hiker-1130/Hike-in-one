@@ -67,3 +67,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-13 — Route planner: pointing at the profile shows the spot on the map (research, Footpath idea)
 - 2026-11-14 — Loading placeholders for the trip forecast (polish)
 - 2026-11-15 — Trip plan to leave with someone at home (research, Cairn / park-service idea)
+- 2026-11-16 — Gear cards: capitalised status, quieter retired, dashed wishlist (polish)

@@ -306,7 +306,7 @@ function renderGearGrid(){
 
   list.forEach(g=>{
     const card = document.createElement('div');
-    card.className = 'gear-card';
+    card.className = 'gear-card is-' + (g.status || 'active');
     const color = GEAR_CATEGORY_COLORS[g.category] || GEAR_CATEGORY_COLORS.Other;
     const qtyLabel = g.quantity > 1 ? ' ×' + g.quantity : '';
     card.innerHTML =

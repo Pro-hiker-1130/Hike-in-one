@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-16 — polish
+
+Looked at: the Gear Room's "All items" list on a phone. Status badges read
+"active", "retired" and "wishlist" in lower case, unlike the trip badges
+("Planned", "Completed"). Retired gear and wishlist items looked exactly
+like gear in use.
+Changed: gear status badges are capitalised ("Active", "Retired",
+"Wishlist"). This is display only; the saved value is unchanged. Retired
+cards get a softer background with lighter name and weight. The tone
+was picked to keep 4.7:1 contrast; my first try at 3.2:1 was too faint.
+Wishlist cards are drawn with a dashed border and no fill. Cards now carry
+their status as a class (`is-retired` etc.). New e2e test. Service worker
+cache `waypoints-v44`. All tests pass: 57 unit, 60 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-15 — research
 
 Looked at: Cairn (trail-safety app: a trip plan with where, what and when

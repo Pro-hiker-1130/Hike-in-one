@@ -513,6 +513,21 @@ test('trips: "Trip plan" copies a plan to leave with someone — route, days, wa
   assert.deepEqual(errors, []);
 });
 
+test('gear cards: status badges read like trip badges; retired cards look quieter and wishlist cards are dashed', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.evaluate(()=>{ gearItems.find(g => g.id === 'g2').status = 'retired'; refreshGear(); });
+  await page.click('#viewAllGearBtn');
+  const card = name => page.$eval(`#categoryView .gear-card:has(.gear-card-name:text-is("${name}"))`, el => {
+    const s = getComputedStyle(el), b = getComputedStyle(el.querySelector('.gear-badge'));
+    return { cls: el.className, border: s.borderTopStyle, badge: b.textTransform };
+  });
+  assert.deepEqual(await card('Exos 58'), { cls: 'gear-card is-active', border: 'solid', badge: 'capitalize' });
+  assert.deepEqual(await card('Revelation 20'), { cls: 'gear-card is-retired', border: 'solid', badge: 'capitalize' });
+  assert.deepEqual(await card('Distance Carbon Z'), { cls: 'gear-card is-wishlist', border: 'dashed', badge: 'capitalize' });
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

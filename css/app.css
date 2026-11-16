@@ -280,6 +280,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
   color:var(--muted);white-space:nowrap;height:fit-content;
 }
 .gear-badge.status-retired{color:var(--muted);background:var(--panel-alt);}
+/* Status reads like the trip badges ("Active", "Planned"); gear you no
+   longer use looks quieter, and wishlist items are drawn dashed. */
+.gear-badge{text-transform:capitalize;}
+.gear-card.is-retired{background:#F7F6F2;}
+.gear-card.is-retired .gear-card-name,.gear-card.is-retired .gear-card-weight{color:rgba(52,78,65,0.78);}
+.gear-card.is-wishlist{background:transparent;border:1.5px dashed rgba(52,78,65,0.3);box-shadow:none;}
 .gear-card-meta{font-size:12px;color:var(--muted);}
 .trip-track-block{
   padding:10px 14px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);
