@@ -1555,14 +1555,20 @@ test('GR routes: shown in the route planner, and how much of each you walked in 
       return json({ results: [
         { type: 'relation', id: 144503, ref: 'GR 561', name: 'GR 561 Kempen - Maaspad', group: 'NAT' },
         { type: 'relation', id: 4580796, ref: 'GR 5', group: 'INT' },
+        { type: 'relation', id: 14894391, ref: 'GR 5', name: 'GR 5 Variant Maastricht (Hoge Fronten)', group: 'NAT' },
         { type: 'relation', id: 1696127, ref: 'GRP 563', name: 'GRP 563 Tour du Pays de Herve', group: 'REG' },
+        { type: 'relation', id: 12077214, ref: 'Gr1', name: 'Eijsden-Margraten Gr1 Historische Bronkroute', group: 'LOC' },
       ] });
     }
     const m = /\/details\/relation\/(\d+)$/.exec(u.pathname);
     if(m){
       calls.details.push(+m[1]);
       if(+m[1] === 144503) return json(part);
-      if(+m[1] === 4580796) return json(umbrella);
+      // The umbrella holds GR 561 again as a section: counted once.
+      if(+m[1] === 4580796) return json(Object.assign({}, umbrella, { route: { route_type: 'route', length: 1, main: [Object.assign({ id: 144503 }, part.route)] },
+        subroutes: { 144503: { ref: 'GR 561', name: 'GR 561 Kempen - Maaspad', group: 'NAT' } } }));
+      // A variant along the same path: shown on the map, not counted.
+      if(+m[1] === 14894391) return json(Object.assign({}, part, { id: 14894391, ref: 'GR 5', name: 'GR 5 Variant Maastricht (Hoge Fronten)' }));
     }
     r.fulfill({ status: 404, body: '{}' });
   });
@@ -1587,7 +1593,7 @@ test('GR routes: shown in the route planner, and how much of each you walked in 
   assert.ok(Math.abs(walkedKm - expectKm) < 0.6, walkedKm + ' km walked vs ' + expectKm.toFixed(1) + ' km of route');
   assert.ok(pct >= 1 && pct <= 10, 'a few percent of 223 km: ' + pct);
   assert.match(await text(page, '#grProgressTotal'), /of the 1 GR route you have set foot on/);
-  assert.deepEqual([...new Set(calls.details)].sort(), [144503, 4580796], 'GRP 563 is never downloaded');
+  assert.deepEqual([...new Set(calls.details)].sort(), [144503, 14894391, 4580796], 'GRP 563 and the local Gr1 loop are never downloaded');
 
   // Reloading uses the saved result: nothing downloaded again.
   const before = calls.area + calls.details.length;

@@ -6,9 +6,41 @@ const G = require('../gr-core.js');
 const part = require('./fixtures/wmt-gr561-part.json');       // a real answer, trimmed
 const umbrella = require('./fixtures/wmt-gr5-umbrella.json'); // "all of GR 5"
 
-test('isGrRef: GR routes, not GR de Pays or E-paths', () => {
-  for(const r of ['GR 5', 'GR5', 'GR 20', 'GR 561', 'gr 131A', 'GR-10']) assert.ok(G.isGrRef(r), r);
-  for(const r of ['GRP 563', 'GRT', 'E2', 'BVW', '', null, 'LF 5']) assert.ok(!G.isGrRef(r), String(r));
+test('isGrRef: GR routes, not local loops, GR de Pays or E-paths', () => {
+  for(const r of ['GR 5', 'GR5', 'GR 20', 'GR 561', 'GR 10F', 'GR-10', 'GR 57 P1', 'GR 126 L6']) assert.ok(G.isGrRef(r), r);
+  for(const r of ['Gr1', 'gr 131A', 'GRP 563', 'GRT SMA', 'GRT-LRE-P2', 'E2', 'LAW 1-3', '', null]) assert.ok(!G.isGrRef(r), String(r));
+});
+
+test('which listed routes count: real ones from Waymarked Trails around Maastricht, Brussels and the Ardennes', () => {
+  const counts = r => G.isGrMainRoute(r);
+  // Main GR routes and their sections.
+  for(const r of [
+    { group: 'NAT', ref: 'GR 561', name: 'GR 561 Kempen - Maaspad' },
+    { group: 'NAT', ref: 'GR 5', name: 'GR 5 België, Vlaanderen' },
+    { group: 'INT', ref: 'GR 5' },
+    { group: 'NAT', ref: 'GR 57 P1', name: "GR 57 Sentier de l'Ourthe Parcours principal" },
+    { group: 'INT', ref: 'GR 12', name: 'GR 12 Vlaanderen, Bruxelles - Braine-le-Château' },
+  ]) assert.ok(counts(r), JSON.stringify(r));
+  // Local loops, GR de Pays, and side branches: variants, link paths, detours.
+  for(const r of [
+    { group: 'LOC', ref: 'Gr1', name: 'Eijsden-Margraten Gr1 Historische Bronkroute' },
+    { group: 'LOC', ref: 'GR 5', name: 'GR 5 - Variante Kastelberg' },
+    { group: 'REG', ref: 'GRP 563', name: 'GRP 563 Tour du Pays de Herve' },
+    { group: 'NAT', ref: 'GR 5', name: 'GR 5 Variant Maastricht (Hoge Fronten)' },
+    { group: 'NAT', ref: 'GR 126 L6', name: 'GR 126 Liaison vers GR 128 Brussegem' },
+    { group: 'NAT', ref: 'GR 57 V1', name: 'GR 57 Variante Hérou' },
+    { group: 'NAT', ref: 'GR 5', name: 'GR 5 Belgie, Vlaanderen Noord (deviation breeding season)' },
+    { group: 'NAT', ref: 'GR 12', name: 'GR 12 Connection GR 512' },
+  ]) assert.ok(!counts(r), JSON.stringify(r));
+  // Side branches are still shown on the map; local loops are not.
+  assert.ok(G.isGrListing({ group: 'NAT', ref: 'GR 5', name: 'GR 5 Variant Maastricht (Hoge Fronten)' }));
+  assert.ok(!G.isGrListing({ group: 'LOC', ref: 'Gr1' }));
+});
+
+test('refFromName reads the GR number of a section mapped without a ref', () => {
+  assert.equal(G.refFromName('GR 12 Vlaanderen, Bergen op Zoom - Bruxelles'), 'GR 12');
+  assert.equal(G.refFromName('GR 57 Sentier'), 'GR 57');
+  assert.equal(G.refFromName('Floris V-pad - 01'), '');
 });
 
 test('Web Mercator to lat/lon and back', () => {
@@ -33,9 +65,35 @@ test('detailsToRoute reads a real answer into simplified lat/lon lines', () => {
   assert.ok(close / gaps < 0.15, close + ' of ' + gaps + ' gaps under 25 m');
 });
 
-test('detailsToRoute skips an umbrella relation (its sections come on their own)', () => {
+test('detailsToRoutes splits an umbrella relation into its GR sections', () => {
+  // Shaped like Waymarked Trails' answer for "GR 12 … all variants":
+  // route > section relations > linear parts > ways (Web Mercator).
+  const way = (lat0) => ({ geometry: { type: 'LineString', coordinates: [G.latLonToMerc(lat0, 4.35), G.latLonToMerc(lat0 + 0.01, 4.35)] } });
+  const d = { type: 'relation', id: 1, ref: 'GR 12', group: 'NAT', name: 'GR 12 all variants',
+    route: { route_type: 'route', length: 5000, main: [
+      { route_type: 'route', id: 2, length: 2200, main: [{ route_type: 'linear', length: 2200, ways: [way(50.80), way(50.81)] }] },
+      { route_type: 'route', id: 3, length: 1100, main: [{ route_type: 'linear', length: 1100, ways: [way(50.90)] }] },
+      { route_type: 'route', id: 4, length: 900, main: [{ route_type: 'linear', length: 900, ways: [way(51.00)] }] },
+      { route_type: 'route', id: 5, length: 1100, main: [{ route_type: 'linear', length: 1100, ways: [way(51.10)] }] },
+    ] },
+    subroutes: {
+      2: { ref: 'GR 12', name: 'GR 12 Vlaanderen, Bruxelles - Braine-le-Château', group: 'INT' },
+      3: { ref: null, name: 'GR 12 Vlaanderen, Bergen op Zoom - Bruxelles', group: 'INT' },
+      4: { ref: null, name: 'GR 12 Variant West', group: 'NAT' },
+      5: { ref: 'LAW 1-3', name: 'Floris V-pad - 01', group: 'NAT' },
+    } };
+  const secs = G.detailsToRoutes(d);
+  assert.deepEqual(secs.map(x => x.id), [2, 3, 4, 5]);
+  const byId = Object.fromEntries(secs.map(x => [x.id, x]));
+  assert.equal(byId[2].lines.length, 1, 'its two ways joined');
+  assert.ok(Math.abs(byId[2].lengthKm - 2.2) < 1e-9);
+  assert.equal(byId[3].ref, 'GR 12', 'GR number read from the name');
+  assert.deepEqual(secs.filter(x => x.main).map(x => x.id), [2, 3], 'the variant and the Dutch LAW section do not count');
+  assert.ok(byId[4].listed && !byId[5].listed, 'the variant is drawn, the LAW section is not');
+  assert.ok(byId[2].bbox[0] < 50.81 && byId[2].bbox[2] > 50.81);
+  assert.equal(G.detailsToRoute(d), null, 'not a single route');
   assert.equal(G.detailsToRoute(umbrella), null);
-  assert.equal(G.detailsToRoute(null), null);
+  assert.deepEqual(G.detailsToRoutes(null), []);
 });
 
 test('coverage: walked part within 60 m, the rest not, gaps in a recording ignored', () => {
