@@ -38,7 +38,7 @@ function renderTripCardsUnguarded(){
   });
   document.getElementById('tripPlannedEmpty').style.display = 'none';
   document.getElementById('tripCompletedEmpty').style.display = 'none';
-  if(!trips.length){ document.getElementById('nextTripCard').hidden = true; return; }
+  if(!trips.length){ document.getElementById('nextTripCard').hidden = true; document.getElementById('tripMemoryCard').hidden = true; return; }
 
   const planned = trips.filter(t => tripStatus(t) === 'planned');
   const completed = trips.filter(t => tripStatus(t) === 'completed');
@@ -63,6 +63,7 @@ function renderTripCardsUnguarded(){
 
   // The next trip gets the countdown card; the planned grid holds the rest
   // and disappears when there is no rest.
+  renderTripMemory(completed);
   const next = renderNextTrip(planned);
   const otherPlanned = planned.filter(t => t !== next);
   const showPlanned = otherPlanned.length || !next;
@@ -110,6 +111,22 @@ function filterByDifficulty(completed){
     document.getElementById('tripCompletedEmpty').textContent = 'No trips ' + parts.join(' and ') + ' yet.';
   }
   return list;
+}
+
+// "1 year ago this week": a completed trip from this week in an earlier
+// year, newest first. Nothing shows when there's none.
+function renderTripMemory(completed){
+  const card = document.getElementById('tripMemoryCard');
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const hits = TrackCore.onThisDay(completed.map(trip => ({ trip, date: tripDisplayDate(trip) })), today, 3);
+  card.hidden = !hits.length;
+  if(!hits.length) return;
+  const { item, yearsAgo, daysOff } = hits[0];
+  card.dataset.tripId = item.trip.id;
+  document.getElementById('tripMemoryLabel').textContent = (yearsAgo === 1 ? '1 year' : yearsAgo + ' years') + ' ago ' + (daysOff === 0 ? 'today' : 'this week');
+  document.getElementById('tripMemoryName').textContent = item.trip.name;
+  const km = tripDistanceKm(item.trip);
+  document.getElementById('tripMemoryMeta').textContent = friendlyDate(item.date) + (km ? ' · ' + km.toFixed(1) + ' km' : '');
 }
 
 function showTripsList(){

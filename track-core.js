@@ -575,10 +575,30 @@
     return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
   }
 
+  // Items whose date ('YYYY-MM-DD') falls within `windowDays` of today's
+  // day and month in an earlier year — "on this day" memories. Returns
+  // [{item, yearsAgo, daysOff}] newest year first; within a year, the
+  // closest day first.
+  function onThisDay(items, todayIso, windowDays){
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(todayIso || '');
+    if(!m) return [];
+    const win = windowDays == null ? 3 : windowDays, y0 = +m[1];
+    const out = [];
+    (items || []).forEach(item => {
+      const d = /^(\d{4})-(\d{2})-(\d{2})/.exec(item && item.date || '');
+      if(!d || +d[1] >= y0) return;
+      // Compare as days in the item's own year, so leap years line up.
+      const same = Date.UTC(+d[1], +m[2] - 1, +m[3]), then = Date.UTC(+d[1], +d[2] - 1, +d[3]);
+      const daysOff = Math.round((then - same) / 86400000);
+      if(Math.abs(daysOff) <= win) out.push({ item, yearsAgo: y0 - +d[1], daysOff });
+    });
+    return out.sort((a, b) => a.yearsAgo - b.yearsAgo || Math.abs(a.daysOff) - Math.abs(b.daysOff));
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName, joinTracks, sliceKm,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint, gradeBreakdown, pointAtKm,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint, gradeBreakdown, pointAtKm, onThisDay,
   };
 });

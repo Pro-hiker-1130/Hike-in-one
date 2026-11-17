@@ -14,6 +14,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - Route planner: colour the planned line by steepness (green flat → red steep) — Locus Map — spotting and avoiding steep bits while planning — M
 - Trip photos pinned on the map where they were taken (from the photo's location data) — Relive — remembering where a view was — M
 - Profile ↔ map link on the trip page too (needs a small map there) — Footpath — same help when reviewing a hike — M
+- A diary line per hike ("windy on the ridge, saw ibex"), shown on the trip page and in the memory card — SummitLynx — remembering the day — M (new saved field)
 
 ## Polish
 
@@ -68,3 +69,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-14 — Loading placeholders for the trip forecast (polish)
 - 2026-11-15 — Trip plan to leave with someone at home (research, Cairn / park-service idea)
 - 2026-11-16 — Gear cards: capitalised status, quieter retired, dashed wishlist (polish)
+- 2026-11-17 — "1 year ago this week" memory card on the Trips page (research, journaling-app idea)

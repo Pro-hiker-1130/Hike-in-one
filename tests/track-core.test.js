@@ -366,3 +366,17 @@ test('pointAtKm finds a spot along a line, scaled to the profile length when giv
   assert.deepEqual(T.pointAtKm(line, -1), [46, 7]);
   assert.equal(T.pointAtKm([], 1), null);
 });
+
+test('onThisDay finds walks from this week in earlier years, newest year and closest day first', () => {
+  const items = [
+    { name: 'A', date: '2025-11-17' }, { name: 'B', date: '2023-11-15' }, { name: 'C', date: '2025-11-20' },
+    { name: 'D', date: '2024-12-01' }, { name: 'E', date: '2026-11-17' }, { name: 'F' },
+  ];
+  const r = T.onThisDay(items, '2026-11-17');
+  assert.deepEqual(r.map(x => [x.item.name, x.yearsAgo, x.daysOff]), [['A', 1, 0], ['C', 1, 3], ['B', 3, -2]],
+    'this year and far-off dates are left out');
+  assert.deepEqual(T.onThisDay(items, '2026-11-17', 0).map(x => x.item.name), ['A']);
+  // Around New Year the window doesn't wrap into another year's January; that's fine for a nudge.
+  assert.deepEqual(T.onThisDay([{ date: '2024-02-29' }], '2026-02-28').map(x => x.daysOff), [1]);
+  assert.deepEqual(T.onThisDay(items, ''), []);
+});
