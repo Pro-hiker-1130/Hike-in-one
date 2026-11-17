@@ -336,3 +336,33 @@ test('GPX for a GPS watch: full GPX 1.1 header, a trip\'s routes joined, one day
   assert.deepEqual(day2.points[day2.points.length-1], [46.04, 7.5]);
   assert.equal(day2.elevationLossM, 100);
 });
+
+test('highestPoint finds where a track tops out, from point elevations or the profile', () => {
+  const pts = [[46, 7], [46.01, 7], [46.02, 7], [46.03, 7]];
+  assert.deepEqual(T.highestPoint({ points: pts, pointEle: [1000, 1450.4, null, 1200] }), { ll: [46.01, 7], eleM: 1450, km: 1.1 });
+  // An older track: only a [km, ele] profile along it.
+  const old = T.highestPoint({ points: pts, profile: [[0, 1000], [2.2, 1800], [3.3, 1500]] });
+  assert.equal(old.eleM, 1800);
+  assert.deepEqual(old.ll, [46.02, 7]);
+  assert.equal(T.highestPoint({ points: pts }), null);
+});
+
+test('gradeBreakdown splits a profile into uphill, downhill and flat km', () => {
+  // 2 km up at 10 %, 1 km flat, 1.5 km down at 8 %.
+  const p = [[0, 1000], [2, 1200], [3, 1200], [4.5, 1080]];
+  assert.deepEqual(T.gradeBreakdown(p), { upKm: 2, downKm: 1.5, flatKm: 1 });
+  assert.deepEqual(T.gradeBreakdown([[0, 500], [3, 520]]), { upKm: 0, downKm: 0, flatKm: 3 }, 'under 3 % counts as flat');
+  assert.equal(T.gradeBreakdown([[0, 500]]), null);
+});
+
+test('pointAtKm finds a spot along a line, scaled to the profile length when given', () => {
+  const line = [[46, 7], [46.1, 7]];   // ~11.12 km north
+  const total = T.cumulativeKm(line)[1];
+  const mid = T.pointAtKm(line, total / 2);
+  assert.ok(Math.abs(mid[0] - 46.05) < 1e-9 && mid[1] === 7);
+  // A profile measured as 12 km long: its km 6 is the middle of the line.
+  assert.ok(Math.abs(T.pointAtKm(line, 6, 12)[0] - 46.05) < 1e-9);
+  assert.deepEqual(T.pointAtKm(line, 99), [46.1, 7], 'clamped to the end');
+  assert.deepEqual(T.pointAtKm(line, -1), [46, 7]);
+  assert.equal(T.pointAtKm([], 1), null);
+});

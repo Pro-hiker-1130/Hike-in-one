@@ -73,6 +73,7 @@ const trackLineRenderer = L.canvas({padding:0.3, tolerance:8});
 const trackEndRenderer = L.canvas({pane:'trackEnds', padding:0.3});
 const trackDrawn = new Map();       // track id -> {t, line, casing}
 const trackEndGroup = L.layerGroup();
+const trackKmGroup = L.layerGroup();   // km markers on the trip or hike in focus
 let trackFocus = null;              // {tripId} or {trackId}: the others fade
 let hoveredTrackId = null;
 const TRACK_ENDS_MIN_ZOOM = 12;
@@ -110,6 +111,7 @@ function styleTracks(){
 
 function renderTrackEnds(){
   trackEndGroup.clearLayers();
+  trackKmGroup.clearLayers();
   if(map.getZoom() < TRACK_ENDS_MIN_ZOOM) return;
   const view = map.getBounds().pad(0.2);
   const dot = (ll, fill, ring) => L.circleMarker(ll, { renderer: trackEndRenderer, interactive: false,
@@ -122,11 +124,36 @@ function renderTrackEnds(){
     dot(end, '#B3261E', '#FFFFFF');
     dot(start, '#3A5A40', '#FFFFFF');
   });
+  // A trip or hike in focus also gets kilometre markers along its route.
+  const fresh = focusMarkersFresh ? ' is-fresh' : '';
+  if(trackFocus && map.getZoom() >= TRACK_ENDS_MIN_ZOOM) focusMarkersFresh = false;
+  if(trackFocus) trackDrawn.forEach(({t, line})=>{
+    if(!trackInFocus(t) || t.points.length < 2 || !line.getBounds().intersects(view)) return;
+    TrackCore.kmMarkers(t.points).forEach(m => addKmMarker(m, trackKmGroup, fresh));
+    // Its high point, unless the walk is about flat.
+    const top = TrackCore.highestPoint(t);
+    if(top && !(t.maxEleM - t.minEleM < 30)) L.marker(top.ll, { interactive: false, keyboard: false,
+      icon: L.divIcon({ className: 'summit-marker' + fresh, html: '<span>\u25B2 ' + top.eleM.toLocaleString('en-US') + ' m</span>', iconSize: null }) }).addTo(trackKmGroup);
+  });
 }
 
+// A small "5" label on a route at km 5 (route planner, focused trips on
+// the map, the shared-route page).
+function addKmMarker(m, group, extraClass){
+  L.marker(m.ll, { interactive: false, keyboard: false,
+    icon: L.divIcon({ className: 'km-marker' + (extraClass || ''), html: '<span>' + m.km + '</span>', iconSize: null }) }).addTo(group);
+}
+
+// Markers and the chip animate in only when what's in focus changes, not
+// on every pan or redraw (CSS: is-fresh, chip-in).
+let focusMarkersFresh = false;
+const focusKey = f => f ? (f.tripId || '') + '|' + (f.trackId || '') : '';
 function setTrackFocus(focus){
+  const changed = focusKey(focus) !== focusKey(trackFocus);
   trackFocus = focus;
+  if(changed) focusMarkersFresh = !!focus;
   const chip = document.getElementById('trackFocusChip');
+  if(chip && changed && focus){ chip.classList.remove('chip-in'); void chip.offsetWidth; chip.classList.add('chip-in'); }
   if(chip){
     let label = '';
     if(focus && focus.tripId){ const tr = trips.find(x => x.id === focus.tripId); label = tr ? tr.name : ''; }
@@ -185,6 +212,7 @@ function renderTracks(){
     trackDrawn.set(t.id, {t, line, casing});
   });
   trackLayerGroup.addLayer(trackEndGroup);
+  trackLayerGroup.addLayer(trackKmGroup);
   // A focused trip that no longer exists lets go.
   if(trackFocus && ![...trackDrawn.values()].some(d => trackInFocus(d.t))) trackFocus = null;
   setTrackFocus(trackFocus);
@@ -315,7 +343,7 @@ function renderYearReview(){
   const s = TrackCore.yearSummary(tracks, yearReviewYear);
   const n = (v, one, many) => v.toLocaleString('en-US') + ' ' + (v === 1 ? one : many);
   const lines = [
-    n(s.count, 'walk', 'walks') + ' on ' + n(s.days, 'day', 'days') + ' · ' + compactNumber(s.distanceKm) + ' km · ' + compactNumber(s.gainM) + ' m up',
+    n(s.count, 'walk', 'walks') + ' on ' + n(s.days, 'day', 'days') + ' · ' + (s.distanceKm < 100 ? s.distanceKm.toFixed(1) : compactNumber(s.distanceKm)) + ' km · ' + compactNumber(s.gainM) + ' m up',
     'Longest: ' + s.longest.name + ', ' + s.longest.distanceKm.toFixed(1) + ' km' +
       (s.highest ? ' · Highest: ' + s.highest.eleM.toLocaleString('en-US') + ' m on ' + s.highest.name : '') +
       ' · Busiest month: ' + MONTHS_LONG[s.busiestMonth],

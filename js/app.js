@@ -371,6 +371,7 @@ document.getElementById('tripGearEditBtn').addEventListener('click', ()=> openGe
 document.getElementById('tripPackBtn').addEventListener('click', toggleTripPacking);
 document.getElementById('tripDailyKm').addEventListener('input', setTripDailyKm);
 document.getElementById('tripShareImageBtn').addEventListener('click', ()=> shareTripImage(currentTripId));
+document.getElementById('tripPlanTextBtn').addEventListener('click', ()=> shareTripPlan(currentTripId));
 document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
 document.getElementById('tripDownloadRouteBtn').addEventListener('click', downloadTripRoute);
 document.getElementById('tripSearch').addEventListener('input', ()=> renderTripCards());
@@ -385,7 +386,13 @@ document.getElementById('paceUseMine').addEventListener('change', e=>{
   renderPaceSettings();
   if(currentTripId) renderTripDetail();
 });
-document.getElementById('yearReviewSelect').addEventListener('change', e=>{ yearReviewYear = e.target.value; renderYearReview(); });
+document.getElementById('yearReviewSelect').addEventListener('change', e=>{
+  yearReviewYear = e.target.value;
+  renderYearReview();
+  // The new year's numbers fade in (CSS: year-review-swap), replayed per change.
+  const text = document.getElementById('yearReviewText');
+  text.classList.remove('year-review-swap'); void text.offsetWidth; text.classList.add('year-review-swap');
+});
 document.getElementById('tripShareUpdateBtn').addEventListener('click', publishTripShare);
 document.getElementById('tripShareStopBtn').addEventListener('click', stopTripShare);
 document.getElementById('tripShareCopyBtn').addEventListener('click', copyTripShareLink);

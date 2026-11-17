@@ -28,18 +28,32 @@ async function wmtJson(path){
   return res.json();
 }
 
-// The GR routes listed in one tile: [{id, ref, name}].
+// The GR routes listed in one tile: [{id, ref, name, group, main}], main
+// being false for side branches (variants, link paths, detours). The
+// service lists at most 100 routes, biggest networks first; when a tile
+// comes back full and the national routes may run past the cut, its four
+// quarters are listed instead (down to ~5 km squares).
+const GR_LIST_CAP = 100, GR_MAX_TILE_ZOOM = 13;
 function grRoutesInTile(tile){
-  return grCached('gr:area:' + tile.key, GR_AREA_DAYS, async ()=>{
-    const d = await wmtJson('/list/by_area?bbox=' + tile.bbox.join(',') + '&limit=100');
-    return (d.results || []).filter(r => r.type === 'relation' && GrCore.isGrRef(r.ref))
-      .map(r => ({ id: r.id, ref: r.ref, name: r.name || r.ref }));
+  return grCached('gr:area2:' + tile.key, GR_AREA_DAYS, async ()=>{
+    const d = await wmtJson('/list/by_area?bbox=' + tile.bbox.join(',') + '&limit=' + GR_LIST_CAP);
+    const results = d.results || [];
+    const z = Number(tile.key.split('/')[0]);
+    const last = results.length ? results[results.length-1].group : null;
+    if(results.length >= GR_LIST_CAP && ['INT', 'NAT'].includes(last) && z < GR_MAX_TILE_ZOOM){
+      const byId = new Map();
+      for(const child of GrCore.tileChildren(tile.key)) (await grRoutesInTile(child)).forEach(r => byId.set(r.id, r));
+      return [...byId.values()];
+    }
+    return results.filter(r => r.type === 'relation' && GrCore.isGrListing(r))
+      .map(r => ({ id: r.id, ref: r.ref, name: r.name || r.ref, group: r.group, main: GrCore.isGrMainRoute(r) }));
   });
 }
 
-// One route's simplified lines, or null for an umbrella relation.
-function grRoute(id){
-  return grCached('gr:route:' + id, GR_ROUTE_DAYS, async ()=> GrCore.detailsToRoute(await wmtJson('/details/relation/' + id)));
+// A listed route's GR sections (one for a plain route, several for an
+// umbrella relation), each with simplified lines; see GrCore.detailsToRoutes.
+function grSections(id){
+  return grCached('gr:route2:' + id, GR_ROUTE_DAYS, async ()=> GrCore.detailsToRoutes(await wmtJson('/details/relation/' + id)));
 }
 
 // Runs fn over items, a few at a time.
@@ -94,8 +108,15 @@ function makeGrOverlay(m){
       try{ (await grRoutesInTile(t)).forEach(r => ids.set(r.id, r)); }catch(e){ failed = true; }
     });
     if(mine !== run || !on) return;
-    await grEach([...ids.keys()].filter(id => !drawn.has(id)), 3, async id=>{
-      try{ const r = await grRoute(id); if(on) draw(r); }catch(e){ failed = true; }
+    // Sections of the listed routes that reach into the view (an umbrella
+    // like all of GR 5 has hundreds of km elsewhere).
+    const view = m.getBounds().pad(0.5);
+    await grEach([...ids.keys()], 3, async id=>{
+      try{
+        (await grSections(id)).forEach(sec=>{
+          if(on && sec.listed && view.intersects([[sec.bbox[0], sec.bbox[1]], [sec.bbox[2], sec.bbox[3]]])) draw(sec);
+        });
+      }catch(e){ failed = true; }
     });
     if(mine !== run || !on) return;
     say(failed ? 'Some GR routes could not be loaded (offline?)' : (ids.size ? '' : 'No GR routes here'));
@@ -136,7 +157,7 @@ async function updateGrProgress(force){
   if(!walked.length){ box.hidden = true; return; }
   const sig = grTracksSignature(walked);
   let cached = null;
-  try{ cached = JSON.parse(await storeGet('gr:progress') || 'null'); }catch(e){}
+  try{ cached = JSON.parse(await storeGet('gr:progress3') || 'null'); }catch(e){}
   if(cached && cached.sig === sig && !force && Date.now() - cached.at < GR_AREA_DAYS * 86400000){
     renderGrProgress(cached.rows);
     return;
@@ -153,21 +174,25 @@ async function updateGrProgress(force){
     await grEach(tiles, 3, async tile=>{
       try{ (await grRoutesInTile(tile)).forEach(r => ids.set(r.id, r)); }catch(e){ failed++; }
     });
-    const rows = [];
+    // Every GR section of those routes (umbrellas split into sections),
+    // once each; only main routes count, not variants or link paths.
+    const sections = new Map();
     await grEach([...ids.keys()], 3, async id=>{
-      let r = null;
-      try{ r = await grRoute(id); }catch(e){ failed++; return; }
-      if(!r) return;
-      // Only tracks whose box touches the route's box.
-      const rb = L.latLngBounds(r.lines.flat()).pad(0.01);
-      const near = walked.filter(t => rb.intersects(L.latLngBounds(t.points))).map(t => t.points);
+      try{ (await grSections(id)).forEach(sec => { if(sec.main) sections.set(sec.id, sec); }); }
+      catch(e){ failed++; }
+    });
+    const rows = [];
+    sections.forEach(sec=>{
+      // Only tracks whose box touches the section's box.
+      const sb = L.latLngBounds([sec.bbox[0], sec.bbox[1]], [sec.bbox[2], sec.bbox[3]]).pad(0.01);
+      const near = walked.filter(t => sb.intersects(L.latLngBounds(t.points))).map(t => t.points);
       if(!near.length) return;
-      const c = GrCore.coverage(r, near);
-      if(c.walkedKm >= 0.3) rows.push({ id: r.id, ref: r.ref, name: grLabel(r), lengthKm: Math.max(r.lengthKm, c.mappedKm), walkedKm: c.walkedKm, pct: c.pct });
+      const c = GrCore.coverage(sec, near);
+      if(c.walkedKm >= 0.3) rows.push({ id: sec.id, ref: sec.ref, name: grLabel(sec), lengthKm: Math.max(sec.lengthKm, c.mappedKm), walkedKm: c.walkedKm, pct: c.pct });
     });
     rows.sort((a, b) => b.pct - a.pct || b.walkedKm - a.walkedKm);
     // Don't keep a result that is missing routes because the network failed.
-    if(!failed) await storeSet('gr:progress', JSON.stringify({ sig, at: Date.now(), rows }));
+    if(!failed) await storeSet('gr:progress3', JSON.stringify({ sig, at: Date.now(), rows }));
     renderGrProgress(rows, failed > 0);
   }catch(e){
     document.getElementById('grProgressTotal').textContent = 'GR routes could not be looked up right now.';

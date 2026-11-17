@@ -14,10 +14,30 @@
 
   const R = 6378137;           // Web Mercator sphere radius (m)
 
-  // "GR 5", "GR5", "GR 20", "GR 561", "GR 131A" — but not "GRP 563"
+  // "GR 5", "GR5", "GR 20", "GR 561", "GR 10F", "GR 57 P1" — capital GR
+  // only: local loops numbered "Gr1", "Gr2" are not GR routes. Not "GRP 563"
   // (GR de Pays), "GRT" or "E2".
   function isGrRef(ref){
-    return /^GR\s?-?\s?\d+[A-Za-z]?\b/i.test(String(ref || '').trim());
+    return /^GR ?-? ?\d+[A-Z]?(\s|$)/.test(String(ref || '').trim());
+  }
+
+  // Side branches of a GR: variants, link paths, seasonal detours. Drawn on
+  // the map, but not counted as a GR route of their own.
+  const SIDE_BRANCH = /\b(variant|variante|varianten|varianti|liaison|liaisons|verbinding|aansluiting|deviation|déviation|omleiding|alternative|alternatief|link|connection|raccordement|enlace|derivación|ramal)\b/i;
+  function isGrSideBranch(r){
+    const ref = String(r && r.ref || '').trim();
+    return / [LV]\d+$/.test(ref) || SIDE_BRANCH.test(String(r && r.name || ''));
+  }
+
+  // A route listing entry ({ref, name, group}) that is a GR route to show on
+  // the map: international, national or regional, not a local loop.
+  function isGrListing(r){
+    return !!r && isGrRef(r.ref) && ['INT', 'NAT', 'REG'].includes(r.group);
+  }
+  // ...and one that counts for "how much of each GR have you walked":
+  // the main route, not a side branch.
+  function isGrMainRoute(r){
+    return isGrListing(r) && !isGrSideBranch(r);
   }
 
   function mercToLatLon(p){
@@ -53,27 +73,9 @@
     return m / 1000;
   }
 
-  // A Waymarked Trails details answer as {id, ref, name, lengthKm, lines},
-  // lines in [lat, lon]; null for an "umbrella" relation that only groups
-  // other routes (e.g. all of GR 5), whose sections are listed on their own.
-  function detailsToRoute(d, minM){
-    // Waymarked Trails lists an umbrella's sections under `subroutes`
-    // (an object keyed by relation id).
-    const subs = d && d.subroutes;
-    if(!d || !d.route || (subs && typeof subs === 'object' && Object.keys(subs).length)) return null;
-    const lines = [];
-    const walk = node => {
-      if(!node) return;
-      (node.ways || []).forEach(w => {
-        const c = w && w.geometry && w.geometry.type === 'LineString' && w.geometry.coordinates;
-        if(c && c.length > 1) lines.push(c.map(mercToLatLon));
-      });
-      (node.main || []).forEach(walk);
-    };
-    walk(d.route);
-    if(!lines.length) return null;
-    // Ways follow each other along the route: join those that continue
-    // one another into long lines (hundreds of short pieces draw slowly).
+  // Lines that continue one another joined into long lines (hundreds of
+  // short pieces draw slowly), then thinned to ~minM metres.
+  function joinLines(lines, minM){
     const joined = [];
     lines.forEach(l=>{
       const last = joined[joined.length-1];
@@ -84,14 +86,70 @@
       }
       joined.push(l.slice());
     });
-    lines.length = 0;
-    lines.push(...joined.map(l => thin(l, minM || 25)));
-    const mapped = lines.reduce((s, l) => s + lineKm(l), 0);
-    return {
-      id: d.id, ref: d.ref || '', name: d.name || d.ref || 'GR',
-      lengthKm: d.route.length > 0 ? d.route.length / 1000 : mapped,
-      lines,
+    return joined.map(l => thin(l, minM || 25));
+  }
+
+  // "GR 12" from a name like "GR 12 Vlaanderen, Bruxelles - …", for
+  // sections mapped without a ref of their own.
+  function refFromName(name){
+    const m = /^(GR ?-? ?\d+[A-Z]?)(?=[\s,:–-]|$)/.exec(String(name || '').trim());
+    return m ? m[1] : '';
+  }
+
+  // A Waymarked Trails details answer as its GR sections: one for a plain
+  // route, one per section for an "umbrella" relation (all of GR 12, say,
+  // whose sections the area listing doesn't always show on their own).
+  // Each is {id, ref, name, group, lengthKm, lines, bbox, listed, main}:
+  // lines in [lat, lon]; bbox [south, west, north, east]; listed = a GR
+  // route to show on the map; main = one that counts for "walked" (not a
+  // variant, link path or detour).
+  function detailsToRoutes(d, minM){
+    if(!d || !d.route) return [];
+    const subs = (d.subroutes && typeof d.subroutes === 'object') ? d.subroutes : {};
+    const info = id => id === d.id ? d : (subs[String(id)] || {});
+    const owners = new Map();     // relation id -> {lines, length}
+    const visit = (node, owner, parentRef) => {
+      if(!node) return;
+      if(node.id != null && node.id !== owner){
+        owner = node.id;
+        const i = info(owner);
+        parentRef = (i.ref && String(i.ref).trim()) || refFromName(i.name) || parentRef;
+        if(!owners.has(owner)) owners.set(owner, { lines: [], length: node.length, ref: parentRef });
+      }
+      (node.ways || []).forEach(w => {
+        const c = w && w.geometry && w.geometry.type === 'LineString' && w.geometry.coordinates;
+        if(c && c.length > 1) owners.get(owner).lines.push(c.map(mercToLatLon));
+      });
+      (node.main || []).forEach(m => visit(m, owner, parentRef));
     };
+    const rootRef = (d.ref && String(d.ref).trim()) || refFromName(d.name);
+    owners.set(d.id, { lines: [], length: d.route.length, ref: rootRef });
+    visit(d.route, d.id, rootRef);
+    const out = [];
+    owners.forEach((o, id) => {
+      if(!o.lines.length) return;
+      const i = info(id);
+      const lines = joinLines(o.lines, minM);
+      const mapped = lines.reduce((sum, l) => sum + lineKm(l), 0);
+      let s = 90, w = 180, n = -90, e = -180;
+      lines.forEach(l => l.forEach(([la, lo]) => { if(la < s) s = la; if(la > n) n = la; if(lo < w) w = lo; if(lo > e) e = lo; }));
+      const r = {
+        id, ref: o.ref || '', name: i.name || o.ref || 'GR', group: i.group || d.group || '',
+        lengthKm: o.length > 0 ? o.length / 1000 : mapped, lines, bbox: [s, w, n, e],
+      };
+      r.listed = isGrListing(r);
+      r.main = isGrMainRoute(r);
+      out.push(r);
+    });
+    return out;
+  }
+
+  // The single-route form, for a plain (non-umbrella) relation.
+  function detailsToRoute(d, minM){
+    const subs = d && d.subroutes;
+    if(subs && typeof subs === 'object' && Object.keys(subs).length) return null;
+    const all = detailsToRoutes(d, minM);
+    return all.length === 1 ? all[0] : (all.find(r => r.id === (d && d.id)) || null);
   }
 
   // ---- How much of a route has been walked ----
@@ -180,6 +238,19 @@
     return [...seen.values()];
   }
 
+  // A tile by its "z/x/y" key, with its box in metres.
+  function tileFromKey(key){
+    const [z, x, y] = key.split('/').map(Number);
+    const n = Math.pow(2, z), size = 2 * Math.PI * R / n;
+    const minX = -Math.PI * R + x * size, maxY = Math.PI * R - y * size;
+    return { key, bbox: [minX, maxY - size, minX + size, maxY].map(v => Math.round(v)) };
+  }
+  // Its four quarters, one zoom level down.
+  function tileChildren(key){
+    const [z, x, y] = key.split('/').map(Number);
+    return [[0,0],[1,0],[0,1],[1,1]].map(([dx, dy]) => tileFromKey((z+1) + '/' + (2*x+dx) + '/' + (2*y+dy)));
+  }
+
   // The tiles (zoom z) covering a lat/lon box, as tilesFor gives them.
   function tilesInBounds(south, west, north, east, z){
     const pts = [];
@@ -195,7 +266,7 @@
   }
 
   return {
-    isGrRef, mercToLatLon, latLonToMerc, metres, thin, lineKm,
-    detailsToRoute, segmentIndex, coverage, tilesFor, tilesInBounds, boundsToMercBox,
+    isGrRef, isGrSideBranch, isGrListing, isGrMainRoute, tileFromKey, tileChildren, mercToLatLon, latLonToMerc, metres, thin, lineKm,
+    detailsToRoute, detailsToRoutes, refFromName, segmentIndex, coverage, tilesFor, tilesInBounds, boundsToMercBox,
   };
 });

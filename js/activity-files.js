@@ -334,7 +334,9 @@ function formatDuration(sec){
 // Track ids whose profile has been drawn this session: only the first
 // showing sweeps in from the left, re-renders appear at once.
 const drawnProfiles = new Set();
-function buildElevationProfile(t){
+// onPoint (optional): called with the km under the pointer or keyboard
+// cursor as it moves, and with null when it leaves, so a map can follow.
+function buildElevationProfile(t, onPoint){
   const pts = t.profile;
   const totalKm = pts[pts.length-1][0] || t.distanceKm || 1;
   let lo = t.minEleM, hi = t.maxEleM;
@@ -384,8 +386,9 @@ function buildElevationProfile(t){
       clientX = r.left + r.width/2; clientY = r.top;
     }
     showChartTooltip(clientX, clientY, ele+' m', 'at '+km.toFixed(1)+' km', null);
+    if(onPoint) onPoint(km);
   }
-  function hide(){ cursor.hidden = dot.hidden = true; hideChartTooltip(); }
+  function hide(){ cursor.hidden = dot.hidden = true; hideChartTooltip(); if(onPoint) onPoint(null); }
   function nearestIndex(km){
     let best = 0;
     for(let i=1;i<pts.length;i++) if(Math.abs(pts[i][0]-km) < Math.abs(pts[best][0]-km)) best = i;
@@ -445,6 +448,15 @@ function trackTerrainSummary(t){
   parts.push('top '+s.highestM.toLocaleString('en-US')+' m');
   if(s.aboveM && s.aboveKm >= 0.1) parts.push(s.aboveKm.toFixed(1)+' km above '+s.aboveM.toLocaleString('en-US')+' m');
   return parts.join(' · ');
+}
+
+// "2.0 km up · 1.5 km down · 1.0 km flat": how a hike's distance splits
+// between climbing, descending and about level ground (over ±3 %).
+function trackGradeLine(t){
+  const g = t.profile && TrackCore.gradeBreakdown(t.profile);
+  if(!g || (g.upKm < 0.1 && g.downKm < 0.1)) return '';
+  return [[g.upKm, 'up'], [g.downKm, 'down'], [g.flatKm, 'flat']]
+    .filter(([km]) => km >= 0.1).map(([km, w]) => km.toFixed(1) + ' km ' + w).join(' · ');
 }
 
 // ---- Country detection (offline point-in-polygon against a bundled,

@@ -280,6 +280,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
   color:var(--muted);white-space:nowrap;height:fit-content;
 }
 .gear-badge.status-retired{color:var(--muted);background:var(--panel-alt);}
+/* Status reads like the trip badges ("Active", "Planned"); gear you no
+   longer use looks quieter, and wishlist items are drawn dashed. */
+.gear-badge{text-transform:capitalize;}
+.gear-card.is-retired{background:#F7F6F2;}
+.gear-card.is-retired .gear-card-name,.gear-card.is-retired .gear-card-weight{color:rgba(52,78,65,0.78);}
+.gear-card.is-wishlist{background:transparent;border:1.5px dashed rgba(52,78,65,0.3);box-shadow:none;}
 .gear-card-meta{font-size:12px;color:var(--muted);}
 .trip-track-block{
   padding:10px 14px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);
@@ -733,6 +739,14 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .trip-weather-day{display:flex;flex-wrap:wrap;gap:2px 12px;padding:4px 0;}
 .trip-weather-date{font-weight:600;min-width:120px;}
 .trip-weather-text,.trip-weather-note{color:var(--muted);margin:0;}
+/* Loading: two soft bars with a light sheen passing over them. */
+@keyframes skeleton-sheen{from{background-position:120% 0;}to{background-position:-20% 0;}}
+.trip-weather-skeleton span{display:block;height:12px;margin:8px 0;border-radius:6px;
+  background:linear-gradient(90deg,var(--sage-soft) 30%,#F4F5F0 50%,var(--sage-soft) 70%) 0 0/250% 100%;
+  animation:skeleton-sheen 1.2s ease-in-out infinite;}
+.trip-weather-skeleton span:first-child{width:85%;}
+.trip-weather-skeleton span:last-child{width:65%;}
+@media (prefers-reduced-motion: reduce){.trip-weather-skeleton span{animation:none;background:var(--sage-soft);}}
 .trip-weather-credit{margin:6px 0 0;font-size:11.5px;color:var(--muted);}
 .trip-weather-credit a{color:inherit;}
 @media (max-width:560px){.trip-weather{margin:10px 12px 0;}}
@@ -788,6 +802,12 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .year-review-text{margin:0;font-size:13px;color:var(--muted);line-height:1.45;}
 .year-review-text span{display:block;}
 .year-review-text span:first-child{color:var(--parchment);font-weight:600;}
+@keyframes year-review-swap{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+.year-review-swap{animation:year-review-swap 200ms ease-out;}
+@media (prefers-reduced-motion: reduce){.year-review-swap{animation:none;}}
+
+.trip-detail-actions{margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;}
+.trip-detail-actions>*{white-space:nowrap;}
 
 /* Multi-day plan */
 #tripDaysSection[hidden]{display:none;}
@@ -1003,6 +1023,18 @@ body{font-size:15px;}
   font:inherit;text-align:left;cursor:pointer;box-shadow:0 1px 2px rgba(52,78,65,0.05);max-width:620px;
 }
 .next-trip:hover{border-color:var(--brass);}
+/* Cards you can open: a slight lift on hover (pointer devices only), a
+   press-in when tapped, and a clear ring for keyboard focus. */
+.trip-card,.next-trip,.row-link{transition:border-color .15s ease,box-shadow .18s ease,transform .18s ease;}
+@media (hover:hover){
+  .trip-card:hover,.next-trip:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(52,78,65,0.12);}
+}
+.trip-card:active,.next-trip:active,.row-link:active{transform:scale(0.99);box-shadow:0 1px 2px rgba(52,78,65,0.05);transition-duration:.08s;}
+.trip-card:focus-visible,.next-trip:focus-visible,.row-link:focus-visible{outline:2px solid var(--fern);outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){
+  .trip-card,.next-trip,.row-link{transition:border-color .15s ease,box-shadow .18s ease;}
+  .trip-card:hover,.next-trip:hover,.trip-card:active,.next-trip:active,.row-link:active{transform:none;}
+}
 .next-trip-count{
   flex:none;width:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:12px 6px;background:var(--brass);color:var(--on-accent);text-align:center;
@@ -1050,6 +1082,13 @@ body{font-size:15px;}
 .pack-list-grow .pack-bar span{transform-origin:left center;animation:pack-bar-grow 300ms cubic-bezier(0.2,0.8,0.2,1) both;animation-delay:calc(var(--i, 0) * 40ms);}
 @media (prefers-reduced-motion: reduce){.pack-list-grow .pack-bar span{animation:none;}}
 .pack-items{padding:0 16px 10px;display:flex;flex-direction:column;}
+/* Opening a category: its items fade in and drop into place, a little apart. */
+@keyframes pack-items-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+.pack-items-in .pack-item{animation:pack-items-in 200ms ease-out both;}
+.pack-items-in .pack-item:nth-child(2){animation-delay:30ms;}
+.pack-items-in .pack-item:nth-child(3){animation-delay:60ms;}
+.pack-items-in .pack-item:nth-child(n+4){animation-delay:90ms;}
+@media (prefers-reduced-motion: reduce){.pack-items-in .pack-item{animation:none;}}
 .pack-item{
   display:flex;align-items:center;gap:10px;min-height:46px;padding:4px 0;border:0;border-top:1px dashed var(--line);
   background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer;
@@ -1263,7 +1302,10 @@ body{font-size:15px;}
 .rp-wp{border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);background:#fff;}
 .rp-wp-start{background:#3A5A40;}
 .rp-wp-end{background:#B3261E;}
-.rp-km span{display:block;transform:translate(-50%,-50%);padding:0 5px;border-radius:8px;background:#fff;border:1.5px solid #C4501C;
+.summit-marker span{display:block;position:relative;transform:translate(-50%,calc(-100% - 7px));padding:1px 7px;border-radius:9px;background:var(--parchment);
+  color:#fff;font:600 11px/17px var(--font-body);white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.summit-marker span::after{content:"";position:absolute;left:50%;bottom:-4px;margin-left:-4px;border:4px solid transparent;border-bottom:0;border-top-color:var(--parchment);}
+.km-marker span{display:block;transform:translate(-50%,-50%);padding:0 5px;border-radius:8px;background:#fff;border:1.5px solid #C4501C;
   color:#7A2E0E;font:600 10.5px/15px var(--font-body);white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.25);}
 .rp-wp-via{background:#fff;border-color:#C4501C;}
 @media (max-width:760px){
@@ -1289,6 +1331,13 @@ body{font-size:15px;}
   animation:modal-overlay-in 180ms ease-out;
 }
 .track-focus-chip[hidden]{display:none;}
+/* Focusing a trip: the chip slides in, its markers fade in once. */
+@keyframes chip-in{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:none;}}
+@keyframes focus-marker-in{from{opacity:0;}to{opacity:1;}}
+.track-focus-chip.chip-in{animation:chip-in 200ms ease-out;}
+.km-marker.is-fresh span,.summit-marker.is-fresh span{animation:focus-marker-in 220ms ease-out both;}
+.summit-marker.is-fresh span{animation-delay:80ms;}
+@media (prefers-reduced-motion: reduce){.track-focus-chip.chip-in,.km-marker.is-fresh span,.summit-marker.is-fresh span{animation:none;}}
 .track-focus-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 .track-focus-chip button{
   flex:none;border:none;border-radius:6px;background:var(--sage-soft);color:var(--brass);

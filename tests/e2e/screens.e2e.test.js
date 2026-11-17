@@ -137,7 +137,7 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   // Year in review: both test hikes are in 2025.
   assert.equal(await page.inputValue('#yearReviewSelect'), '2025');
   assert.match(await text(page, '#yearReviewText'),
-    /^2 walks on 2 days · [\d.]+ km · 900 m upLongest: .+, [\d.]+ km · Highest: 1,600 m on Eiger trail · Busiest month: (July|August)$/);
+    /^2 walks on 2 days · \d+\.\d km · 900 m upLongest: .+, [\d.]+ km · Highest: 1,600 m on Eiger trail · Busiest month: (July|August)$/);
   // Personal bests, all time.
   const bests = await page.$$eval('#personalBests li', els => els.map(li => [...li.children].map(c => c.textContent)));
   assert.equal(bests[0][0], 'Longest walk');
@@ -145,6 +145,32 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   assert.equal(await page.getAttribute('#personalBests li:has-text("Highest point") .pb-walk', 'title'), 'Eiger trail, 10 Jul 2025');
   assert.deepEqual(bests.find(b => b[0] === 'Biggest climb'), ['Biggest climb', '600 m up', 'Eiger trail']);
   assert.deepEqual(bests.find(b => b[0] === 'Highest point'), ['Highest point', '1,600 m', 'Eiger trail']);
+  // Picking another year: its numbers, with a short fade.
+  await page.evaluate(()=>{ tracks.push({ id: 'y24', name: 'Old walk', date: '2024-09-01', distanceKm: 7.25, elevationGainM: 300, points: [[45, 7], [45.01, 7]] }); renderStats(); });
+  await page.selectOption('#yearReviewSelect', '2024');
+  assert.match(await text(page, '#yearReviewText'), /^1 walk on 1 day · 7\.3 km · 300 m up/);
+  assert.equal(await page.$eval('#yearReviewText', el => getComputedStyle(el).animationName), 'year-review-swap');
+  await page.selectOption('#yearReviewSelect', '2025');
+  await page.evaluate(()=>{ tracks.pop(); yearReviewYear = null; renderStats(); });
+  // A hike in focus gets km markers once zoomed in; none without focus.
+  const kmShown = () => page.locator('#map .km-marker').count();
+  await page.evaluate(()=>{ const t = tracks[0]; map.setView(t.points[Math.floor(t.points.length / 2)], 13, { animate: false }); });
+  assert.equal(await kmShown(), 0, 'nothing in focus');
+  const want = await page.evaluate(()=>{ setTrackFocus({ trackId: tracks[0].id }); return TrackCore.kmMarkers(tracks[0].points).length; });
+  assert.ok(want > 0);
+  assert.equal(await kmShown(), want);
+  // They fade in when the focus changes, not again on a pan; the chip slides in.
+  assert.equal(await page.locator('#map .km-marker.is-fresh').count(), want);
+  assert.equal(await page.$eval('#trackFocusChip', el => getComputedStyle(el).animationName), 'chip-in');
+  await page.evaluate(()=> new Promise(r => { map.once('moveend', r); map.panBy([30, 0], { animate: false }); }));
+  assert.equal(await kmShown(), want);
+  assert.equal(await page.locator('#map .km-marker.is-fresh').count(), 0, 'no replay after panning');
+  // ...and its high point (the Eiger trail test hike climbs to 1,600 m).
+  assert.deepEqual(await page.$$eval('#map .summit-marker', els => els.map(e => e.textContent)),
+    [await page.evaluate(()=> '\u25B2 ' + TrackCore.highestPoint(tracks[0]).eleM.toLocaleString('en-US') + ' m')]);
+  await page.evaluate(()=> setTrackFocus(null));
+  assert.equal(await kmShown(), 0);
+  assert.equal(await page.locator('#map .summit-marker').count(), 0);
   // A change while the map is showing counts up, then lands on the new value.
   const counting = await page.evaluate(()=>{
     trips.push({ id: 'trip_x', name: 'X', trackIds: [], gearIds: [], status: 'planned', createdAt: 2 });
@@ -203,6 +229,8 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
   assert.deepEqual(sweeps, [1, 0]);
   // Each walked track says how steep it gets (the test hikes climb steadily north).
   assert.match(await text(page, '#tripTrackList .track-terrain'), /^Steepest climb \d+ % at km \d+\.\d · top [\d,]+ m/);
+  // ...and how its distance splits between up, down and flat (the test hikes only climb).
+  assert.match(await page.$eval('#tripTrackList .track-terrain + .track-terrain', el => el.textContent), /^\d+\.\d km up( · \d+\.\d km flat)?$/);
   assert.deepEqual(errors, []);
 });
 
@@ -275,7 +303,9 @@ test('trips: a planned route splits into days of about the chosen distance', { s
 test('trips: a planned trip within 16 days shows the forecast at its start, further out says when to check', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   const asked = [];
-  await page.context().route(/api\.open-meteo\.com\/v1\/forecast/, r=>{
+  let release; const answered = new Promise(r => { release = r; });   // the forecast waits until the test lets it through
+  await page.context().route(/api\.open-meteo\.com\/v1\/forecast/, async r=>{
+    await answered;
     const q = new URL(r.request().url()).searchParams;
     asked.push([q.get('latitude'), q.get('longitude'), q.get('start_date'), q.get('end_date')]);
     const from = q.get('start_date');
@@ -293,7 +323,13 @@ test('trips: a planned trip within 16 days shows the forecast at its start, furt
     await saveTrips();
     showTripDetail('trip_wx');
   }, { soon, later });
+  // While it loads: placeholder rows, announced as loading.
+  await page.waitForSelector('#tripWeather .trip-weather-skeleton');
+  assert.equal(await page.getAttribute('#tripWeather .trip-weather-skeleton', 'aria-label'), 'Loading the forecast');
+  assert.equal(await page.locator('#tripWeather .trip-weather-skeleton span').count(), 2);
+  release();
   await page.waitForSelector('#tripWeather .trip-weather-day');
+  assert.equal(await page.locator('#tripWeather .trip-weather-skeleton').count(), 0, 'placeholders replaced');
   const days = await page.$$eval('#tripWeather .trip-weather-day', els => els.map(e => e.textContent));
   assert.equal(days.length, 2, 'two days at 15 km a day');
   assert.match(days[0], /Partly cloudy · 4–15 °C · rain 10 % · wind up to 18 km\/h$/);
@@ -428,6 +464,70 @@ test('closing a dialog: it is gone at once, and a copy without ids fades away br
   assert.deepEqual(errors, []);
 });
 
+test('trip cards lift on hover, show a focus ring for the keyboard, and stay still with reduced motion', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await importHikes(page);
+  const card = '#tripCompletedGrid .trip-card';
+  const style = () => page.$eval(card, el => { const s = getComputedStyle(el); return { transform: s.transform, outline: s.outlineStyle }; });
+  await page.hover(card);
+  await page.waitForTimeout(250);
+  assert.notEqual((await style()).transform, 'none', 'lifts on hover');
+  await page.mouse.move(0, 0);
+  await page.evaluate(sel => document.querySelector(sel).blur(), card);
+  await page.keyboard.press('Tab');
+  await page.evaluate(sel => document.querySelector(sel).focus({ focusVisible: true }), card);
+  assert.equal((await style()).outline, 'solid', 'keyboard focus ring');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.hover(card);
+  await page.waitForTimeout(250);
+  assert.equal((await style()).transform, 'none', 'no movement with reduced motion');
+  assert.deepEqual(errors, []);
+});
+
+test('trips: "Trip plan" copies a plan to leave with someone — route, days, walking time, start link and blanks to fill in', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    tracks.push({ id: 't_plan2', name: 'Hut to hut', planned: true, distanceKm: 32, elevationGainM: 500, elevationLossM: 300, minEleM: 1000, maxEleM: 1500,
+      points: [[46.02345, 7.74912], [46.3, 7.5]], profile: [[0, 1000], [10, 1500], [20, 1200], [32, 1200]] });
+    trips.push({ id: 'trip_plan2', name: 'Three huts', trackIds: ['t_plan2'], gearIds: [], status: 'planned', date: '2030-07-05', dailyKm: 15, notes: 'Huts booked', createdAt: 1 });
+    trips.push({ id: 'trip_done2', name: 'Old one', trackIds: ['t_plan2'], gearIds: [], status: 'completed', createdAt: 2 });
+    await saveTrips();
+    showTripDetail('trip_done2');
+  });
+  assert.ok(await page.isHidden('#tripPlanTextBtn'), 'only for planned trips');
+  await page.evaluate(()=> showTripDetail('trip_plan2'));
+  await page.click('#tripPlanTextBtn');
+  await page.waitForSelector('#globalToast:not([hidden])');
+  assert.match(await text(page, '#globalToast'), /^Trip plan copied/);
+  const plan = (await page.evaluate(()=> navigator.clipboard.readText())).split('\n');
+  assert.equal(plan[0], 'Trip plan: Three huts');
+  assert.equal(plan[1], 'When: Fri 5 Jul 2030');
+  assert.match(plan[2], /^Route: Hut to hut — 32\.0 km, 500 m up, about .+ of walking plus breaks$/);
+  assert.equal(plan[3], 'Start: https://www.openstreetmap.org/?mlat=46.02345&mlon=7.74912#map=14/46.02345/7.74912');
+  assert.match(plan[4], /^Day 1: km 0\.0–15\.0, 500 m up, about /);
+  assert.match(plan[5], /^Day 2: km 15\.0–32\.0, 0 m up, about /);
+  assert.equal(plan[6], 'Notes: Huts booked');
+  assert.deepEqual(plan.slice(7), ['', 'Who is going (names, phone numbers):', 'Back by (day and time):', 'If you haven\'t heard from us by then, wait until … and then call …']);
+  assert.deepEqual(errors, []);
+});
+
+test('gear cards: status badges read like trip badges; retired cards look quieter and wishlist cards are dashed', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.evaluate(()=>{ gearItems.find(g => g.id === 'g2').status = 'retired'; refreshGear(); });
+  await page.click('#viewAllGearBtn');
+  const card = name => page.$eval(`#categoryView .gear-card:has(.gear-card-name:text-is("${name}"))`, el => {
+    const s = getComputedStyle(el), b = getComputedStyle(el.querySelector('.gear-badge'));
+    return { cls: el.className, border: s.borderTopStyle, badge: b.textTransform };
+  });
+  assert.deepEqual(await card('Exos 58'), { cls: 'gear-card is-active', border: 'solid', badge: 'capitalize' });
+  assert.deepEqual(await card('Revelation 20'), { cls: 'gear-card is-retired', border: 'solid', badge: 'capitalize' });
+  assert.deepEqual(await card('Distance Carbon Z'), { cls: 'gear-card is-wishlist', border: 'dashed', badge: 'capitalize' });
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');
@@ -490,6 +590,13 @@ test('gear: categories as weight bars that open to their items; Shelves still th
 
   await page.click('.pack-cat:nth-child(3) .pack-cat-head');
   assert.deepEqual((await bars()).map(b => b.split(' ')[0]), ['none', 'none', 'none']);
+  // The opened category's items slide in; opening another doesn't replay the first.
+  const itemAnims = () => page.$$eval('#gearPackList .pack-items', els => els.map(e => e.classList.contains('pack-items-in')));
+  assert.deepEqual(await itemAnims(), [true]);
+  assert.equal(await page.$eval('#gearPackList .pack-item', el => getComputedStyle(el).animationName), 'pack-items-in');
+  await page.click('.pack-cat:nth-child(1) .pack-cat-head');
+  assert.deepEqual(await itemAnims(), [true, false], 'only the newly opened one (Shelter, first) animates');
+  await page.click('.pack-cat:nth-child(1) .pack-cat-head');
   assert.equal(await page.getAttribute('.pack-cat:nth-child(3) .pack-cat-head', 'aria-expanded'), 'true');
   assert.deepEqual(await page.$$eval('.pack-item-name', els => els.map(e => e.textContent)), ['Revelation 20', 'NeoAir XLite NXT']);
   await page.click('.pack-item >> nth=0');
@@ -829,6 +936,8 @@ test('backup: download everything, restore it on an empty device; a wrong file i
   const page = second.page;
   await page.click('.nav-tab[data-page="settings"]');
   await page.setInputFiles('#backupRestoreInput', { name: 'notes.json', mimeType: 'application/json', buffer: Buffer.from('{"hello":1}') });
+  // The file is read asynchronously: wait for the message rather than reading at once.
+  await page.waitForFunction(()=> document.getElementById('backupStatus').textContent !== '');
   assert.match(await page.textContent('#backupStatus'), /isn't a Hike-in-one backup/);
   assert.ok(!(await page.isVisible('#backupConfirm')));
   await page.setInputFiles('#backupRestoreInput', file);
@@ -987,8 +1096,15 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.waitForFunction(()=> /km · ↑ 100 m · ↓ 0 m · about \d+ (h|min)/.test(document.getElementById('rpStats').textContent));
   assert.equal(elevationCalls, 1);
   assert.equal(await page.locator('#rpProfile .ele-profile').count(), 1);
+  // Pointing at the profile shows that spot on the map; moving away hides it.
+  const plot = await page.$('#rpProfile .ele-plot');
+  const pb = await plot.boundingBox();
+  await page.mouse.move(pb.x + pb.width / 2, pb.y + pb.height / 2);
+  assert.equal(await page.locator('#rpMap .rp-probe').count(), 1);
+  await page.mouse.move(pb.x + pb.width / 2, pb.y - 80);
+  assert.equal(await page.locator('#rpMap .rp-probe').count(), 0);
   // Distance markers along the route.
-  const km = await page.evaluate(()=> ({ shown: [...document.querySelectorAll('#rpMap .rp-km')].map(e => e.textContent),
+  const km = await page.evaluate(()=> ({ shown: [...document.querySelectorAll('#rpMap .km-marker')].map(e => e.textContent),
     want: TrackCore.kmMarkers(rpRoute.points).map(m => String(m.km)), total: rpRoute.distanceKm }));
   assert.ok(km.total > 1.5 ? km.want.length > 0 : true, 'a route over 1.5 km gets markers: ' + km.total);
   assert.deepEqual(km.shown, km.want);
@@ -1103,6 +1219,8 @@ test('share with partners: a partner opens the link without an account and sends
   assert.equal(await text(page, '#srStats'), '1 track · 12.3 km');
   assert.match(await text(page, '#srSuggestions'), /Kim: Start an hour earlier \(done\)/);
   await page.waitForSelector('#srMap path.leaflet-interactive', { timeout: 3000 });   // route drawn
+  assert.equal(await page.locator('#srMap .km-marker').count(),
+    await page.evaluate(()=> TrackCore.kmMarkers([[46.0, 7.5], [46.02, 7.52], [46.05, 7.55]]).length), 'km markers on the shared route');
 
   await page.click('#srSendBtn');
   assert.match(await text(page, '#srError'), /Add your name and a suggestion/);
@@ -1437,14 +1555,20 @@ test('GR routes: shown in the route planner, and how much of each you walked in 
       return json({ results: [
         { type: 'relation', id: 144503, ref: 'GR 561', name: 'GR 561 Kempen - Maaspad', group: 'NAT' },
         { type: 'relation', id: 4580796, ref: 'GR 5', group: 'INT' },
+        { type: 'relation', id: 14894391, ref: 'GR 5', name: 'GR 5 Variant Maastricht (Hoge Fronten)', group: 'NAT' },
         { type: 'relation', id: 1696127, ref: 'GRP 563', name: 'GRP 563 Tour du Pays de Herve', group: 'REG' },
+        { type: 'relation', id: 12077214, ref: 'Gr1', name: 'Eijsden-Margraten Gr1 Historische Bronkroute', group: 'LOC' },
       ] });
     }
     const m = /\/details\/relation\/(\d+)$/.exec(u.pathname);
     if(m){
       calls.details.push(+m[1]);
       if(+m[1] === 144503) return json(part);
-      if(+m[1] === 4580796) return json(umbrella);
+      // The umbrella holds GR 561 again as a section: counted once.
+      if(+m[1] === 4580796) return json(Object.assign({}, umbrella, { route: { route_type: 'route', length: 1, main: [Object.assign({ id: 144503 }, part.route)] },
+        subroutes: { 144503: { ref: 'GR 561', name: 'GR 561 Kempen - Maaspad', group: 'NAT' } } }));
+      // A variant along the same path: shown on the map, not counted.
+      if(+m[1] === 14894391) return json(Object.assign({}, part, { id: 14894391, ref: 'GR 5', name: 'GR 5 Variant Maastricht (Hoge Fronten)' }));
     }
     r.fulfill({ status: 404, body: '{}' });
   });
@@ -1469,7 +1593,7 @@ test('GR routes: shown in the route planner, and how much of each you walked in 
   assert.ok(Math.abs(walkedKm - expectKm) < 0.6, walkedKm + ' km walked vs ' + expectKm.toFixed(1) + ' km of route');
   assert.ok(pct >= 1 && pct <= 10, 'a few percent of 223 km: ' + pct);
   assert.match(await text(page, '#grProgressTotal'), /of the 1 GR route you have set foot on/);
-  assert.deepEqual([...new Set(calls.details)].sort(), [144503, 4580796], 'GRP 563 is never downloaded');
+  assert.deepEqual([...new Set(calls.details)].sort(), [144503, 14894391, 4580796], 'GRP 563 and the local Gr1 loop are never downloaded');
 
   // Reloading uses the saved result: nothing downloaded again.
   const before = calls.area + calls.details.length;

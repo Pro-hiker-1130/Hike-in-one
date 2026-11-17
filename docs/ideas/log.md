@@ -3,6 +3,200 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-16 — polish
+
+Looked at: the Gear Room's "All items" list on a phone. Status badges read
+"active", "retired" and "wishlist" in lower case, unlike the trip badges
+("Planned", "Completed"). Retired gear and wishlist items looked exactly
+like gear in use.
+Changed: gear status badges are capitalised ("Active", "Retired",
+"Wishlist"). This is display only; the saved value is unchanged. Retired
+cards get a softer background with lighter name and weight. The tone
+was picked to keep 4.7:1 contrast; my first try at 3.2:1 was too faint.
+Wishlist cards are drawn with a dashed border and no fill. Cards now carry
+their status as a class (`is-retired` etc.). New e2e test. Service worker
+cache `waypoints-v44`. All tests pass: 57 unit, 60 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-15 — research
+
+Looked at: Cairn (trail-safety app: a trip plan with where, what and when
+you'll be back, sent to emergency contacts, alerts if you're overdue, live
+location) and trip-plan guidance from park services and trail groups
+(route with a map, distance, climb, time, return time with a buffer, and
+when your contact should call for help). Budget used: 2 searches, 0
+fetches.
+Changed: planned trips with a route get a "Trip plan" button. It shares
+(or copies) a plain-text plan to leave with someone at home: the trip name
+and date, the route with distance, climb and walking time (fitted to your
+pace), the start as an OpenStreetMap link, each day when the trip is split
+into days, and the notes. It ends with blanks to fill in: who's going,
+when you'll be back, and when to call for help. Nothing new is saved or
+sent anywhere by the app. Overdue alerts and live tracking would need a
+server, so they're left out. The trip page's buttons now wrap neatly on
+phones. New e2e test reads the copied plan. Service worker cache
+`waypoints-v43`. All tests pass: 57 unit, 59 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-14 — polish
+
+Looked at: the forecast card on a planned trip page while it loads. It
+showed a plain "Loading the forecast…" line, and the card jumped in size
+when the forecast arrived.
+Changed: while loading, the card shows its heading and two placeholder
+rows shaped like forecast lines, with a soft sheen passing over them. They
+are announced to screen readers as "Loading the forecast". The sheen loops
+(1.2 s) until the forecast arrives, which is longer than the 150–300 ms
+guideline for transitions but never blocks input. Reduced motion shows
+still bars. The weather e2e test now holds back the mocked forecast to
+check the placeholders, then that they are replaced. Service worker cache
+`waypoints-v42`. All tests pass: 57 unit, 58 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-13 — research
+
+Looked at: Footpath (draw a route with your finger, snapped to trails;
+slope colouring; distance and climb at any point along the route;
+adjustable speed) and Relive (animated recap videos; photos pinned where
+they were taken). Budget used: 2 searches, 0 fetches.
+Changed: in the route planner, pointing at the elevation profile (mouse,
+touch or the arrow keys) shows that spot as a dot on the map; moving away
+removes it. `buildElevationProfile` takes an optional callback with the km
+under the cursor. `TrackCore.pointAtKm` finds the spot, scaled to the
+profile's length, and has a unit test. The route-planner e2e test checks
+the dot. Service worker cache `waypoints-v41`. All tests pass: 57 unit,
+58 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-12 — polish
+
+Looked at: trip cards and the next-trip card. They act as buttons (open a
+trip, reachable by Tab), but only their border colour changed on hover.
+There was no press feedback and no clear focus ring for keyboard users.
+Changed (CSS only): trip cards, the next-trip card and the full-width row
+links lift by 1 px with a soft shadow on hover (pointer devices only), press
+in slightly when tapped, and show a green focus ring for keyboard focus.
+With reduced motion, only the colour and shadow change, with no movement. New
+e2e test (hover lift, focus ring, reduced motion). Service worker cache
+`waypoints-v40`. All tests pass: 56 unit, 58 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-11 — research
+
+Synced: main had a new commit from another session (GR routes in the
+route planner and the overview). The service worker conflicted on both the
+cache version and the app's file list. main added `gr-routes`, and my
+first resolution dropped the file-list line. The updates e2e test caught
+it, and I restored main's list exactly (cache `waypoints-v38`). A second
+run then hit an intermittent failure in the backup test: it read the
+"isn't a backup" message before the file had been read. The test now waits
+for the message. 2 full runs in a row passed (57/57).
+Looked at: Locus Map (planner with elevation profile, surfaces and way
+types; route line coloured by steepness to avoid steep climbs; share a
+route by link) and OsmAnd (split a track by time, distance, or
+uphill/downhill/flat; track analysis on the map). Budget used: 2 searches,
+0 fetches.
+Changed: each hike on a trip page gets a line saying how its distance
+splits between climbing, descending and about level ground, e.g. "4.0 km
+up · 5.6 km down". It's judged over 100 m stretches, with ±3 % counting as
+flat. `TrackCore.gradeBreakdown` has a unit test, plus the trips e2e test.
+Service worker cache `waypoints-v39`. All tests pass: 56 unit, 57 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-10 — polish
+
+Synced: main had a new commit from another session (show my location on
+the map, following until the map is dragged). Only the service worker
+cache version conflicted; I set it above both sides. All tests passed on
+the merge, which was pushed as its own commit.
+Looked at: focusing a trip on the map ("View on map" or a track's popup).
+The "Showing … · Show all" chip, the kilometre markers and the high-point
+label all popped in at once.
+Changed: the chip slides in from the left (200 ms) whenever what's in
+focus changes. The markers and the high-point label fade in once (220 ms)
+the first time they show for a new focus. The map redraws them on every
+pan and zoom, so they don't fade again then. Off under reduced motion. The
+map e2e test checks the fade, that panning doesn't replay it, and the chip
+animation. Service worker cache `waypoints-v37`. All tests pass: 49 unit,
+56 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-09 — research
+
+Synced: main had a new commit from another session (Download GPX for
+Garmin, whole route or per day). Only the service worker cache version
+conflicted; I set it above both sides. All tests passed on the merge,
+which was pushed as its own commit.
+Looked at: Peakbagger (log ascents, filter peaks by climbed or not,
+custom peak lists), Trailforks (trail reports with photos pinned to a
+spot) and Wikiloc (waypoints and photos along recorded routes). Budget
+used: 2 searches, 0 fetches.
+Changed: on the main map, the trip or hike in focus also marks where it
+tops out, with a small "▲ 2,412 m" label at its highest point. Walks with
+under 30 m between their lowest and highest points get no label. It uses
+the track's per-point elevation, or the profile for older tracks
+(`TrackCore.highestPoint`, unit test; the map e2e test checks the label).
+A small step toward the peak-list idea without needing summit data.
+Service worker cache `waypoints-v35`. All tests pass: 49 unit, 55 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-08 — polish
+
+Looked at: screenshots (phone) of a trip page, Settings and the map
+sidebar. In the Year in review, the summary rounded distance to whole
+kilometres ("10 km"), while the line under it and Personal bests showed
+"9.6 km" for the same walk. Switching years swapped the text abruptly.
+Changed: the year summary shows one decimal under 100 km (e.g. "9.6 km";
+larger totals stay short like "1.2k"). Picking another year fades the new
+numbers in (200 ms), replayed on each change and off under reduced motion.
+The map e2e test checks the decimal and the fade. Service worker cache
+`waypoints-v33`. All tests pass: 47 unit, 54 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-07 — research
+
+Looked at: Mapy.com (A-to-B and round-trip planning with time, distance
+and climb; custom speeds; users asking for a "terrain profile ahead") and
+bergfex (tap start and end for distance, climb and time; intermediate
+stops; GPX in and out). Most of this the app already has (round trips,
+your own pace, GPX). Budget used: 2 searches, 0 fetches.
+Changed: kilometre markers, until now only in the route planner, also
+show on the main map for the trip or hike in focus (from "View on map" or
+a track's popup), once zoomed in as far as the start and finish dots, and
+on the shared-route page partners open. They sit in their own map layer
+(`trackKmGroup`), so the start/finish dots layer is unchanged. The marker
+style is now one shared class (`km-marker`). E2e tests cover the map
+(markers only while something is in focus) and the shared page. Service
+worker cache `waypoints-v32`. All tests pass: 47 unit, 54 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-06 — polish
+
+Looked at: the backlog item "Gear breakdown donut should use the category
+colours". I checked the 13 category colours against the chart background
+(#DAD7CD): Water 2.7, Electronics 2.6, Hygiene 2.4, Food 2.6 and Other
+1.6 are below the 3:1 contrast that chart shapes need. The donut's own
+palette was chosen to stay apart for colour-blind viewers. So switching
+the donut would make it harder to read, and fixing it properly means
+changing the category colours themselves (dots, shelf scene, donut). I
+left it as a question for the owner.
+Changed instead: in the Gear Room list, opening a category makes its items
+fade in and drop into place (200 ms, 30 ms apart). Only the category just
+opened animates; other redraws don't replay it. Off under reduced motion.
+The Gear Room e2e test checks it. Service worker cache `waypoints-v31`.
+All tests pass: 47 unit, 54 e2e.
+For the owner: see the colour question in backlog.md.
+
 ## 2026-11-05 — research
 
 Synced: main had one new commit from another session (the track editor
