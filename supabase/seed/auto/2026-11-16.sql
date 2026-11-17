@@ -1,0 +1,8 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Lifesystems', 'Trek First Aid Kit', null, 'Safety', 240, '{}', 'Compact CE-certified first aid kit, 14 x 11 x 5 cm. Listed weight is 240 g; retailers list 234-250 g.', 'https://www.cotswoldoutdoor.com/p/lifesystems-trek-first-aid-kit-E7314023.html', 'seed'),
+('Lifesystems', 'Explorer First Aid Kit', null, 'Safety', 395, '{}', 'Mid-size first aid kit with 36 items. Listed weight is 395 g.', 'https://trekitt.co.uk/equipment/survival-emergency/lifesystems-explorer-first-aid-kit__59979', 'seed'),
+('Lifesystems', 'Mountain First Aid Kit', null, 'Safety', 700, '{}', 'Larger first aid kit with 52 items. Listed weight is 700 g.', 'https://www.tiso.com/products/lifesystems-mountain-first-aid-kit-no-colour-tiso-lifs-1062739', 'seed'),
+('Alpkit', 'Kraku', null, 'Cooking', 45, '{}', 'Collapsible titanium canister stove with no igniter. Listed weight is the brand''s 45 g; one reviewer measured 43 g.', 'https://eu.alpkit.com/products/kraku', 'seed'),
+('Alpkit', 'MytiPot 900', null, 'Cooking', 120, '{"capacity_ml":900}', 'Titanium pot with lid. Listed weight is the brand''s 120 g for the pot and lid.', 'https://alpkit.com/products/mytipot', 'seed'),
+('Alpkit', 'Ordos 2', null, 'Shelter', 1400, '{"capacity_persons":2,"packed_size":"13 x 42 cm"}', 'Two-person semi-geodesic backpacking tent. Listed weight is the brand''s 1400 g minimum weight, without footprint and pegs (about 1750 g with them); reviews weigh it at 1.34-1.52 kg.', 'https://eu.alpkit.com/products/ordos-2', 'seed')
+on conflict (normalized_key) do nothing;

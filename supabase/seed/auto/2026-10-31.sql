@@ -1,0 +1,8 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Honey Stinger', 'Organic Energy Gel', 'Single packet', 'Food', 31, '{}', 'Honey-based energy gel packet. Listed weight is 1.1 oz (31 g); some listings say 32 g.', 'https://shop.activesalem.com/product/708104/honey-stinger-organic-energy-gels-1-oz-strawberry-kiwi-caffeinated', 'seed'),
+('Clif', 'Bar Energy Bar', 'Chocolate Chip', 'Food', 68, '{}', 'Energy bar. Listed weight is 2.4 oz (68 g) for one bar.', 'https://www.shoprite.com/product/clif-bar-chocolate-chip-energy-bar-240-oz-00722252100900', 'seed'),
+('Clif', 'Bloks Energy Chews', '60 g pouch', 'Food', 60, '{}', 'Six chewable energy blocks per pouch. Listed weight is 60 g; some regions sell them as Shot Bloks.', 'https://www.snowandrock.com/p/clif-energy-bloks-black-cherry-E6334133.html?colour=180', 'seed'),
+('Garmin', 'eTrex SE', null, 'Navigation', 157, '{}', 'Budget handheld GPS. Listed weight is 156.5 g with two AA batteries fitted.', 'https://www.tiso.com/products/garmin-etrex-se-ww-unisex-yellow', 'seed'),
+('Garmin', 'GPSMAP 65s', null, 'Navigation', 217, '{}', 'Multi-band handheld GPS. Listed weight is 217 g with two AA batteries fitted.', 'https://woo.gpscentral.ca/wp-content/uploads/Garmin_GPSMAP_65s_Specs.pdf', 'seed'),
+('Suunto', 'Race', 'Stainless steel', 'Navigation', 83, '{}', 'GPS watch with route navigation. Listed weight is for the steel version; the titanium version is about 69 g.', 'https://gadgetsandwearables.com/technical-specs/suunto-race/', 'seed')
+on conflict (normalized_key) do nothing;

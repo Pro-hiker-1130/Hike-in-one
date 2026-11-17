@@ -1,0 +1,6 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('CNOC Outdoors', 'ThruBottle 1000', null, 'Water', 63, '{"capacity_ml":1000}', 'Collapsible hard-sided 1 L bottle with a 28 mm neck. Listed weight is 63 g for the current model; the first generation was about 90 g.', 'https://www.halfwayanywhere.com/gear/review/cnoc-outdoors-thrubottle-1000-review/', 'seed'),
+('Klean Kanteen', 'Classic', '800 ml, sport cap', 'Water', 213, '{"capacity_ml":800}', 'Single-wall stainless steel bottle. Listed weight is 212.6 g with the sport cap; the loop-cap version is about 204 g.', 'https://www.bogong.com.au/klean-kanteen-27oz-800ml-bottle.html', 'seed'),
+('Hydro Flask', 'Standard Mouth', '24 oz', 'Water', 375, '{"capacity_ml":710}', 'Insulated stainless steel bottle with cap. Listed weight is about 375 g (13.2 oz); one retailer lists 390 g.', 'https://en.hardloop.de/product/25206-hydro-flask-24-oz-standard-mouth-vacuum-flask', 'seed'),
+('Euroschirm', 'Swing Liteflex', null, 'Other', 207, '{}', 'Trekking umbrella with fibreglass frame, 100 cm canopy. Listed weight is the brand''s 207 g; retailers list 209-217 g.', 'https://www.ultralightoutdoorgear.co.uk/equipment-c3/accessories-c10/trekking-umbrellas-c369/swing-liteflex-trekking-umbrella-p3300', 'seed')
+on conflict (normalized_key) do nothing;

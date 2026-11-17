@@ -1,0 +1,8 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Black Diamond', 'Pursuit', 'M/L, pair', 'Other', 500, '{}', 'Aluminium adjustable trekking poles. Weight per pair for the M/L size; the S/M size is about 464 g and one test weighed M/L at 540 g.', 'https://www.treelinereview.com/gearreviews/black-diamond-pursuit-poles-review', 'seed'),
+('Black Diamond', 'Distance Carbon FLZ', '125-140 cm, pair', 'Other', 380, '{}', 'Folding carbon trekking poles. Weight per pair for the 125-140 cm length; retailers list 368-386 g, and shorter lengths weigh less.', 'https://theoutfitters.nf.ca/products/distance-carbon-flz', 'seed'),
+('Leki', 'Makalu Cork Lite', 'Pair', 'Other', 508, '{}', 'Telescopic aluminium trekking poles with cork grips. Weight per pair (254 g each).', 'https://thebigoutside.com/review-leki-makalu-cork-lite-trekking-poles/', 'seed'),
+('Gossamer Gear', 'FT3', 'Pair', 'Other', 356, '{}', 'Folding carbon trekking poles. Weight per pair, from the brand''s 178 g per pole.', 'https://www.garagegrowngear.com/products/ft3-carbon-fiber-folding-trekking-poles-by-gossamer-gear', 'seed'),
+('Garmin', 'Montana 700i', null, 'Navigation', 410, '{}', 'Rugged handheld GPS with satellite messaging. Listed weight is 410 g with the lithium-ion battery pack.', 'https://gearshop.co.nz/products/garmin-montana-700i', 'seed'),
+('Suunto', 'Vertical', 'Titanium Solar', 'Navigation', 74, '{}', 'GPS outdoor watch with solar charging. Listed weight is 74 g for the titanium version; the steel version is about 86 g.', 'https://www.runnea.co.uk/heart-rate-monitors-sports-watches/suunto/vertical-titanium-solar/1032942/', 'seed')
+on conflict (normalized_key) do nothing;
