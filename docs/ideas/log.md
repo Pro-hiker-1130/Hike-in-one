@@ -3,6 +3,25 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-17 — research
+
+Synced: main had a new commit from another session (GR progress counts
+only real GR sections). It fast-forwarded with no conflicts.
+Looked at: SummitLynx (a hiking diary with entries, photos and comments,
+badges, statistics) and "on this day" memory features. A journaling app
+(Day One) has one, hikers ask for "one year ago today" in their apps, and
+none of the hiking apps I found offers it. Budget used: 2 searches, 0
+fetches.
+Changed: the Trips page shows a small memory card when a completed trip
+happened in the same week (±3 days) of an earlier year, e.g. "1 year ago
+this week: Bergsee loop, Sat 15 Nov 2025 · 11.4 km". It says "today" on
+the exact day, and the most recent year wins. Tapping it opens the trip.
+Nothing shows when there's no match, and nothing new is saved.
+`TrackCore.onThisDay` has a unit test, plus a new e2e test. Service worker
+cache `waypoints-v46`. All tests pass: 60 unit, 61 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-16 — polish
 
 Looked at: the Gear Room's "All items" list on a phone. Status badges read

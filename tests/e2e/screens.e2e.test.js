@@ -528,6 +528,31 @@ test('gear cards: status badges read like trip badges; retired cards look quiete
   assert.deepEqual(errors, []);
 });
 
+test('trips: a completed trip from this week in an earlier year shows as a memory and opens the trip', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  assert.ok(await page.isHidden('#tripMemoryCard'), 'nothing to recall yet');
+  await page.evaluate(async ()=>{
+    const ago = (y, d) => { const x = new Date(); x.setFullYear(x.getFullYear() - y); x.setDate(x.getDate() + d);
+      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+    tracks.push({ id: 'm1', name: 'Memory hike', date: ago(2, 0), distanceKm: 11.4, points: [[46, 7], [46.01, 7]] });
+    tracks.push({ id: 'm2', name: 'Older hike', date: ago(3, 1), distanceKm: 6, points: [[46, 7.1], [46.01, 7.1]] });
+    tracks.push({ id: 'm3', name: 'Other season', date: ago(1, 60), distanceKm: 6, points: [[46, 7.2], [46.01, 7.2]] });
+    trips.push({ id: 'trip_m1', name: 'Ridge two years ago', trackIds: ['m1'], gearIds: [], status: 'completed', createdAt: 1 });
+    trips.push({ id: 'trip_m2', name: 'Lake three years ago', trackIds: ['m2'], gearIds: [], status: 'completed', createdAt: 2 });
+    trips.push({ id: 'trip_m3', name: 'Autumn walk', trackIds: ['m3'], gearIds: [], status: 'completed', createdAt: 3 });
+    await saveTrips();
+    renderTripCards();
+  });
+  assert.equal(await text(page, '#tripMemoryLabel'), '2 years ago today', 'the newest year wins');
+  assert.equal(await text(page, '#tripMemoryName'), 'Ridge two years ago');
+  assert.match(await text(page, '#tripMemoryMeta'), / · 11\.4 km$/);
+  await page.click('#tripMemoryCard');
+  await page.waitForSelector('#tripDetailView', { state: 'visible' });
+  assert.equal(await text(page, '#tripDetailTitle'), 'Ridge two years ago');
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

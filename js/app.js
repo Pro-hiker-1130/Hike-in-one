@@ -375,6 +375,7 @@ document.getElementById('tripPlanTextBtn').addEventListener('click', ()=> shareT
 document.getElementById('tripShareRouteBtn').addEventListener('click', publishTripShare);
 document.getElementById('tripDownloadRouteBtn').addEventListener('click', downloadTripRoute);
 document.getElementById('tripSearch').addEventListener('input', ()=> renderTripCards());
+document.getElementById('tripMemoryCard').addEventListener('click', e=> showTripDetail(e.currentTarget.dataset.tripId));
 document.getElementById('tripDifficultyFilter').addEventListener('click', e=>{
   const b = e.target.closest('button[data-level]');
   if(!b) return;
