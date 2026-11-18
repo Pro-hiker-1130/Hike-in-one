@@ -378,7 +378,7 @@ test('walking times fit your own pace once there are 3 timed walks, and can be s
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="settings"]');
   assert.match(await text(page, '#paceNote'), /Once you have 3 or more timed walks/);
-  assert.ok(await page.isDisabled('#paceUseMine'));
+  assert.ok(await page.isHidden('#paceToggle'), 'no switch until there is a pace to switch to');
   await page.evaluate(()=>{
     // Three walks, each taking 1.5 times the standard estimate.
     [[10, 600], [8, 300], [12, 900]].forEach(([km, up], i) => tracks.push({ id: 'w' + i, name: 'Walk ' + i, date: '2025-06-0' + (i + 1),
@@ -387,6 +387,7 @@ test('walking times fit your own pace once there are 3 timed walks, and can be s
     renderStats();
   });
   assert.match(await text(page, '#paceNote'), /From 3 timed walks, you go 50 % slower than the rule \(breaks included\)\.$/);
+  assert.ok(await page.isVisible('#paceToggle'));
   assert.ok(await page.isChecked('#paceUseMine'));
   // 12 km and 600 m up: the rule says 4 h; at your pace 6 h.
   assert.match(await page.evaluate(()=> trackClimbSummary(tracks.find(t => t.id === 'plan'))), /about 6 h 00 min walking$/);

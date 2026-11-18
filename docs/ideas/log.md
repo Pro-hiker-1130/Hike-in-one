@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-18 — polish
+
+Looked at: the Settings page on a device with no timed walks. The
+"Fit estimates to my own pace" box showed ticked but greyed out, which
+read as a setting that was on even though there was no pace to use yet.
+Changed: the switch is hidden until there are 3 timed walks to work out a
+pace from. Before that, the card only explains the standard rule and
+what's needed. Once a pace exists, the switch appears and works as
+before. The pace e2e test now checks that the switch is hidden, then
+shown. Service worker cache `waypoints-v47`. All tests pass: 60 unit,
+61 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-17 — research
 
 Synced: main had a new commit from another session (GR progress counts

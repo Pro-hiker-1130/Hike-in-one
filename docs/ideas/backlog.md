@@ -70,3 +70,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-15 — Trip plan to leave with someone at home (research, Cairn / park-service idea)
 - 2026-11-16 — Gear cards: capitalised status, quieter retired, dashed wishlist (polish)
 - 2026-11-17 — "1 year ago this week" memory card on the Trips page (research, journaling-app idea)
+- 2026-11-18 — Settings: the pace switch shows only once there's a pace (polish)
