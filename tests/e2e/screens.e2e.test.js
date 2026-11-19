@@ -554,6 +554,30 @@ test('trips: a completed trip from this week in an earlier year shows as a memor
   assert.deepEqual(errors, []);
 });
 
+test('trips: a planned trip warns about packed gear at or past the lifespan you set', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    gearItems.push({ id: 'shoes', name: 'Trail shoes', category: 'Footwear', weightGrams: 700, status: 'active', lifespanKm: 100 });
+    gearItems.push({ id: 'poles', name: 'Poles', category: 'Other', weightGrams: 400, status: 'active', lifespanKm: 50 });
+    gearItems.push({ id: 'tent', name: 'Tent', category: 'Shelter', weightGrams: 1200, status: 'active' });
+    tracks.push({ id: 'w1', name: 'Long walk', date: '2025-06-01', distanceKm: 90, points: [[46, 7], [46.01, 7]] });
+    trips.push({ id: 'trip_w1', name: 'Done', trackIds: ['w1'], gearIds: ['shoes', 'poles'], status: 'completed', createdAt: 1 });
+    trips.push({ id: 'trip_w2', name: 'Next weekend', trackIds: [], gearIds: ['shoes', 'poles', 'tent'], status: 'planned', createdAt: 2 });
+    await saveTrips();
+    showTripDetail('trip_w2');
+  });
+  // Shoes: 90 of 100 km (replace soon); poles: 90 of 50 km (worn out); the tent has no lifespan.
+  assert.equal(await text(page, '#tripWearWarning'), '⚠ Trail shoes and Poles are at or near the end of the lifespan you set.');
+  const rows = await page.$$eval('#tripGearSummaryList .trip-track-row-name', els => els.map(e => e.textContent));
+  assert.deepEqual(rows.sort(), ['PolesWorn out', 'Tent', 'Trail shoesReplace soon']);
+  // Past trips don't nag.
+  await page.evaluate(()=> showTripDetail('trip_w1'));
+  assert.ok(await page.isHidden('#tripWearWarning'));
+  assert.equal(await page.locator('#tripGearSummaryList .wear-badge').count(), 0);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

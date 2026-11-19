@@ -580,6 +580,18 @@ function renderTripGear(trip){
 
   renderTripFoodPlan(trip, gearList);
 
+  // Planned trips: gear past (or near) the lifespan you set gets a warning,
+  // before it's on the trail — the same wear the Gear Room cards show.
+  const planned = tripStatus(trip) === 'planned';
+  const wear = new Map(planned ? gearList.map(g => [g.id, gearWear(g)]).filter(([, w]) => w && w.level !== 'ok') : []);
+  const warn = document.getElementById('tripWearWarning');
+  warn.hidden = !wear.size;
+  if(wear.size){
+    const names = gearList.filter(g => wear.has(g.id)).map(g => g.name);
+    warn.textContent = '\u26A0 ' + (names.length === 1 ? names[0] + ' is' : names.slice(0, -1).join(', ') + ' and ' + names[names.length-1] + ' are') +
+      ' at or near the end of the lifespan you set.';
+  }
+
   const done = gearList.filter(g => packed.has(g.id)).length;
   const progress = document.getElementById('tripPackProgress');
   progress.hidden = !(packing || done);
@@ -604,7 +616,8 @@ function renderTripGear(trip){
       row.addEventListener('click', ()=> togglePacked(trip, g.id));
     }
     row.innerHTML =
-      '<span class="trip-track-row-name">'+(packing || isPacked ? '<span class="pack-check" aria-hidden="true"></span>' : '')+escapeHtml(g.name)+'</span>'+
+      '<span class="trip-track-row-name">'+(packing || isPacked ? '<span class="pack-check" aria-hidden="true"></span>' : '')+escapeHtml(g.name)+
+        (wear.has(g.id) ? '<span class="wear-badge wear-' + wear.get(g.id).level + '">' + (wear.get(g.id).level === 'worn' ? 'Worn out' : 'Replace soon') + '</span>' : '')+'</span>'+
       '<span class="trip-track-row-meta">'+formatWeight(g.weightGrams)+'</span>';
     gearListEl.appendChild(row);
   });

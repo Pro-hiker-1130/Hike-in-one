@@ -3,6 +3,24 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-19 — research
+
+Looked at: gear-wear reminders. Strava emails when shoes pass a distance
+you set, and keeps reminding until they're retired. Garmin Connect
+notifies at a "max distance" you choose. The app already tracks walked
+km against each item's lifespan (the wear meter on Gear Room cards), but
+said nothing where it matters: when packing that gear for the next trip.
+Budget used: 2 searches, 0 fetches.
+Changed: on a planned trip, gear at 90 % or more of its lifespan gets a
+"Replace soon" badge, and gear past it gets "Worn out", both in the gear
+list and in packing mode. One line above the list names them ("⚠ Trail
+shoes and Poles are at or near the end of the lifespan you set."). Past
+trips don't show it. It uses the same wear calculation as the Gear Room,
+and nothing new is saved. New e2e test. Service worker cache
+`waypoints-v48`. All tests pass: 60 unit, 62 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-18 — polish
 
 Looked at: the Settings page on a device with no timed walks. The
