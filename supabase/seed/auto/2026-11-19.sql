@@ -1,0 +1,6 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('ACR', 'ResQLink View 425', null, 'Safety', 148, '{}', 'Personal locator beacon with a digital display. Listed weight is the beacon alone; one launch announcement says 151 g.', 'https://www.aircraftspruce.com/catalog/pnpages/11-17216.php', 'seed'),
+('Sea to Summit', 'Trek & Travel Pocket Laundry Wash', '50 leaves', 'Hygiene', 14, '{}', 'Dissolving laundry soap leaves in a small case. Brand figure of 14 g includes the container; some retailers list 10 to 15 g.', 'https://support.seatosummit.com/hc/en-us/articles/19361665314324-How-much-do-the-Trek-Travel-Pocket-Wash-products-Pocket-Wilderness-Wash-weigh', 'seed'),
+('Ben''s', '30 Tick & Insect Repellent', '3.4 oz pump spray', 'Hygiene', 96, '{}', 'DEET-based insect repellent in a pump bottle. Listed weight is the full 3.4 oz bottle as claimed by retailers.', 'https://www.backcountry.com/ben-s-30-pump', 'seed'),
+('Badger', 'Active Mineral Sunscreen Stick', 'SPF 35, 0.65 oz', 'Hygiene', 18, '{}', 'Mineral sunscreen face stick. Listed weight is the 18.4 g net content, so the stick with its case is slightly heavier.', 'https://well.ca/products/badger-clear-zinc-face-stick_181284.html', 'seed')
+on conflict (normalized_key) do nothing;

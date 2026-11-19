@@ -120,3 +120,8 @@ pin down to "Skipped" with a reason.
 - Sea to Summit Lightweight Dry Bag 13L: listings give 2.9 oz and 3.3 oz.
 - Opinel No. 7 stainless: listed weights run 34-40 g, with some outliers up to 52 g.
 - MSR AutoFlow Gravity Microfilter 4 L: no gram weight found in search.
+- Fox 40 Classic whistle: listed weights differ by variant (4.5 to 28 g) and cannot be matched to one model.
+- Adventure Medical Kits Mountain Series Hiker: sources disagree (204 to 283 g).
+- ACR Bivy Stick: listings disagree (100 g, 142 g, 227 g) and the brand page does not match the common figure.
+- Dr. Bronner's Pure-Castile Liquid Soap 2 oz: no sourced gram weight found.
+- Badger SPF 30 stick: no gram weight found.
