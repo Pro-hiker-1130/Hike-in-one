@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-20 — polish
+
+Looked at: keyboard focus across the app's controls, following last
+week's card focus rings. Buttons, segmented toggles, links and inputs
+already shared one green ring. Select menus outside forms (breakdown
+metric, "Apply a loadout…", gear status filter and sort, year picker) got
+the browser's own dark ring instead, and so did textareas outside forms.
+Changed: select menus and textareas get the same 2 px ring as everything
+else. Form fields keep their own focus style (thin brass outline and
+border), because their rule is more specific. CSS only. New e2e test
+compares the select's ring with a button's and checks a form field keeps
+its own. Service worker cache `waypoints-v49`. All tests pass: 60 unit,
+63 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-19 — research
 
 Looked at: gear-wear reminders. Strava emails when shoes pass a distance

@@ -578,6 +578,22 @@ test('trips: a planned trip warns about packed gear at or past the lifespan you 
   assert.deepEqual(errors, []);
 });
 
+test('keyboard focus: select menus get the same ring as buttons; form fields keep their own', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  const ring = sel => page.$eval(sel, el => { const s = getComputedStyle(el); return s.outlineStyle + ' ' + s.outlineWidth; });
+  await page.focus('#gearBreakdownMetric'); await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(()=> document.activeElement.id), 'gearBreakdownMetric');
+  const select = await ring('#gearBreakdownMetric');
+  await page.focus('#gearViewToggle [data-gearview="shelves"]'); await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Tab');
+  assert.equal(select, await ring('#gearViewToggle [data-gearview="shelves"]'), 'same ring as a button');
+  assert.equal(select, 'solid 2px');
+  await page.evaluate(()=> openGearModal(null));
+  await page.focus('#gearCategory');
+  assert.equal(await ring('#gearCategory'), 'solid 1px', 'form fields keep their own focus style');
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');
