@@ -125,3 +125,5 @@ pin down to "Skipped" with a reason.
 - ACR Bivy Stick: listings disagree (100 g, 142 g, 227 g) and the brand page does not match the common figure.
 - Dr. Bronner's Pure-Castile Liquid Soap 2 oz: no sourced gram weight found.
 - Badger SPF 30 stick: no gram weight found.
+- Coros Nomad: listed weights conflict (39 g, 49 g, 61 g) between reviews.
+- Platypus Platy Plus 1 L: sources disagree (23 to 38 g).
