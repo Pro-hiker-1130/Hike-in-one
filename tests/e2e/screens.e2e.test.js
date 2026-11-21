@@ -594,6 +594,23 @@ test('keyboard focus: select menus get the same ring as buttons; form fields kee
   assert.deepEqual(errors, []);
 });
 
+test('gear cards: cost per trip so far, from the price and completed trips', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.evaluate(async ()=>{
+    gearItems.push({ id: 'pricey', name: 'Rain shell', category: 'Clothing', weightGrams: 300, status: 'active', price: 300, currency: 'EUR' });
+    gearItems.push({ id: 'unused', name: 'New stove', category: 'Cooking', weightGrams: 90, status: 'active', price: 60, currency: 'USD' });
+    trips.push({ id: 'c1', name: 'One', trackIds: [], gearIds: ['pricey', 'unused'], status: 'planned', createdAt: 1 });
+    ['c2', 'c3', 'c4'].forEach((id, i) => trips.push({ id, name: 'Walk ' + i, trackIds: [], gearIds: ['pricey'], status: 'completed', createdAt: 2 + i }));
+    await saveGear(); await saveTrips(); refreshGear();
+  });
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#viewAllGearBtn');
+  const cost = name => page.$$eval(`#categoryView .gear-card:has(.gear-card-name:text-is("${name}")) .gear-card-cost`, els => els.map(e => e.textContent));
+  assert.deepEqual(await cost('Rain shell'), ['€100 per trip so far'], '300 over 3 completed trips; planned ones don\'t count');
+  assert.deepEqual(await cost('New stove'), [], 'not used on a completed trip yet');
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

@@ -320,6 +320,7 @@ function renderGearGrid(){
       (g.brand || g.model ? '<div class="gear-card-meta">'+escapeHtml([g.brand,g.model].filter(Boolean).join(' '))+'</div>' : '')+
       '<div class="gear-card-weight">'+formatWeight(g.weightGrams)+'</div>'+
       (gearUsageSummary(g.id) ? '<div class="gear-card-meta">'+escapeHtml(gearUsageSummary(g.id))+'</div>' : '')+
+      (gearCostPerTrip(g) ? '<div class="gear-card-meta gear-card-cost">'+escapeHtml(formatMoney(gearCostPerTrip(g).perTrip, g.currency || 'EUR'))+' per trip so far</div>' : '')+
       gearWearHtml(g)+
       '<div class="gear-card-actions">'+
         '<button class="icon-btn" data-action="edit">Edit</button>'+

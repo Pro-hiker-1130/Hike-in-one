@@ -73,3 +73,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-18 — Settings: the pace switch shows only once there's a pace (polish)
 - 2026-11-19 — Planned trips warn about worn-out packed gear (research, Strava/Garmin idea)
 - 2026-11-20 — Select menus get the same keyboard focus ring as buttons (polish)
+- 2026-11-21 — Gear cards: cost per trip so far (research, HikerKit/PackTrack idea)

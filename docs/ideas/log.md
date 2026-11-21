@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-21 — research
+
+Looked at: gear apps that put a value on use. HikerKit (statistics with
+cost per use and trip value), PackTrack (cost per adventure), Kit Book
+(lifetime cost net of resale), and Packstack, Hikt and OutPack
+(gear closet, weights, packing lists). Budget used: 2 searches, 0 fetches.
+Changed: Gear Room cards show what each completed trip has cost so far,
+e.g. "€100 per trip so far" for a €300 shell used on 3 completed trips.
+It falls as the gear gets used. It's shown only when the item has a price
+and has been on at least one completed trip, and planned trips don't
+count. It uses the item's currency and the existing money format, and
+nothing new is saved. New e2e test. Service worker cache `waypoints-v50`.
+All tests pass: 60 unit, 64 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-20 — polish
 
 Looked at: keyboard focus across the app's controls, following last

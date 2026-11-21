@@ -217,6 +217,13 @@ function gearUsageSummary(gearId){
   if(planned) parts.push('packed for '+planned+' planned trip'+(planned>1?'s':''));
   return parts.join(' · ');
 }
+// What each completed trip has cost so far: price ÷ trips walked with it.
+// Null without a price or before its first completed trip.
+function gearCostPerTrip(g){
+  if(!(g.price > 0)) return null;
+  const done = gearUsageTrips(g.id).filter(tr => tripStatus(tr) === 'completed').length;
+  return done ? { perTrip: g.price / done, trips: done } : null;
+}
 // null when the item has no lifespan set; otherwise distance vs lifespan
 // plus a severity level for the card's wear meter.
 function gearWear(g){
