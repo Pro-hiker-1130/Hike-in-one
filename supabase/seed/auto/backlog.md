@@ -127,3 +127,5 @@ pin down to "Skipped" with a reason.
 - Badger SPF 30 stick: no gram weight found.
 - Coros Nomad: listed weights conflict (39 g, 49 g, 61 g) between reviews.
 - Platypus Platy Plus 1 L: sources disagree (23 to 38 g).
+- Gear Aid Tenacious Tape: listed weights range from 15 to 34 g depending on whether the case is counted.
+- Sea to Summit Ultra-Sil Compression Sack: weights and sizes conflict between sources.
