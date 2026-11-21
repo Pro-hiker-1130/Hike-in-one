@@ -379,7 +379,10 @@ function renderPaceSettings(){
   const pace = TrackCore.personalPace(tracks);
   const on = usePersonalPace();
   const box = document.getElementById('paceUseMine');
-  box.checked = on; box.disabled = !pace;
+  box.checked = on;
+  // The switch only shows once there's a pace to switch to; before that a
+  // ticked but greyed-out box looked like a setting that was on.
+  document.getElementById('paceToggle').hidden = !pace;
   const rule = 'The standard rule is 4 km an hour plus 1 hour for every 600 m of climb.';
   let note;
   if(!pace) note = rule + ' Once you have 3 or more timed walks of 2 km or longer, estimates can fit your own pace.';

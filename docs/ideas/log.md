@@ -3,6 +3,54 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-20 — polish
+
+Looked at: keyboard focus across the app's controls, following last
+week's card focus rings. Buttons, segmented toggles, links and inputs
+already shared one green ring. Select menus outside forms (breakdown
+metric, "Apply a loadout…", gear status filter and sort, year picker) got
+the browser's own dark ring instead, and so did textareas outside forms.
+Changed: select menus and textareas get the same 2 px ring as everything
+else. Form fields keep their own focus style (thin brass outline and
+border), because their rule is more specific. CSS only. New e2e test
+compares the select's ring with a button's and checks a form field keeps
+its own. Service worker cache `waypoints-v49`. All tests pass: 60 unit,
+63 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-19 — research
+
+Looked at: gear-wear reminders. Strava emails when shoes pass a distance
+you set, and keeps reminding until they're retired. Garmin Connect
+notifies at a "max distance" you choose. The app already tracks walked
+km against each item's lifespan (the wear meter on Gear Room cards), but
+said nothing where it matters: when packing that gear for the next trip.
+Budget used: 2 searches, 0 fetches.
+Changed: on a planned trip, gear at 90 % or more of its lifespan gets a
+"Replace soon" badge, and gear past it gets "Worn out", both in the gear
+list and in packing mode. One line above the list names them ("⚠ Trail
+shoes and Poles are at or near the end of the lifespan you set."). Past
+trips don't show it. It uses the same wear calculation as the Gear Room,
+and nothing new is saved. New e2e test. Service worker cache
+`waypoints-v48`. All tests pass: 60 unit, 62 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-18 — polish
+
+Looked at: the Settings page on a device with no timed walks. The
+"Fit estimates to my own pace" box showed ticked but greyed out, which
+read as a setting that was on even though there was no pace to use yet.
+Changed: the switch is hidden until there are 3 timed walks to work out a
+pace from. Before that, the card only explains the standard rule and
+what's needed. Once a pace exists, the switch appears and works as
+before. The pace e2e test now checks that the switch is hidden, then
+shown. Service worker cache `waypoints-v47`. All tests pass: 60 unit,
+61 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-17 — research
 
 Synced: main had a new commit from another session (GR progress counts

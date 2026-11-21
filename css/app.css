@@ -207,7 +207,9 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%;ov
 }
 .leaflet-tooltip-top:before{border-top-color:var(--panel);}
 
-a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible{
+/* One keyboard focus ring everywhere (select menus used the browser's own). */
+a:focus-visible, button:focus-visible, input:focus-visible, label:focus-visible,
+select:focus-visible, textarea:focus-visible{
   outline:2px solid var(--brass);outline-offset:2px;
 }
 
@@ -769,8 +771,8 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .sr-point{margin:0;font-size:12.5px;color:var(--muted);}
 #sharedRouteOverlay .rp-map{cursor:pointer;height:min(42vh,380px);}
 
+.pace-toggle[hidden]{display:none;}
 .pace-toggle{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--parchment);}
-.pace-toggle input:disabled + *{opacity:.5;}
 
 .personal-bests-title{margin:12px 0 4px;}
 .personal-bests{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:auto auto 1fr;gap:3px 10px;font-size:13px;align-items:baseline;}
@@ -836,6 +838,12 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .pack-split-consumable::before{background:#B87333;}
 .food-plan{margin:0 0 10px;font-size:13px;color:var(--muted);}
 .food-plan[hidden]{display:none;}
+/* Worn gear on a planned trip */
+.gear-wear-warning{margin:0 0 10px;padding:8px 12px;border-radius:8px;font-size:13px;color:#7A2E0E;background:#F6E3D8;}
+.gear-wear-warning[hidden]{display:none;}
+.wear-badge{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;vertical-align:1px;white-space:nowrap;}
+.wear-badge.wear-worn{color:#fff;background:var(--danger);}
+.wear-badge.wear-soon{color:#7A4E00;background:#FBEFD5;}
 /* Packing mode: big tap rows with a round tick, and a progress bar. */
 .pack-progress{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-size:13px;color:var(--muted);}
 .pack-progress[hidden]{display:none;}
