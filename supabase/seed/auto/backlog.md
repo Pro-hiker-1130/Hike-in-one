@@ -129,3 +129,5 @@ pin down to "Skipped" with a reason.
 - Platypus Platy Plus 1 L: sources disagree (23 to 38 g).
 - Gear Aid Tenacious Tape: listed weights range from 15 to 34 g depending on whether the case is counted.
 - Sea to Summit Ultra-Sil Compression Sack: weights and sizes conflict between sources.
+- Nemo Tensor Insulated (Regular): brand lists 425 g but the R-value differs between the brand (4.2) and REI (3.5), so the version is unclear.
+- Exped MegaMat Duo: weights differ by size and by whether the pump and bag are counted.
