@@ -286,7 +286,10 @@ function renderGearStats(){
   document.getElementById('gearStatCount').textContent = count;
   document.getElementById('gearStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
   const currencyLabel = currencies.size === 1 ? [...currencies][0] : (currencies.size > 1 ? 'mixed' : 'EUR');
-  document.getElementById('gearStatValue').textContent = value ? formatMoney(value, currencyLabel) : '0';
+  // No prices entered isn't "worth nothing": show a dash and say how to fill it.
+  const valueEl = document.getElementById('gearStatValue');
+  valueEl.textContent = value ? formatMoney(value, currencyLabel) : '—';
+  valueEl.title = value ? priced.length + ' of ' + owned.length + ' owned items have a price' : 'Add prices to your gear (More details in the gear form) to see its value';
 }
 
 function renderGearGrid(){

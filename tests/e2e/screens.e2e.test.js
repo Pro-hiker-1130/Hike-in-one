@@ -611,6 +611,17 @@ test('gear cards: cost per trip so far, from the price and completed trips', { s
   assert.deepEqual(errors, []);
 });
 
+test('gear stats: total value shows a dash until prices are entered, then the sum', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  assert.equal(await text(page, '#gearStatValue'), '—', 'the test gear has no prices');
+  assert.match(await page.getAttribute('#gearStatValue', 'title'), /^Add prices to your gear/);
+  await page.evaluate(()=>{ gearItems[0].price = 450; gearItems[0].currency = 'EUR'; gearItems[1].price = 230; gearItems[1].currency = 'EUR'; refreshGear(); });
+  assert.equal(await text(page, '#gearStatValue'), '€680');
+  assert.equal(await page.getAttribute('#gearStatValue', 'title'), '2 of 4 owned items have a price');
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

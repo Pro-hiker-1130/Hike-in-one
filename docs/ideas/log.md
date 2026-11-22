@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-22 — polish
+
+Looked at: phone screenshots of the Gear Room and a loadout page. With no
+prices entered, the Gear Room's "Total value" tile said "0", which reads
+as if the gear were worth nothing, while other empty stats (metres
+climbed) show "—".
+Changed: the tile shows "—" until an item has a price, with a hover hint
+on how to add one ("More details" in the gear form). Once prices exist it
+shows the sum as before, with a hover note like "2 of 4 owned items have
+a price". New e2e test. Service worker cache `waypoints-v51`. All tests
+pass: 60 unit, 65 e2e.
+Noticed for later: on phones the breakdown panel on a loadout page is
+narrower than the rest of the page.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-21 — research
 
 Looked at: gear apps that put a value on use. HikerKit (statistics with

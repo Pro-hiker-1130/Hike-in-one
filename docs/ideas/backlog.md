@@ -18,6 +18,8 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 ## Polish
 
+- Loadout page on phones: the breakdown panel is narrower than the rest of the page — S
+
 
 
 ## Questions for the owner
@@ -74,3 +76,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-19 — Planned trips warn about worn-out packed gear (research, Strava/Garmin idea)
 - 2026-11-20 — Select menus get the same keyboard focus ring as buttons (polish)
 - 2026-11-21 — Gear cards: cost per trip so far (research, HikerKit/PackTrack idea)
+- 2026-11-22 — Gear Room total value shows a dash until prices exist (polish)
