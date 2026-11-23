@@ -220,9 +220,7 @@ function renderTripDetail(){
         block.appendChild(c);
       });
       if(t.profile && t.profile.length > 1){
-        const prof = buildElevationProfile(t);
-        prof.style.setProperty('--ele-color', trackColors[t.id]);
-        block.appendChild(prof);
+        block.appendChild(tripTrackProfile(trip, tks, t));
       }
       trackList.appendChild(block);
     });
@@ -515,6 +513,28 @@ function downloadTripDay(trip, day, index, profileKm){
   saveTrackGpx(part);
 }
 
+// Where each day of a split route starts, on one planned track's own
+// profile: [{km, label: 'Day 2'}, ...].
+function tripDayMarks(trip, tks, track){
+  if(!(trip.dailyKm > 0) || !track.planned) return [];
+  const days = TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm);
+  let offset = 0;
+  for(const t of tks.filter(x => x.planned && x.profile && x.profile.length > 1)){
+    const len = t.profile[t.profile.length-1][0] - t.profile[0][0];
+    if(t === track) return days.slice(1)
+      .filter(d => d.fromKm > offset && d.fromKm < offset + len)
+      .map(d => ({ km: t.profile[0][0] + d.fromKm - offset, label: 'Day ' + (days.indexOf(d) + 1) }));
+    offset += len;
+  }
+  return [];
+}
+function tripTrackProfile(trip, tks, t){
+  const prof = buildElevationProfile(t, null, { dayMarks: tripDayMarks(trip, tks, t) });
+  prof.style.setProperty('--ele-color', computeTrackColors()[t.id]);
+  prof.dataset.trackId = t.id;
+  return prof;
+}
+
 function renderTripDays(trip, tks){
   const profile = tripPlannedProfile(tks);
   const section = document.getElementById('tripDaysSection');
@@ -552,7 +572,12 @@ function setTripDailyKm(){
   const v = Number(document.getElementById('tripDailyKm').value);
   if(v > 0) trip.dailyKm = Math.min(200, v); else delete trip.dailyKm;
   saveTrips();
-  renderTripDays(trip, tripTracks(trip));
+  const tks = tripTracks(trip);
+  renderTripDays(trip, tks);
+  tks.filter(t => t.planned).forEach(t=>{
+    const old = document.querySelector('#tripTrackList .ele-profile[data-track-id="' + CSS.escape(String(t.id)) + '"]');
+    if(old) old.replaceWith(tripTrackProfile(trip, tks, t));
+  });
   renderTripFoodPlan(trip, tripGearItemsList(trip));
   renderTripWaterPlan(trip);
 }

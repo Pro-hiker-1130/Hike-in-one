@@ -289,6 +289,9 @@ test('trips: a planned route splits into days of about the chosen distance', { s
   assert.match(rows[0], /^Day 1 · Fri 5 Jul 2030km 0\.0–15\.0 · ↑ 500 m ↓ 150 m · about /);
   assert.match(rows[1], /^Day 2 · Sat 6 Jul 2030km 15\.0–32\.0/);
   assert.equal(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_days').dailyKm), 15);
+  // The profile marks where day 2 starts.
+  assert.deepEqual(await page.$$eval('#tripTrackList .ele-day-mark', els => els.map(e => [e.textContent, e.style.left])), [['Day 2', '46.88%']]);
+  assert.match(await page.getAttribute('#tripTrackList .ele-profile', 'aria-label'), / Day 2 starts at 15\.0 km\. /);
   // ...and for the longest day once it is.
   assert.equal(await text(page, '#tripWaterPlan'), 'Water: about 2.5 L on the longest day (4 h 35 min of walking) — up to 4.5 L in heat or on hard climbs. Plan where to refill.');
   // Food for those days, against the food packed.
@@ -303,6 +306,7 @@ test('trips: a planned route splits into days of about the chosen distance', { s
   assert.match(await text(page, '#tripFoodPlan'), /Packed: 1\.5 kg, about right\.$/);
   await page.fill('#tripDailyKm', '');
   assert.equal(await page.evaluate(()=> 'dailyKm' in trips.find(tr => tr.id === 'trip_days')), false);
+  assert.equal(await page.locator('#tripTrackList .ele-day-mark').count(), 0, 'no marks once the route is one day again');
   assert.deepEqual(errors, []);
 });
 
