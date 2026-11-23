@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-23 — research (owner asked for several research days: C of 3)
+
+Looked at: multi-day stage planners. HiiKER, AllTrails Peak, komoot and
+Bikemap all split a route into days and show each stage against the
+elevation profile. Budget used: 1 search, 0 fetches.
+Changed: when a planned trip is split into days, the planned route's
+elevation profile on the trip page has a dashed line and a "Day 2",
+"Day 3"... label where each day starts (also read out in the profile's
+screen-reader label). The marks update as you change the daily distance
+and go away when you clear it. They don't animate. The trips e2e test
+checks the marks and the label. Service worker cache `waypoints-v55`.
+All tests pass: 62 unit, 65 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-23 — research (owner asked for several research days: B of 3)
 
 Looked at: how much to drink by temperature. Trail Hiking Australia's

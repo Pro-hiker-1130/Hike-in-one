@@ -49,6 +49,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-03 — Share a route with partners for suggestions (CalTopo idea)
 - 2026-11-04 — Toast slides in and fades out (polish)
 - 2026-11-23 — Water estimate uses the forecast high (research)
+- 2026-11-23 — Day boundaries on the planned route's elevation profile (research)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)
