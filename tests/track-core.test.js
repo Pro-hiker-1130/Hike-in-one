@@ -390,3 +390,7 @@ test('latestStart works back from sunset: an hour early, walking plus 10 minutes
   assert.equal(T.latestStart(day(8), day(17), 12 * 3600).fitsDaylight, false);
   assert.equal(T.latestStart(day(8), day(17), 0), null);
 });
+
+test('waterLitresPerHour rises with the forecast temperature', () => {
+  assert.deepEqual([null, 8, 18, 24.9, 25, 29, 30, 36].map(T.waterLitresPerHour), [0.5, 0.4, 0.5, 0.5, 0.65, 0.65, 0.8, 0.8]);
+});

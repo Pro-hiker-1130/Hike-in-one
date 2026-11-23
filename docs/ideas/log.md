@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-23 — research (owner asked for several research days: B of 3)
+
+Looked at: how much to drink by temperature. Trail Hiking Australia's
+table gives about 0.35–0.5 L an hour of moderate walking at 15–25 °C,
+0.45–0.65 L at 25–30 °C and more above that (double above about 32 °C);
+REI's baseline is ½ L an hour. Budget used: 1 search, 0 fetches.
+Changed: when a planned trip's forecast has loaded, the water line uses
+the forecast high: 0.4 L an hour below 15 °C, 0.5 L to 25 °C, 0.65 L to
+30 °C and 0.8 L above, and says which high it used, e.g. "(4 h 35 min of
+walking, forecast high 28 °C)". Without a forecast it stays at ½ L an
+hour as before. `TrackCore.waterLitresPerHour` has a unit test; the
+weather e2e test checks the line. Service worker cache `waypoints-v54`.
+All tests pass: 62 unit, 65 e2e.
+For the owner: the rates are rough planning numbers, not medical advice;
+the "up to" figure for heat or hard climbs is unchanged.
+
 ## 2026-11-23 — research (owner asked for several research days: A of 3)
 
 Looked at: turnaround and start-time planning. Calculators (Trail

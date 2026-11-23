@@ -399,6 +399,8 @@ async function shareTripImage(id){
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 const FORECAST_DAYS = 16;
 const forecastCache = new Map();
+// tripId -> the highest forecast top temperature over the trip's days (°C).
+const tripForecastHigh = {};
 const WEATHER_WORDS = [[0,'Clear'],[1,'Mostly clear'],[2,'Partly cloudy'],[3,'Cloudy'],[48,'Fog'],[57,'Drizzle'],
   [67,'Rain'],[77,'Snow'],[82,'Showers'],[86,'Snow showers'],[99,'Thunderstorms']];
 function weatherWord(code){ const w = WEATHER_WORDS.find(([max]) => code <= max); return w ? w[1] : ''; }
@@ -452,6 +454,9 @@ function renderTripWeather(trip, tks){
     if(el.dataset.key !== key) return;
     el.dataset.state = 'done';
     const d = data.daily;
+    const highs = (d.temperature_2m_max || []).filter(v => v != null);
+    tripForecastHigh[trip.id] = highs.length ? Math.max(...highs) : null;
+    if(currentTripId === trip.id) renderTripWaterPlan(trip);
     const r = v => v == null ? '–' : Math.round(v);
     el.innerHTML = '<p class="section-label trip-weather-title">Forecast at the start</p>';
     d.time.forEach((iso, i)=>{
@@ -640,9 +645,12 @@ function renderTripWaterPlan(trip){
   const sec = days.length > 1 ? Math.max(...days.map(d => walkingSec(d.distanceKm, d.upM)))
     : walkingSec(route.reduce((s, t) => s + t.distanceKm, 0), route.reduce((s, t) => s + (t.elevationGainM || 0), 0));
   const hours = sec / 3600;
+  const high = tripForecastHigh[trip.id];
+  const rate = TrackCore.waterLitresPerHour(high);
   const litres = v => (Math.round(v * 2) / 2).toFixed(1).replace(/\.0$/, '');
-  el.textContent = 'Water: about ' + litres(Math.max(0.5, hours * 0.5)) + ' L ' +
-    (days.length > 1 ? 'on the longest day (' + formatDuration(sec) + ' of walking)' : 'for ' + formatDuration(sec) + ' of walking') +
+  el.textContent = 'Water: about ' + litres(Math.max(0.5, hours * rate)) + ' L ' +
+    (days.length > 1 ? 'on the longest day (' + formatDuration(sec) + ' of walking' : 'for ' + formatDuration(sec) + ' of walking') +
+    (high != null ? (days.length > 1 ? ', ' : ' (') + 'forecast high ' + Math.round(high) + ' °C)' : days.length > 1 ? ')' : '') +
     ' — up to ' + litres(Math.max(1, hours)) + ' L in heat or on hard climbs.' + (days.length > 1 || hours > 4 ? ' Plan where to refill.' : '');
 }
 

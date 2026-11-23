@@ -340,6 +340,7 @@ test('trips: a planned trip within 16 days shows the forecast at its start, furt
   assert.equal(days.length, 2, 'two days at 15 km a day');
   assert.match(days[0], /Partly cloudy · 4–15 °C · rain 10 % · wind up to 18 km\/h$/);
   assert.match(days[1], /Rain · 6–11 °C · rain 80 % \(12\.5 mm\) · wind up to 32 km\/h$/);
+  assert.match(await text(page, '#tripWaterPlan'), /^Water: about [\d.]+ L on the longest day \(\d.* of walking, forecast high 15 °C\) — up to /, 'the water line uses the forecast');
   assert.deepEqual(asked, [['46.02', '7.75', soon, isoInDays(4)]], 'only the rounded start point and the dates are sent');
   await page.evaluate(()=> renderTripDetail());
   assert.equal(asked.length, 1, 're-rendering does not ask again');
