@@ -15,6 +15,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - Trip photos pinned on the map where they were taken (from the photo's location data) — Relive — remembering where a view was — M
 - Profile ↔ map link on the trip page too (needs a small map there) — Footpath — same help when reviewing a hike — M
 - A diary line per hike ("windy on the ridge, saw ibex"), shown on the trip page and in the memory card — SummitLynx — remembering the day — M (new saved field)
+- Water estimate that uses the trip's forecast (more on hot days) — Trail Estimator — fewer surprises in summer — S
 
 ## Polish
 
@@ -77,3 +78,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-20 — Select menus get the same keyboard focus ring as buttons (polish)
 - 2026-11-21 — Gear cards: cost per trip so far (research, HikerKit/PackTrack idea)
 - 2026-11-22 — Gear Room total value shows a dash until prices exist (polish)
+- 2026-11-23 — Water estimate on planned trips (research, NOLS/REI guidance, Trail Estimator idea)

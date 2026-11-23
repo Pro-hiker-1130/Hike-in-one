@@ -279,12 +279,16 @@ test('trips: a planned route splits into days of about the chosen distance', { s
   });
   assert.ok(await page.isVisible('#tripDaysSection'));
   assert.match(await text(page, '#tripDaysList'), /Set a daily distance/);
+  // Water for the whole route while it isn't split into days.
+  assert.equal(await text(page, '#tripWaterPlan'), 'Water: about 4.5 L for 8 h 50 min of walking — up to 9 L in heat or on hard climbs. Plan where to refill.');
   await page.fill('#tripDailyKm', '15');
   const rows = await page.$$eval('#tripDaysList .trip-day-row', els => els.map(e => e.textContent));
   assert.equal(rows.length, 2, '32 km at 15 a day: the 2 km left over joins day 2');
   assert.match(rows[0], /^Day 1 · Fri 5 Jul 2030km 0\.0–15\.0 · ↑ 500 m ↓ 150 m · about /);
   assert.match(rows[1], /^Day 2 · Sat 6 Jul 2030km 15\.0–32\.0/);
   assert.equal(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_days').dailyKm), 15);
+  // ...and for the longest day once it is.
+  assert.equal(await text(page, '#tripWaterPlan'), 'Water: about 2.5 L on the longest day (4 h 35 min of walking) — up to 4.5 L in heat or on hard climbs. Plan where to refill.');
   // Food for those days, against the food packed.
   assert.equal(await text(page, '#tripFoodPlan'), 'Food for 2 days: about 1.4–1.8 kg. No food in the gear list yet.');
   await page.evaluate(()=>{

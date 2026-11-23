@@ -3,6 +3,25 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-23 — research
+
+Looked at: water planning. NOLS and REI suggest about ½ L an hour of
+moderate walking, rising to about 1 L an hour in heat or on hard climbs.
+Trail Estimator works out water for a route, FarOut shows the distance to
+the next water source, and HIIKER marks refill points. Budget used: 2
+searches, 0 fetches.
+Changed: planned trips with a planned route show a water line under the
+food estimate, e.g. "Water: about 2.5 L on the longest day (4 h 35 min
+of walking) — up to 4.5 L in heat or on hard climbs. Plan where to
+refill." It uses the walking time already shown (fitted to your pace),
+rounded to the half litre. It covers the whole route, or the longest day
+when the trip is split into days. "Plan where to refill" is added for
+multi-day trips and walks over 4 hours. Nothing new is saved. The days e2e
+test checks both forms. Service worker cache `waypoints-v52`. All tests
+pass: 60 unit, 65 e2e.
+For the owner: these are rough planning numbers. The trip's forecast
+could raise the figure on hot days, if you'd like that.
+
 ## 2026-11-22 — polish
 
 Looked at: phone screenshots of the Gear Room and a loadout page. With no

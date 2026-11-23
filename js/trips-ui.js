@@ -549,6 +549,7 @@ function setTripDailyKm(){
   saveTrips();
   renderTripDays(trip, tripTracks(trip));
   renderTripFoodPlan(trip, tripGearItemsList(trip));
+  renderTripWaterPlan(trip);
 }
 
 // ---- Trip gear, with a packing mode ----
@@ -579,6 +580,7 @@ function renderTripGear(trip){
       {base:'Base', worn:'Worn', consumable:'Consumable'}[r]+'</span> '+formatWeight(split[r])+'</span>').join('');
 
   renderTripFoodPlan(trip, gearList);
+  renderTripWaterPlan(trip);
 
   // Planned trips: gear past (or near) the lifespan you set gets a warning,
   // before it's on the trail — the same wear the Gear Room cards show.
@@ -625,6 +627,25 @@ function renderTripGear(trip){
 
 // "Food for 2 days: about 1.4–1.8 kg. Packed: 1.5 kg, about right."
 // Planned trips with gear or a daily distance; days from the day split.
+// Water from walking time (fitted to your pace): about ½ L an hour, up to
+// 1 L an hour in heat or on hard climbs, the common hiking guidance. On a
+// trip split into days, for the longest day.
+function renderTripWaterPlan(trip){
+  const el = document.getElementById('tripWaterPlan');
+  const tks = tripTracks(trip);
+  const route = tks.filter(t => t.planned && t.distanceKm > 0);
+  el.hidden = tripStatus(trip) !== 'planned' || !route.length;
+  if(el.hidden) return;
+  const days = trip.dailyKm > 0 ? TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm) : [];
+  const sec = days.length > 1 ? Math.max(...days.map(d => walkingSec(d.distanceKm, d.upM)))
+    : walkingSec(route.reduce((s, t) => s + t.distanceKm, 0), route.reduce((s, t) => s + (t.elevationGainM || 0), 0));
+  const hours = sec / 3600;
+  const litres = v => (Math.round(v * 2) / 2).toFixed(1).replace(/\.0$/, '');
+  el.textContent = 'Water: about ' + litres(Math.max(0.5, hours * 0.5)) + ' L ' +
+    (days.length > 1 ? 'on the longest day (' + formatDuration(sec) + ' of walking)' : 'for ' + formatDuration(sec) + ' of walking') +
+    ' — up to ' + litres(Math.max(1, hours)) + ' L in heat or on hard climbs.' + (days.length > 1 || hours > 4 ? ' Plan where to refill.' : '');
+}
+
 function renderTripFoodPlan(trip, gearList){
   const el = document.getElementById('tripFoodPlan');
   const tks = tripTracks(trip);
