@@ -218,6 +218,8 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
     renderTripDetail();
   });
   assert.match(await text(page, '#tripDaylight'), /^Sunrise \d.+ · sunset \d.+ · \d+ h \d+ min of daylight on /);
+  // ...and the latest start that finishes an hour before sunset (a 2 km plan: 35 min with breaks).
+  assert.match(await text(page, '#tripDaylight'), /\(your time zone\)\. It's about 35 min with breaks: start by \d.+ to finish an hour before sunset\.$/);
   // An elevation profile sweeps in the first time only, not on every re-render.
   const sweeps = await page.evaluate(()=>{
     const walked = trips.find(tr => tripTracks(tr).some(t => t.profile && t.profile.length > 1));

@@ -380,3 +380,13 @@ test('onThisDay finds walks from this week in earlier years, newest year and clo
   assert.deepEqual(T.onThisDay([{ date: '2024-02-29' }], '2026-02-28').map(x => x.daysOff), [1]);
   assert.deepEqual(T.onThisDay(items, ''), []);
 });
+
+test('latestStart works back from sunset: an hour early, walking plus 10 minutes of breaks an hour', () => {
+  const day = h => Date.UTC(2030, 6, 5, h);
+  // 6 h of walking -> 7 h out; finish by 20:00 for a 21:00 sunset -> start by 13:00.
+  const r = T.latestStart(day(6), day(21), 6 * 3600);
+  assert.deepEqual(r, { startMs: day(13), totalSec: 7 * 3600, fitsDaylight: true });
+  // 12 h of walking (14 h out) on a 9 h winter day doesn't fit.
+  assert.equal(T.latestStart(day(8), day(17), 12 * 3600).fitsDaylight, false);
+  assert.equal(T.latestStart(day(8), day(17), 0), null);
+});

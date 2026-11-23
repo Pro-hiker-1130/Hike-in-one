@@ -3,6 +3,25 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-23 — research (owner asked for several research days: A of 3)
+
+Looked at: turnaround and start-time planning. Calculators (Trail
+Hiking Australia) and WTA advice work back from sunset: the latest start
+is the target finish minus the total time out, padded for breaks, with a
+target finish about an hour before sunset. Budget used: 1 search, 0
+fetches.
+Changed: on a planned trip with a route, the daylight line adds the
+latest start, e.g. "Day 1 is about 4 h 28 min with breaks: start by
+1:55 PM to finish an hour before sunset." It uses the walking time already
+shown (fitted to your pace) plus 10 minutes of breaks an hour, for the
+whole route or the first day of a split trip. When it doesn't fit between
+sunrise and sunset, it says so and suggests splitting into days.
+`TrackCore.latestStart` has a unit test; the trips e2e test checks the
+sentence. Service worker cache `waypoints-v53`. All tests pass: 61 unit,
+65 e2e.
+For the owner: times are in the device's time zone, as for sunrise and
+sunset.
+
 ## 2026-11-23 — research
 
 Looked at: water planning. NOLS and REI suggest about ½ L an hour of

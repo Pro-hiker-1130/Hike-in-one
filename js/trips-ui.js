@@ -703,6 +703,20 @@ function renderTripDaylight(trip, tks){
   const mins = Math.round((sun.sunset - sun.sunrise) / 60000);
   el.textContent = 'Sunrise ' + hm(sun.sunrise) + ' · sunset ' + hm(sun.sunset) +
     ' · ' + Math.floor(mins/60) + ' h ' + (mins%60) + ' min of daylight ' + when + ' (your time zone).';
+  // Work back from sunset: the latest start that finishes an hour before
+  // it, for the planned route's walking time plus breaks (the first day of
+  // a trip split into days).
+  const route = tks.filter(t => t.planned && t.distanceKm > 0);
+  if(!route.length) return;
+  const days = trip.dailyKm > 0 ? TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm) : [];
+  const walk = days.length > 1 ? walkingSec(days[0].distanceKm, days[0].upM)
+    : walkingSec(route.reduce((a, t) => a + t.distanceKm, 0), route.reduce((a, t) => a + (t.elevationGainM || 0), 0));
+  const ls = TrackCore.latestStart(sun.sunrise, sun.sunset, walk);
+  if(!ls) return;
+  const what = (days.length > 1 ? 'Day 1 is' : 'It\'s') + ' about ' + formatDuration(ls.totalSec) + ' with breaks';
+  el.textContent += ls.fitsDaylight
+    ? ' ' + what + ': start by ' + hm(ls.startMs) + ' to finish an hour before sunset.'
+    : ' ' + what + ', more than the daylight allows' + (days.length > 1 ? '.' : ' — consider splitting it into days.');
 }
 
 // ---- Trip photos ----

@@ -79,3 +79,4 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-21 — Gear cards: cost per trip so far (research, HikerKit/PackTrack idea)
 - 2026-11-22 — Gear Room total value shows a dash until prices exist (polish)
 - 2026-11-23 — Water estimate on planned trips (research, NOLS/REI guidance, Trail Estimator idea)
+- 2026-11-23 — Latest start time to finish before sunset (research, WTA / trail calculators idea)
