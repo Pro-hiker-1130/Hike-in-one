@@ -131,3 +131,6 @@ pin down to "Skipped" with a reason.
 - Sea to Summit Ultra-Sil Compression Sack: weights and sizes conflict between sources.
 - Nemo Tensor Insulated (Regular): brand lists 425 g but the R-value differs between the brand (4.2) and REI (3.5), so the version is unclear.
 - Exped MegaMat Duo: weights differ by size and by whether the pump and bag are counted.
+- Counter Assault Bear Deterrent 8.1 oz: 230 g is net contents only; weighed gross figures run 281 to 333 g.
+- Esbit steel pocket stove: weight depends on kit contents (stove alone about 90 g, kits include fuel).
+- Fire-Maple Fixed Star 2: no weight found.
