@@ -615,6 +615,13 @@ function renderTripGear(trip){
   bigEl.textContent = big.total ? 'Big three: ' + formatWeight(big.total) + ' (' +
     big.parts.map(p => p.label + ' ' + formatWeight(p.grams)).join(' · ') + ') — usually the first place to save weight.' : '';
 
+  const cmp = tripBaseCompare(trip);
+  const cmpEl = document.getElementById('tripBaseCompare');
+  cmpEl.hidden = !cmp;
+  if(cmp) cmpEl.textContent = 'Base weight: ' + (Math.abs(cmp.diff) < 50 ? 'about the same as' :
+    formatWeight(Math.abs(cmp.diff)) + (cmp.diff < 0 ? ' lighter than' : ' heavier than')) +
+    ' on ' + cmp.prev.name + ' (' + friendlyDate(String(tripDisplayDate(cmp.prev)).slice(0, 10), false) + ').';
+
   renderTripFoodPlan(trip, gearList);
   renderTripWaterPlan(trip);
 

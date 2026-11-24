@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-24 — research (owner asked for 3 more research days: F of 3)
+
+Looked at: how hikers track pack weight across trips. Base weight is the
+number they compare, because it stays about the same whatever the trip
+length. A common habit is to start from the gear list of the latest
+similar trip. I found no app documenting such a comparison. Budget used:
+1 search, 0 fetches.
+Changed: a trip's gear shows "Base weight: 370 g lighter than on Old loop
+(1 May 2029)." (or heavier, or "about the same as" within 50 g),
+against the latest completed trip before it that has gear. It is hidden
+when there's nothing to compare with. The packing e2e test checks it.
+Service worker cache `waypoints-v62`. All tests pass: 62 unit, 66 e2e.
+For the owner: it compares with the latest trip, whatever the season; a
+winter trip will usually come out heavier than a summer one.
+
 ## 2026-11-24 — research (owner asked for 3 more research days: E of 3)
 
 Looked at: reversing a planned route. komoot lets you reverse a route's

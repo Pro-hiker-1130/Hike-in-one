@@ -160,6 +160,21 @@ function tripBigThree(trip){
     .filter(p => p.grams > 0);
   return { parts, total: parts.reduce((s, p) => s + p.grams, 0) };
 }
+// This trip's base weight against the latest completed trip before it
+// (with gear and a date), the usual way to see a pack getting lighter.
+function tripBaseCompare(trip){
+  const base = tripWeightSplit(trip).base;
+  if(!base) return null;
+  const mine = tripDisplayDate(trip), day = d => String(d).slice(0, 10);
+  let prev = null;
+  trips.forEach(tr => {
+    const d = tripDisplayDate(tr);
+    if(tr.id === trip.id || !d || tripStatus(tr) !== 'completed' || (mine && day(d) >= day(mine))) return;
+    if(!tripWeightSplit(tr).base) return;
+    if(!prev || day(d) > day(tripDisplayDate(prev))) prev = tr;
+  });
+  return prev ? { prev, diff: base - tripWeightSplit(prev).base } : null;
+}
 // Food to carry, by the usual rule of about 700–900 g of food a day, set
 // against the food the trip already has (the Food category).
 const FOOD_G_PER_DAY = [700, 900];
