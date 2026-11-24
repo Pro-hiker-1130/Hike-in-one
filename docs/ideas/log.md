@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-24 — polish
+
+Looked at: phone screenshots (390 px) of a loadout page and a trip page,
+measuring where each block starts and ends.
+Changed: on a loadout page the breakdown card was indented twice (its
+section's padding plus its own margin), so on phones it ran 36–354 px
+while the stat cards above ran 12–378 px. The card no longer adds its own
+margin inside a section, and on phones the sections use the same 12 px
+sides as the stat cards. Trip pages share those sections, so their
+daylight line, weather and track cards now line up with the stats too.
+Desktop is unchanged apart from the loadout card matching its section.
+Service worker cache `waypoints-v56`. All tests pass: 62 unit, 65 e2e.
+Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-23 — research (owner asked for several research days: C of 3)
 
 Looked at: multi-day stage planners. HiiKER, AllTrails Peak, komoot and

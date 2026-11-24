@@ -156,6 +156,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%;ov
 .trip-card-notes{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .trip-card-meta{font-size:12px;color:var(--muted);}
 .trip-detail-section{padding:4px 24px 20px;}
+.trip-detail-section .breakdown-card{margin:0;}
 .trip-detail-section-head{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px;}
 .trip-track-row{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -566,6 +567,8 @@ select:focus-visible, textarea:focus-visible{
 }
 @media (max-width:760px){
   .breakdown-card{margin:0 12px 18px;padding:16px;}
+  /* Sections already have their side padding: line up with the stat cards. */
+  .trip-detail-section{padding-left:12px;padding-right:12px;}
   .breakdown-body{gap:18px;}
   .donut-wrap{width:120px;height:120px;}
 }
