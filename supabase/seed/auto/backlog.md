@@ -134,3 +134,6 @@ pin down to "Skipped" with a reason.
 - Counter Assault Bear Deterrent 8.1 oz: 230 g is net contents only; weighed gross figures run 281 to 333 g.
 - Esbit steel pocket stove: weight depends on kit contents (stove alone about 90 g, kits include fuel).
 - Fire-Maple Fixed Star 2: no weight found.
+- Darn Tough Hiker Micro Crew Cushion: no weight listed for this exact model; only a related model was found.
+- Montbell Versalite Pants: single review figure for size XL only.
+- Arc'teryx Beta LT Jacket: already in the catalog.
