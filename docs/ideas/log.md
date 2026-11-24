@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-24 — research (owner asked for 3 research days: B of 3)
+
+Looked at: how route planners finish a route. Gaia GPS, AllTrails,
+HiiKER, Footpath and Apple Maps each have both "back to start" (one more
+leg to the start) and "out and back" (the same way back). This planner
+had only "Back to start". Budget used: 1 search, 0 fetches.
+Changed: the route planner has an "Out and back" button on the map. It
+adds the points in reverse, so the route goes back the same way, and
+draws each leg back the way it went out (on trails or a straight line).
+Undo takes it back off. It is disabled when the route already ends at
+the start. The route planner e2e test checks the points and the modes.
+Service worker cache `waypoints-v58`. All tests pass: 62 unit, 65 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-24 — research (owner asked for 3 research days: A of 3)
 
 Looked at: pack-planning apps (Packstack, OutPack, TrailBound, HikerKit,

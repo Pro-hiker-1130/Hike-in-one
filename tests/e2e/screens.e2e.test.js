@@ -1240,6 +1240,15 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   assert.ok(await page.isDisabled('#rpLoopBtn'), 'already a round trip');
   await page.click('#rpUndoBtn');
   await page.waitForFunction(()=> rp.waypoints.length === 3);
+  // Out and back retraces the points, each leg drawn the way it went out.
+  const out = await page.evaluate(()=> rp.waypoints.map(w => [w.ll.join(','), w.mode]));
+  await page.click('#rpBackBtn');
+  const both = await page.evaluate(()=> rp.waypoints.map(w => [w.ll.join(','), w.mode]));
+  assert.deepEqual(both.map(w => w[0]), out.map(w => w[0]).concat([out[1][0], out[0][0]]));
+  assert.deepEqual(both.slice(3).map(w => w[1]), [out[2][1], out[1][1]]);
+  assert.ok(await page.isDisabled('#rpBackBtn') && await page.isDisabled('#rpLoopBtn'), 'back at the start');
+  await page.click('#rpUndoBtn');
+  await page.waitForFunction(()=> rp.waypoints.length === 3);
 
   // Download it, then save it to the trip.
   await page.fill('#rpName', 'Haute Route day 1');
