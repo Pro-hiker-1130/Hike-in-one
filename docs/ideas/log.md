@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-24 — research (owner asked for 3 research days: A of 3)
+
+Looked at: pack-planning apps (Packstack, OutPack, TrailBound, HikerKit,
+PackTrack). They all split base, worn and consumable weight, which this
+app already does; the other number lightweight hikers watch is the "big
+three" (pack, shelter, sleep system), usually the heaviest part of the
+base weight. Budget used: 1 search, 0 fetches.
+Changed: a trip's gear shows a line like "Big three: 3.1 kg (pack 1.2 kg
+· shelter 1.2 kg · sleep system 640 g) — usually the first place to save
+weight." It counts the Backpack, Shelter and Sleep system categories and
+is hidden when the trip has none of them. The packing e2e test checks
+it. Service worker cache `waypoints-v57`. All tests pass: 62 unit,
+65 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-24 — polish
 
 Looked at: phone screenshots (390 px) of a loadout page and a trip page,

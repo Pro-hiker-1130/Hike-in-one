@@ -151,6 +151,15 @@ function tripWeightSplit(trip){
   tripGearItemsList(trip).forEach(g => { split[gearPackRole(g)] += (g.weightGrams || 0) * (g.quantity || 1); });
   return split;
 }
+// The "big three" — pack, shelter and sleep system — usually the heaviest
+// items and the first place to save weight. Grams per category, plus total.
+const BIG_THREE = [['Backpack', 'pack'], ['Shelter', 'shelter'], ['Sleep system', 'sleep system']];
+function tripBigThree(trip){
+  const parts = BIG_THREE.map(([cat, label]) => ({ label, grams: tripGearItemsList(trip)
+    .filter(g => g.category === cat).reduce((s, g) => s + (g.weightGrams || 0) * (g.quantity || 1), 0) }))
+    .filter(p => p.grams > 0);
+  return { parts, total: parts.reduce((s, p) => s + p.grams, 0) };
+}
 // Food to carry, by the usual rule of about 700–900 g of food a day, set
 // against the food the trip already has (the Food category).
 const FOOD_G_PER_DAY = [700, 900];

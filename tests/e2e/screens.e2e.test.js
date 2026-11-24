@@ -248,6 +248,7 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
   // Shelter 1219 g + pack 1212 g are base; the quilt is set to worn here.
   await page.evaluate(()=>{ gearItems.find(g => g.id === 'g2').packRole = 'worn'; renderTripDetail(); });
   assert.equal(await text(page, '#tripPackSplit'), 'Base 2.4 kgWorn 640 gConsumable —');
+  assert.match(await text(page, '#tripBigThree'), /^Big three: 3\.1 kg \(pack 1\.2 kg · shelter 1\.2 kg · sleep system 640 g\) — usually the first place to save weight\.$/);
   await page.click('#tripPackBtn');
   assert.equal(await page.getAttribute('#tripPackBtn', 'aria-pressed'), 'true');
   assert.equal(await page.locator('#tripGearSummaryList .pack-row').count(), 3);

@@ -609,6 +609,12 @@ function renderTripGear(trip){
     '<span class="pack-split-part pack-split-'+r+'"><span class="pack-split-label">'+
       {base:'Base', worn:'Worn', consumable:'Consumable'}[r]+'</span> '+formatWeight(split[r])+'</span>').join('');
 
+  const big = tripBigThree(trip);
+  const bigEl = document.getElementById('tripBigThree');
+  bigEl.hidden = !big.total;
+  bigEl.textContent = big.total ? 'Big three: ' + formatWeight(big.total) + ' (' +
+    big.parts.map(p => p.label + ' ' + formatWeight(p.grams)).join(' · ') + ') — usually the first place to save weight.' : '';
+
   renderTripFoodPlan(trip, gearList);
   renderTripWaterPlan(trip);
 
