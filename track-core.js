@@ -595,10 +595,30 @@
     return out.sort((a, b) => a.yearsAgo - b.yearsAgo || Math.abs(a.daysOff) - Math.abs(b.daysOff));
   }
 
+  // The latest start that still finishes `bufferMin` before sunset, for a
+  // walk of walkSec plus breaks (breakShare of the walking time; 1/6 is
+  // 10 minutes an hour). {startMs, totalSec, fitsDaylight}: fitsDaylight
+  // is false when that start would be before sunrise.
+  function latestStart(sunriseMs, sunsetMs, walkSec, opts){
+    const o = Object.assign({ breakShare: 1/6, bufferMin: 60 }, opts);
+    if(!(sunsetMs > sunriseMs) || !(walkSec > 0)) return null;
+    const totalSec = Math.round(walkSec * (1 + o.breakShare));
+    const startMs = sunsetMs - o.bufferMin * 60000 - totalSec * 1000;
+    return { startMs, totalSec, fitsDaylight: startMs >= sunriseMs };
+  }
+
+  // Litres of water an hour of moderate walking, by the day's top
+  // temperature (°C), from common hiking planning tables. Without a
+  // temperature, the usual ½ L an hour.
+  function waterLitresPerHour(maxTempC){
+    if(maxTempC == null || !isFinite(maxTempC)) return 0.5;
+    return maxTempC < 15 ? 0.4 : maxTempC < 25 ? 0.5 : maxTempC < 30 ? 0.65 : 0.8;
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName, joinTracks, sliceKm,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint, gradeBreakdown, pointAtKm, onThisDay,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint, gradeBreakdown, pointAtKm, onThisDay, latestStart, waterLitresPerHour,
   };
 });

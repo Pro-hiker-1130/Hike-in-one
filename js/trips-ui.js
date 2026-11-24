@@ -220,9 +220,7 @@ function renderTripDetail(){
         block.appendChild(c);
       });
       if(t.profile && t.profile.length > 1){
-        const prof = buildElevationProfile(t);
-        prof.style.setProperty('--ele-color', trackColors[t.id]);
-        block.appendChild(prof);
+        block.appendChild(tripTrackProfile(trip, tks, t));
       }
       trackList.appendChild(block);
     });
@@ -399,6 +397,8 @@ async function shareTripImage(id){
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 const FORECAST_DAYS = 16;
 const forecastCache = new Map();
+// tripId -> the highest forecast top temperature over the trip's days (°C).
+const tripForecastHigh = {};
 const WEATHER_WORDS = [[0,'Clear'],[1,'Mostly clear'],[2,'Partly cloudy'],[3,'Cloudy'],[48,'Fog'],[57,'Drizzle'],
   [67,'Rain'],[77,'Snow'],[82,'Showers'],[86,'Snow showers'],[99,'Thunderstorms']];
 function weatherWord(code){ const w = WEATHER_WORDS.find(([max]) => code <= max); return w ? w[1] : ''; }
@@ -452,6 +452,9 @@ function renderTripWeather(trip, tks){
     if(el.dataset.key !== key) return;
     el.dataset.state = 'done';
     const d = data.daily;
+    const highs = (d.temperature_2m_max || []).filter(v => v != null);
+    tripForecastHigh[trip.id] = highs.length ? Math.max(...highs) : null;
+    if(currentTripId === trip.id) renderTripWaterPlan(trip);
     const r = v => v == null ? '–' : Math.round(v);
     el.innerHTML = '<p class="section-label trip-weather-title">Forecast at the start</p>';
     d.time.forEach((iso, i)=>{
@@ -510,6 +513,28 @@ function downloadTripDay(trip, day, index, profileKm){
   saveTrackGpx(part);
 }
 
+// Where each day of a split route starts, on one planned track's own
+// profile: [{km, label: 'Day 2'}, ...].
+function tripDayMarks(trip, tks, track){
+  if(!(trip.dailyKm > 0) || !track.planned) return [];
+  const days = TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm);
+  let offset = 0;
+  for(const t of tks.filter(x => x.planned && x.profile && x.profile.length > 1)){
+    const len = t.profile[t.profile.length-1][0] - t.profile[0][0];
+    if(t === track) return days.slice(1)
+      .filter(d => d.fromKm > offset && d.fromKm < offset + len)
+      .map(d => ({ km: t.profile[0][0] + d.fromKm - offset, label: 'Day ' + (days.indexOf(d) + 1) }));
+    offset += len;
+  }
+  return [];
+}
+function tripTrackProfile(trip, tks, t){
+  const prof = buildElevationProfile(t, null, { dayMarks: tripDayMarks(trip, tks, t) });
+  prof.style.setProperty('--ele-color', computeTrackColors()[t.id]);
+  prof.dataset.trackId = t.id;
+  return prof;
+}
+
 function renderTripDays(trip, tks){
   const profile = tripPlannedProfile(tks);
   const section = document.getElementById('tripDaysSection');
@@ -547,8 +572,14 @@ function setTripDailyKm(){
   const v = Number(document.getElementById('tripDailyKm').value);
   if(v > 0) trip.dailyKm = Math.min(200, v); else delete trip.dailyKm;
   saveTrips();
-  renderTripDays(trip, tripTracks(trip));
+  const tks = tripTracks(trip);
+  renderTripDays(trip, tks);
+  tks.filter(t => t.planned).forEach(t=>{
+    const old = document.querySelector('#tripTrackList .ele-profile[data-track-id="' + CSS.escape(String(t.id)) + '"]');
+    if(old) old.replaceWith(tripTrackProfile(trip, tks, t));
+  });
   renderTripFoodPlan(trip, tripGearItemsList(trip));
+  renderTripWaterPlan(trip);
 }
 
 // ---- Trip gear, with a packing mode ----
@@ -579,6 +610,7 @@ function renderTripGear(trip){
       {base:'Base', worn:'Worn', consumable:'Consumable'}[r]+'</span> '+formatWeight(split[r])+'</span>').join('');
 
   renderTripFoodPlan(trip, gearList);
+  renderTripWaterPlan(trip);
 
   // Planned trips: gear past (or near) the lifespan you set gets a warning,
   // before it's on the trail — the same wear the Gear Room cards show.
@@ -625,6 +657,28 @@ function renderTripGear(trip){
 
 // "Food for 2 days: about 1.4–1.8 kg. Packed: 1.5 kg, about right."
 // Planned trips with gear or a daily distance; days from the day split.
+// Water from walking time (fitted to your pace): about ½ L an hour, up to
+// 1 L an hour in heat or on hard climbs, the common hiking guidance. On a
+// trip split into days, for the longest day.
+function renderTripWaterPlan(trip){
+  const el = document.getElementById('tripWaterPlan');
+  const tks = tripTracks(trip);
+  const route = tks.filter(t => t.planned && t.distanceKm > 0);
+  el.hidden = tripStatus(trip) !== 'planned' || !route.length;
+  if(el.hidden) return;
+  const days = trip.dailyKm > 0 ? TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm) : [];
+  const sec = days.length > 1 ? Math.max(...days.map(d => walkingSec(d.distanceKm, d.upM)))
+    : walkingSec(route.reduce((s, t) => s + t.distanceKm, 0), route.reduce((s, t) => s + (t.elevationGainM || 0), 0));
+  const hours = sec / 3600;
+  const high = tripForecastHigh[trip.id];
+  const rate = TrackCore.waterLitresPerHour(high);
+  const litres = v => (Math.round(v * 2) / 2).toFixed(1).replace(/\.0$/, '');
+  el.textContent = 'Water: about ' + litres(Math.max(0.5, hours * rate)) + ' L ' +
+    (days.length > 1 ? 'on the longest day (' + formatDuration(sec) + ' of walking' : 'for ' + formatDuration(sec) + ' of walking') +
+    (high != null ? (days.length > 1 ? ', ' : ' (') + 'forecast high ' + Math.round(high) + ' °C)' : days.length > 1 ? ')' : '') +
+    ' — up to ' + litres(Math.max(1, hours)) + ' L in heat or on hard climbs.' + (days.length > 1 || hours > 4 ? ' Plan where to refill.' : '');
+}
+
 function renderTripFoodPlan(trip, gearList){
   const el = document.getElementById('tripFoodPlan');
   const tks = tripTracks(trip);
@@ -682,6 +736,20 @@ function renderTripDaylight(trip, tks){
   const mins = Math.round((sun.sunset - sun.sunrise) / 60000);
   el.textContent = 'Sunrise ' + hm(sun.sunrise) + ' · sunset ' + hm(sun.sunset) +
     ' · ' + Math.floor(mins/60) + ' h ' + (mins%60) + ' min of daylight ' + when + ' (your time zone).';
+  // Work back from sunset: the latest start that finishes an hour before
+  // it, for the planned route's walking time plus breaks (the first day of
+  // a trip split into days).
+  const route = tks.filter(t => t.planned && t.distanceKm > 0);
+  if(!route.length) return;
+  const days = trip.dailyKm > 0 ? TrackCore.splitDays(tripPlannedProfile(tks), trip.dailyKm) : [];
+  const walk = days.length > 1 ? walkingSec(days[0].distanceKm, days[0].upM)
+    : walkingSec(route.reduce((a, t) => a + t.distanceKm, 0), route.reduce((a, t) => a + (t.elevationGainM || 0), 0));
+  const ls = TrackCore.latestStart(sun.sunrise, sun.sunset, walk);
+  if(!ls) return;
+  const what = (days.length > 1 ? 'Day 1 is' : 'It\'s') + ' about ' + formatDuration(ls.totalSec) + ' with breaks';
+  el.textContent += ls.fitsDaylight
+    ? ' ' + what + ': start by ' + hm(ls.startMs) + ' to finish an hour before sunset.'
+    : ' ' + what + ', more than the daylight allows' + (days.length > 1 ? '.' : ' — consider splitting it into days.');
 }
 
 // ---- Trip photos ----

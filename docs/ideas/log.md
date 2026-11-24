@@ -3,6 +3,106 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-23 — research (owner asked for several research days: C of 3)
+
+Looked at: multi-day stage planners. HiiKER, AllTrails Peak, komoot and
+Bikemap all split a route into days and show each stage against the
+elevation profile. Budget used: 1 search, 0 fetches.
+Changed: when a planned trip is split into days, the planned route's
+elevation profile on the trip page has a dashed line and a "Day 2",
+"Day 3"... label where each day starts (also read out in the profile's
+screen-reader label). The marks update as you change the daily distance
+and go away when you clear it. They don't animate. The trips e2e test
+checks the marks and the label. Service worker cache `waypoints-v55`.
+All tests pass: 62 unit, 65 e2e.
+For the owner: nothing to decide.
+
+## 2026-11-23 — research (owner asked for several research days: B of 3)
+
+Looked at: how much to drink by temperature. Trail Hiking Australia's
+table gives about 0.35–0.5 L an hour of moderate walking at 15–25 °C,
+0.45–0.65 L at 25–30 °C and more above that (double above about 32 °C);
+REI's baseline is ½ L an hour. Budget used: 1 search, 0 fetches.
+Changed: when a planned trip's forecast has loaded, the water line uses
+the forecast high: 0.4 L an hour below 15 °C, 0.5 L to 25 °C, 0.65 L to
+30 °C and 0.8 L above, and says which high it used, e.g. "(4 h 35 min of
+walking, forecast high 28 °C)". Without a forecast it stays at ½ L an
+hour as before. `TrackCore.waterLitresPerHour` has a unit test; the
+weather e2e test checks the line. Service worker cache `waypoints-v54`.
+All tests pass: 62 unit, 65 e2e.
+For the owner: the rates are rough planning numbers, not medical advice;
+the "up to" figure for heat or hard climbs is unchanged.
+
+## 2026-11-23 — research (owner asked for several research days: A of 3)
+
+Looked at: turnaround and start-time planning. Calculators (Trail
+Hiking Australia) and WTA advice work back from sunset: the latest start
+is the target finish minus the total time out, padded for breaks, with a
+target finish about an hour before sunset. Budget used: 1 search, 0
+fetches.
+Changed: on a planned trip with a route, the daylight line adds the
+latest start, e.g. "Day 1 is about 4 h 28 min with breaks: start by
+1:55 PM to finish an hour before sunset." It uses the walking time already
+shown (fitted to your pace) plus 10 minutes of breaks an hour, for the
+whole route or the first day of a split trip. When it doesn't fit between
+sunrise and sunset, it says so and suggests splitting into days.
+`TrackCore.latestStart` has a unit test; the trips e2e test checks the
+sentence. Service worker cache `waypoints-v53`. All tests pass: 61 unit,
+65 e2e.
+For the owner: times are in the device's time zone, as for sunrise and
+sunset.
+
+## 2026-11-23 — research
+
+Looked at: water planning. NOLS and REI suggest about ½ L an hour of
+moderate walking, rising to about 1 L an hour in heat or on hard climbs.
+Trail Estimator works out water for a route, FarOut shows the distance to
+the next water source, and HIIKER marks refill points. Budget used: 2
+searches, 0 fetches.
+Changed: planned trips with a planned route show a water line under the
+food estimate, e.g. "Water: about 2.5 L on the longest day (4 h 35 min
+of walking) — up to 4.5 L in heat or on hard climbs. Plan where to
+refill." It uses the walking time already shown (fitted to your pace),
+rounded to the half litre. It covers the whole route, or the longest day
+when the trip is split into days. "Plan where to refill" is added for
+multi-day trips and walks over 4 hours. Nothing new is saved. The days e2e
+test checks both forms. Service worker cache `waypoints-v52`. All tests
+pass: 60 unit, 65 e2e.
+For the owner: these are rough planning numbers. The trip's forecast
+could raise the figure on hot days, if you'd like that.
+
+## 2026-11-22 — polish
+
+Looked at: phone screenshots of the Gear Room and a loadout page. With no
+prices entered, the Gear Room's "Total value" tile said "0", which reads
+as if the gear were worth nothing, while other empty stats (metres
+climbed) show "—".
+Changed: the tile shows "—" until an item has a price, with a hover hint
+on how to add one ("More details" in the gear form). Once prices exist it
+shows the sum as before, with a hover note like "2 of 4 owned items have
+a price". New e2e test. Service worker cache `waypoints-v51`. All tests
+pass: 60 unit, 65 e2e.
+Noticed for later: on phones the breakdown panel on a loadout page is
+narrower than the rest of the page.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
+## 2026-11-21 — research
+
+Looked at: gear apps that put a value on use. HikerKit (statistics with
+cost per use and trip value), PackTrack (cost per adventure), Kit Book
+(lifetime cost net of resale), and Packstack, Hikt and OutPack
+(gear closet, weights, packing lists). Budget used: 2 searches, 0 fetches.
+Changed: Gear Room cards show what each completed trip has cost so far,
+e.g. "€100 per trip so far" for a €300 shell used on 3 completed trips.
+It falls as the gear gets used. It's shown only when the item has a price
+and has been on at least one completed trip, and planned trips don't
+count. It uses the item's currency and the existing money format, and
+nothing new is saved. New e2e test. Service worker cache `waypoints-v50`.
+All tests pass: 60 unit, 64 e2e.
+For the owner: nothing new. The category-colour question in backlog.md is
+still open.
+
 ## 2026-11-20 — polish
 
 Looked at: keyboard focus across the app's controls, following last

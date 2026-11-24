@@ -336,8 +336,11 @@ function formatDuration(sec){
 const drawnProfiles = new Set();
 // onPoint (optional): called with the km under the pointer or keyboard
 // cursor as it moves, and with null when it leaves, so a map can follow.
-function buildElevationProfile(t, onPoint){
+// opts.dayMarks: [{km, label}] — dashed lines where each day of a split
+// route starts (km in the profile's own distances).
+function buildElevationProfile(t, onPoint, opts){
   const pts = t.profile;
+  const dayMarks = ((opts && opts.dayMarks) || []).filter(m => m.km > pts[0][0] && m.km < pts[pts.length-1][0]);
   const totalKm = pts[pts.length-1][0] || t.distanceKm || 1;
   let lo = t.minEleM, hi = t.maxEleM;
   // A near-flat walk shouldn't have 3 m of GPS noise blown up to fill
@@ -354,7 +357,8 @@ function buildElevationProfile(t, onPoint){
   el.className = 'ele-profile';
   el.tabIndex = 0;
   el.setAttribute('role', 'img');
-  el.setAttribute('aria-label', 'Elevation profile: '+t.minEleM+' to '+t.maxEleM+' m over '+totalKm.toFixed(1)+' km, '+t.elevationGainM+' m climbed. Use left and right arrow keys to read points.');
+  el.setAttribute('aria-label', 'Elevation profile: '+t.minEleM+' to '+t.maxEleM+' m over '+totalKm.toFixed(1)+' km, '+t.elevationGainM+' m climbed.'+
+    dayMarks.map(m => ' '+m.label+' starts at '+m.km.toFixed(1)+' km.').join('')+' Use left and right arrow keys to read points.');
   el.innerHTML =
     '<div class="ele-axis ele-axis-max">'+t.maxEleM+' m</div>'+
     '<div class="ele-axis ele-axis-min">'+t.minEleM+' m</div>'+
@@ -363,6 +367,7 @@ function buildElevationProfile(t, onPoint){
         '<path class="ele-area" d="'+area+'"/>'+
         '<path class="ele-line" d="'+line+'" vector-effect="non-scaling-stroke"/>'+
       '</svg>'+
+      dayMarks.map(m => '<div class="ele-day-mark" aria-hidden="true" style="left:'+(m.km / totalKm * 100).toFixed(2)+'%"><span>'+escapeHtml(m.label)+'</span></div>').join('')+
       '<div class="ele-cursor" hidden></div><div class="ele-dot" hidden></div>'+
     '</div>'+
     '<div class="ele-axis-x"><span>0 km</span><span>'+totalKm.toFixed(1)+' km</span></div>';

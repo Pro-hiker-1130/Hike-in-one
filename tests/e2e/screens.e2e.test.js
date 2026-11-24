@@ -218,6 +218,8 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
     renderTripDetail();
   });
   assert.match(await text(page, '#tripDaylight'), /^Sunrise \d.+ · sunset \d.+ · \d+ h \d+ min of daylight on /);
+  // ...and the latest start that finishes an hour before sunset (a 2 km plan: 35 min with breaks).
+  assert.match(await text(page, '#tripDaylight'), /\(your time zone\)\. It's about 35 min with breaks: start by \d.+ to finish an hour before sunset\.$/);
   // An elevation profile sweeps in the first time only, not on every re-render.
   const sweeps = await page.evaluate(()=>{
     const walked = trips.find(tr => tripTracks(tr).some(t => t.profile && t.profile.length > 1));
@@ -279,12 +281,19 @@ test('trips: a planned route splits into days of about the chosen distance', { s
   });
   assert.ok(await page.isVisible('#tripDaysSection'));
   assert.match(await text(page, '#tripDaysList'), /Set a daily distance/);
+  // Water for the whole route while it isn't split into days.
+  assert.equal(await text(page, '#tripWaterPlan'), 'Water: about 4.5 L for 8 h 50 min of walking — up to 9 L in heat or on hard climbs. Plan where to refill.');
   await page.fill('#tripDailyKm', '15');
   const rows = await page.$$eval('#tripDaysList .trip-day-row', els => els.map(e => e.textContent));
   assert.equal(rows.length, 2, '32 km at 15 a day: the 2 km left over joins day 2');
   assert.match(rows[0], /^Day 1 · Fri 5 Jul 2030km 0\.0–15\.0 · ↑ 500 m ↓ 150 m · about /);
   assert.match(rows[1], /^Day 2 · Sat 6 Jul 2030km 15\.0–32\.0/);
   assert.equal(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_days').dailyKm), 15);
+  // The profile marks where day 2 starts.
+  assert.deepEqual(await page.$$eval('#tripTrackList .ele-day-mark', els => els.map(e => [e.textContent, e.style.left])), [['Day 2', '46.88%']]);
+  assert.match(await page.getAttribute('#tripTrackList .ele-profile', 'aria-label'), / Day 2 starts at 15\.0 km\. /);
+  // ...and for the longest day once it is.
+  assert.equal(await text(page, '#tripWaterPlan'), 'Water: about 2.5 L on the longest day (4 h 35 min of walking) — up to 4.5 L in heat or on hard climbs. Plan where to refill.');
   // Food for those days, against the food packed.
   assert.equal(await text(page, '#tripFoodPlan'), 'Food for 2 days: about 1.4–1.8 kg. No food in the gear list yet.');
   await page.evaluate(()=>{
@@ -297,6 +306,7 @@ test('trips: a planned route splits into days of about the chosen distance', { s
   assert.match(await text(page, '#tripFoodPlan'), /Packed: 1\.5 kg, about right\.$/);
   await page.fill('#tripDailyKm', '');
   assert.equal(await page.evaluate(()=> 'dailyKm' in trips.find(tr => tr.id === 'trip_days')), false);
+  assert.equal(await page.locator('#tripTrackList .ele-day-mark').count(), 0, 'no marks once the route is one day again');
   assert.deepEqual(errors, []);
 });
 
@@ -334,6 +344,7 @@ test('trips: a planned trip within 16 days shows the forecast at its start, furt
   assert.equal(days.length, 2, 'two days at 15 km a day');
   assert.match(days[0], /Partly cloudy · 4–15 °C · rain 10 % · wind up to 18 km\/h$/);
   assert.match(days[1], /Rain · 6–11 °C · rain 80 % \(12\.5 mm\) · wind up to 32 km\/h$/);
+  assert.match(await text(page, '#tripWaterPlan'), /^Water: about [\d.]+ L on the longest day \(\d.* of walking, forecast high 15 °C\) — up to /, 'the water line uses the forecast');
   assert.deepEqual(asked, [['46.02', '7.75', soon, isoInDays(4)]], 'only the rounded start point and the dates are sent');
   await page.evaluate(()=> renderTripDetail());
   assert.equal(asked.length, 1, 're-rendering does not ask again');
@@ -591,6 +602,34 @@ test('keyboard focus: select menus get the same ring as buttons; form fields kee
   await page.evaluate(()=> openGearModal(null));
   await page.focus('#gearCategory');
   assert.equal(await ring('#gearCategory'), 'solid 1px', 'form fields keep their own focus style');
+  assert.deepEqual(errors, []);
+});
+
+test('gear cards: cost per trip so far, from the price and completed trips', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.evaluate(async ()=>{
+    gearItems.push({ id: 'pricey', name: 'Rain shell', category: 'Clothing', weightGrams: 300, status: 'active', price: 300, currency: 'EUR' });
+    gearItems.push({ id: 'unused', name: 'New stove', category: 'Cooking', weightGrams: 90, status: 'active', price: 60, currency: 'USD' });
+    trips.push({ id: 'c1', name: 'One', trackIds: [], gearIds: ['pricey', 'unused'], status: 'planned', createdAt: 1 });
+    ['c2', 'c3', 'c4'].forEach((id, i) => trips.push({ id, name: 'Walk ' + i, trackIds: [], gearIds: ['pricey'], status: 'completed', createdAt: 2 + i }));
+    await saveGear(); await saveTrips(); refreshGear();
+  });
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#viewAllGearBtn');
+  const cost = name => page.$$eval(`#categoryView .gear-card:has(.gear-card-name:text-is("${name}")) .gear-card-cost`, els => els.map(e => e.textContent));
+  assert.deepEqual(await cost('Rain shell'), ['€100 per trip so far'], '300 over 3 completed trips; planned ones don\'t count');
+  assert.deepEqual(await cost('New stove'), [], 'not used on a completed trip yet');
+  assert.deepEqual(errors, []);
+});
+
+test('gear stats: total value shows a dash until prices are entered, then the sum', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="gear"]');
+  assert.equal(await text(page, '#gearStatValue'), '—', 'the test gear has no prices');
+  assert.match(await page.getAttribute('#gearStatValue', 'title'), /^Add prices to your gear/);
+  await page.evaluate(()=>{ gearItems[0].price = 450; gearItems[0].currency = 'EUR'; gearItems[1].price = 230; gearItems[1].currency = 'EUR'; refreshGear(); });
+  assert.equal(await text(page, '#gearStatValue'), '€680');
+  assert.equal(await page.getAttribute('#gearStatValue', 'title'), '2 of 4 owned items have a price');
   assert.deepEqual(errors, []);
 });
 

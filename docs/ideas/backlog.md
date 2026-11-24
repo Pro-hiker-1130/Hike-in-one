@@ -18,6 +18,8 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 ## Polish
 
+- Loadout page on phones: the breakdown panel is narrower than the rest of the page — S
+
 
 
 ## Questions for the owner
@@ -46,6 +48,8 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-03 — Share a trip as an image (Komoot/LighterPack idea)
 - 2026-11-03 — Share a route with partners for suggestions (CalTopo idea)
 - 2026-11-04 — Toast slides in and fades out (polish)
+- 2026-11-23 — Water estimate uses the forecast high (research)
+- 2026-11-23 — Day boundaries on the planned route's elevation profile (research)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)
@@ -73,3 +77,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-18 — Settings: the pace switch shows only once there's a pace (polish)
 - 2026-11-19 — Planned trips warn about worn-out packed gear (research, Strava/Garmin idea)
 - 2026-11-20 — Select menus get the same keyboard focus ring as buttons (polish)
+- 2026-11-21 — Gear cards: cost per trip so far (research, HikerKit/PackTrack idea)
+- 2026-11-22 — Gear Room total value shows a dash until prices exist (polish)
+- 2026-11-23 — Water estimate on planned trips (research, NOLS/REI guidance, Trail Estimator idea)
+- 2026-11-23 — Latest start time to finish before sunset (research, WTA / trail calculators idea)
