@@ -634,6 +634,23 @@ test('gear stats: total value shows a dash until prices are entered, then the su
   assert.deepEqual(errors, []);
 });
 
+test('gear: "Most used" sorts by completed trips, unused gear last', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.evaluate(async ()=>{
+    trips.push({ id: 'tu1', name: 'A', trackIds: [], gearIds: ['g2', 'g1'], status: 'completed', date: '2025-06-01', createdAt: 1 },
+      { id: 'tu2', name: 'B', trackIds: [], gearIds: ['g2'], status: 'completed', date: '2025-07-01', createdAt: 2 },
+      { id: 'tu3', name: 'C', trackIds: [], gearIds: ['g3', 'g3b'], status: 'planned', date: '2030-07-01', createdAt: 3 });
+    await saveTrips();
+  });
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#viewAllGearBtn');
+  await page.selectOption('#gearSort', 'used');
+  const names = await page.$$eval('#gearGrid .gear-card-name', els => els.map(e => e.textContent));
+  // Two trips, then one, then the rest by name (a planned trip doesn't count).
+  assert.deepEqual(names, ['Revelation 20', 'Exos 58', 'Copper Spur HV UL2', 'Distance Carbon Z', 'NeoAir XLite NXT']);
+  assert.deepEqual(errors, []);
+});
+
 test('gear: Download CSV saves the whole list, grouped by category, safe for spreadsheets', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="gear"]');

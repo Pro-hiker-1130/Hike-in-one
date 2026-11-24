@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-24 — research (owner asked for 3 research days: C of 3)
+
+Looked at: gear-closet apps. HikerKit shows a usage rate per item, and
+OutPack and PackTrack count how often each item was packed. Here the
+gear cards already say "Used on N trips · last …", but there was no way
+to see the most- and least-used gear together. Budget used: 1 search,
+0 fetches.
+Changed: the Gear Room's sort menu has "Sort: Most used", ordered by the
+number of completed trips each item went on. Gear that was never used
+comes last, so the end of the list shows what might not need keeping.
+Planned trips don't count. New e2e test. Service worker cache
+`waypoints-v59`. All tests pass: 62 unit, 66 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-24 — research (owner asked for 3 research days: B of 3)
 
 Looked at: how route planners finish a route. Gaia GPS, AllTrails,

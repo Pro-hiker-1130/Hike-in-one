@@ -253,7 +253,11 @@ function filteredSortedGear(){
     return true;
   });
 
+  // Most used: completed trips each item went on; unused gear sinks to the end.
+  const uses = sortBy === 'used' ? new Map(list.map(g => [g.id,
+    gearUsageTrips(g.id).filter(tr => tripStatus(tr) === 'completed').length])) : null;
   list.sort((a,b)=>{
+    if(uses) return uses.get(b.id) - uses.get(a.id) || a.name.localeCompare(b.name);
     if(sortBy === 'weight') return (b.weightGrams||0) - (a.weightGrams||0);
     if(sortBy === 'category') return (a.category||'').localeCompare(b.category||'') || a.name.localeCompare(b.name);
     if(sortBy === 'price') return (b.price||0) - (a.price||0);
