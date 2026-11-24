@@ -147,6 +147,7 @@ function rpChanged(){
   document.getElementById('rpClearBtn').disabled = !rp.waypoints.length;
   document.getElementById('rpLoopBtn').disabled = !rpCanLoop();
   document.getElementById('rpBackBtn').disabled = !rpCanLoop();
+  document.getElementById('rpReverseBtn').disabled = rp.waypoints.length < 2;
   document.getElementById('rpHint').hidden = rp.waypoints.length > 1;
   document.getElementById('rpHint').textContent = rp.waypoints.length
     ? 'Now tap where the route goes next.'
@@ -254,6 +255,14 @@ function rpOutAndBack(){
   rp.waypoints = w.concat(back);
   rpChanged();
 }
+// Walk it the other way: the points in reverse, each leg drawn as before.
+function rpReverse(){
+  if(!rp || rp.waypoints.length < 2) return;
+  rpRemember();
+  const w = rp.waypoints, n = w.length;
+  rp.waypoints = w.map((_, k) => ({ ll: w[n-1-k].ll.slice(), mode: k ? w[n-k].mode : w[0].mode }));
+  rpChanged();
+}
 function rpClear(){
   if(!rp || !rp.waypoints.length) return;
   rpRemember();
@@ -315,6 +324,7 @@ document.getElementById('rpUndoBtn').addEventListener('click', rpUndo);
 document.getElementById('rpClearBtn').addEventListener('click', rpClear);
 document.getElementById('rpLoopBtn').addEventListener('click', rpLoop);
 document.getElementById('rpBackBtn').addEventListener('click', rpOutAndBack);
+document.getElementById('rpReverseBtn').addEventListener('click', rpReverse);
 document.getElementById('rpSaveBtn').addEventListener('click', saveRoutePlan);
 document.getElementById('rpDeleteBtn').addEventListener('click', deleteRoutePlan);
 document.getElementById('rpDownloadBtn').addEventListener('click', downloadRoutePlan);

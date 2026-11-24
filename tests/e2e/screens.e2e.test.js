@@ -1267,6 +1267,13 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   assert.ok(await page.isDisabled('#rpBackBtn') && await page.isDisabled('#rpLoopBtn'), 'back at the start');
   await page.click('#rpUndoBtn');
   await page.waitForFunction(()=> rp.waypoints.length === 3);
+  // Reverse walks it the other way: same points backwards, each leg drawn as before.
+  await page.click('#rpReverseBtn');
+  const rev = await page.evaluate(()=> rp.waypoints.map(w => [w.ll.join(','), w.mode]));
+  assert.deepEqual(rev.map(w => w[0]), out.map(w => w[0]).reverse());
+  assert.deepEqual(rev.slice(1).map(w => w[1]), [out[2][1], out[1][1]]);
+  await page.click('#rpUndoBtn');
+  assert.deepEqual(await page.evaluate(()=> rp.waypoints.map(w => w.ll.join(','))), out.map(w => w[0]), 'Undo puts it back');
 
   // Download it, then save it to the trip.
   await page.fill('#rpName', 'Haute Route day 1');

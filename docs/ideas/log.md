@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-24 — research (owner asked for 3 more research days: E of 3)
+
+Looked at: reversing a planned route. komoot lets you reverse a route's
+waypoints, and users note that you should check the route after doing so.
+Budget used: 0 searches (from D's search), 0 fetches.
+Changed: the route planner has a "Reverse" button on the map. It puts
+the points in the opposite order and keeps how each leg was drawn (on
+trails or a straight line), so the same path is fetched the other way.
+The distance, climb, profile and difficulty update to match. Undo puts
+it back. The route planner e2e test checks the points, the modes and
+Undo. Service worker cache `waypoints-v61`. All tests pass: 62 unit,
+66 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-24 — research (owner asked for 3 more research days: D of 3)
 
 Looked at: what route planners show while you draw. komoot's planner
