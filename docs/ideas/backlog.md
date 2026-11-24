@@ -53,6 +53,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-24 — "Big three" weight on a trip's gear (research)
 - 2026-11-24 — Route planner: Out and back (research)
 - 2026-11-24 — Gear Room: Sort by most used (research)
+- 2026-11-24 — Route planner shows the difficulty while drawing (research)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)

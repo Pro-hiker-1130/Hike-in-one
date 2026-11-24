@@ -1295,6 +1295,7 @@ body{font-size:15px;}
 }
 .rp-hint[hidden]{display:none;}
 .rp-stats{font-size:13.5px;font-weight:600;color:var(--parchment);min-height:1.2em;}
+.rp-stats .difficulty-badge{margin-top:0;vertical-align:1px;}
 .rp-profile:empty{display:none;}
 .rp-credit{font-size:11px;color:var(--muted);margin:0;}
 .rp-credit a{color:inherit;}

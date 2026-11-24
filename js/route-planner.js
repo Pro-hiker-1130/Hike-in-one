@@ -212,7 +212,8 @@ function rpDrawRoute(){
   profileEl.innerHTML = '';
   if(wps.length < 2){ stats.textContent = ''; return; }
   if(!ready){ stats.textContent = 'Finding the route…'; return; }
-  stats.textContent = rpRoute.distanceKm.toFixed(1) + ' km · ' + trackClimbSummary(rpRoute);
+  // The same difficulty label the trip page gives the route, updated as you draw.
+  stats.innerHTML = escapeHtml(rpRoute.distanceKm.toFixed(1) + ' km · ' + trackClimbSummary(rpRoute)) + ' ' + trackDifficultyBadgeHtml(rpRoute);
   // Distance markers along the route, so it's easy to see where 5 km is.
   TrackCore.kmMarkers(rpRoute.points).forEach(m => addKmMarker(m, rpLineLayer));
   if(rpRoute.profile && rpRoute.profile.length > 1){

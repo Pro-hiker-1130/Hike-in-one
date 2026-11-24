@@ -3,6 +3,18 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-24 — research (owner asked for 3 more research days: D of 3)
+
+Looked at: what route planners show while you draw. komoot's planner
+shows distance, time and difficulty under the profile as the route
+changes, and lets you reverse a route. Budget used: 1 search, 0 fetches.
+Changed: the route planner's line under the map now ends with the same
+difficulty label (Easy, Moderate, Hard, Strenuous) the trip page gives a
+planned route, updating as you add, move or undo points. The route
+planner e2e test checks it. Service worker cache `waypoints-v60`. All
+tests pass: 62 unit, 66 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-24 — research (owner asked for 3 research days: C of 3)
 
 Looked at: gear-closet apps. HikerKit shows a usage rate per item, and

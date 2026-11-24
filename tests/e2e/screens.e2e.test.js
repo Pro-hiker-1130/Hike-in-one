@@ -1217,6 +1217,7 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.click('#rpModeToggle [data-mode="line"]');
   await tap(550, 250);   // a straight line, elevation from Open-Meteo
   await page.waitForFunction(()=> /km · ↑ 100 m · ↓ 0 m · about \d+ (h|min)/.test(document.getElementById('rpStats').textContent));
+  assert.equal(await text(page, '#rpStats .difficulty-badge'), await page.evaluate(()=> DIFFICULTY_LABELS[trackDifficulty(rpRoute).level]), 'difficulty while planning');
   assert.equal(elevationCalls, 1);
   assert.equal(await page.locator('#rpProfile .ele-profile').count(), 1);
   // Pointing at the profile shows that spot on the map; moving away hides it.
