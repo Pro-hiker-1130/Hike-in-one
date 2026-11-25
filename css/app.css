@@ -843,6 +843,12 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .pack-split-consumable::before{background:#B87333;}
 .food-plan{margin:0 0 10px;font-size:13px;color:var(--muted);}
 .food-plan[hidden]{display:none;}
+/* The trip's planning lines (big three, base weight, food, water) as one card. */
+.trip-plan-notes{margin:0 0 12px;padding:2px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);}
+.trip-plan-notes:not(:has(> p:not([hidden]))){display:none;}
+.trip-plan-notes > .food-plan{margin:0;padding:9px 0;line-height:1.45;}
+.trip-plan-notes > p:not([hidden]) ~ p:not([hidden]){border-top:1px solid var(--line);}
+.trip-plan-notes strong{font-weight:600;color:var(--parchment);}
 /* Worn gear on a planned trip */
 .gear-wear-warning{margin:0 0 10px;padding:8px 12px;border-radius:8px;font-size:13px;color:#7A2E0E;background:#F6E3D8;}
 .gear-wear-warning[hidden]{display:none;}

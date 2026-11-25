@@ -3,6 +3,19 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-25 — polish
+
+Looked at: a phone screenshot (390 px) of a planned trip's gear section.
+After the last few research days it had four plain grey paragraphs in a
+row (big three, base weight, food, water), which read as a wall of text.
+Changed: those lines now sit together in one light card, separated by
+thin lines, each starting with a bold lead-in ("Big three:", "Base
+weight:", "Food for 2 days:", "Water:"). The wording is unchanged. The
+card hides itself when none of the lines apply. Nothing moves, so there
+is no motion to reduce. Service worker cache `waypoints-v63`. All tests
+pass: 62 unit, 66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-24 — research (owner asked for 3 more research days: F of 3)
 
 Looked at: how hikers track pack weight across trips. Base weight is the
