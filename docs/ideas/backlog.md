@@ -62,6 +62,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-25 — One left edge for section labels and card grids on phones (polish)
 - 2026-11-25 — Trips header buttons as an equal pair on phones (polish)
 - 2026-11-25 — Trip page actions in a tidy two-column block on phones (polish)
+- 2026-11-25 — Gear and catalog forms: the name gets a full row on phones (polish)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)

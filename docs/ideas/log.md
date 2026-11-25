@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-25 — polish (owner asked for more polish days: 2 of 3)
+
+Looked at: the gear form on a 390 px phone. The Name field was meant to
+be twice as wide as Category, but on phones it came out narrower, so a
+name like "Copper Spur" barely fit: the phone rule gave Category a
+140 px starting width while Name started from nothing.
+Changed: on phones the item name (and "Product name" in the add-to-
+catalog form) gets a full row, with Category on the next row. The
+"twice as wide" setting moved from an inline style into a CSS class so
+the phone rule can apply. Desktop is unchanged. Service worker cache
+`waypoints-v69`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-25 — polish (owner asked for more polish days: 1 of 3)
 
 Looked at: phone screenshots (390 and 320 px) of the map, Settings, a
