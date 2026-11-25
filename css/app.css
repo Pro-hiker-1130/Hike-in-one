@@ -1164,6 +1164,9 @@ body{font-size:15px;}
 .settings-card .upload-status:empty{display:none;}
 .settings-note{margin:0;font-size:14px;color:var(--muted);line-height:1.45;}
 .settings-account-email{margin:0;font-weight:600;}
+/* Filled in by JS: space its lines like the rest of the card. */
+#settingsAccount{display:flex;flex-direction:column;align-items:flex-start;gap:10px;}
+#settingsAccount .settings-note:empty{display:none;}
 .settings-error{color:var(--danger);}
 .catalog-browse-modal{max-width:640px;display:flex;flex-direction:column;}
 .cb-controls{padding:12px 20px 0;display:flex;flex-direction:column;gap:8px;}

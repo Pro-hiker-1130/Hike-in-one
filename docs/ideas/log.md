@@ -3,6 +3,19 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-25 — polish (owner asked for more polish days: 3 of 3)
+
+Looked at: the Account card on Settings, signed out and signed in. Its
+lines are filled in by script inside a plain wrapper, so the card's
+spacing didn't reach them: the "Sign in" button touched the text above,
+and when signed in the email, sync status and "Sign out" were crammed
+together.
+Changed: the account lines now have the same 10 px spacing as the other
+Settings cards, and an empty sync-status line takes no space. CSS only.
+Service worker cache `waypoints-v70`. All tests pass: 62 unit, 66 e2e.
+Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-25 — polish (owner asked for more polish days: 2 of 3)
 
 Looked at: the gear form on a 390 px phone. The Name field was meant to
