@@ -822,6 +822,12 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 
 .trip-detail-actions{margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;}
 .trip-detail-actions>*{white-space:nowrap;}
+@media (max-width:760px){
+  /* A block of its own under the title in two equal columns; with Trip plan
+     hidden (3 buttons), Edit spans the last row. */
+  .trip-detail-actions{flex:1 1 100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr;}
+  #tripPlanTextBtn[hidden] ~ #tripEditBtn{grid-column:1 / -1;}
+}
 
 /* "1 year ago this week" on the Trips page */
 .memory-card{display:flex;flex-direction:column;gap:2px;margin:12px 24px 0;padding:12px 16px;max-width:620px;flex:none;
