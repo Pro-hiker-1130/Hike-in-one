@@ -137,3 +137,6 @@ pin down to "Skipped" with a reason.
 - Darn Tough Hiker Micro Crew Cushion: no weight listed for this exact model; only a related model was found.
 - Montbell Versalite Pants: single review figure for size XL only.
 - Arc'teryx Beta LT Jacket: already in the catalog.
+- Peak Refuel Homestyle Chicken & Rice (2 servings): single listing gives 5.15 oz, not confirmed elsewhere.
+- Mountain House Chicken Tikka Masala (2 servings): single retailer figure of 4.2 oz.
+- Backpacker's Pantry Chicken Tikka Masala: no weight found.
