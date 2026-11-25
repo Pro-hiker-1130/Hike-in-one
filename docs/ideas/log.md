@@ -3,6 +3,19 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-25 — polish (owner asked for 4 polish days: 2 of 4)
+
+Looked at: the Gear Room's shelf view (All items or a category) on a
+390 px phone. The toolbar wrapped by itself: the search box squeezed
+next to the title, the two menus at different widths, and "+ Add item"
+alone on a third row.
+Changed: on phones the toolbar now has three tidy rows: Garage, the
+title and "+ Add item" on the first; a full-width search on the second;
+the status and sort menus side by side, equal width, on the third.
+Desktop is unchanged. CSS only. Service worker cache `waypoints-v65`.
+All tests pass: 62 unit, 66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-25 — polish (owner asked for 4 polish days: 1 of 4)
 
 Looked at: phone screenshots (390 px) of the Gear Room, Trips and

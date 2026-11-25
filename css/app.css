@@ -218,6 +218,11 @@ select:focus-visible, textarea:focus-visible{
   .app{flex-direction:column;}
   .sidebar{width:100%;min-width:0;max-height:46vh;border-right:none;border-bottom:1px solid var(--line);}
   .gear-toolbar{flex-wrap:wrap;}
+  /* Shelf view: back, title and Add on one row, then search, then the two menus side by side. */
+  #categoryView .gear-toolbar{gap:8px;}
+  #categoryView .category-view-heading{flex:1;min-width:0;}
+  #gearSearch{order:2;flex:1 1 100%;}
+  #gearStatusFilter,#gearSort{order:3;flex:1 1 0;max-width:none;min-width:0;}
   .gear-grid{grid-template-columns:1fr;}
   .gear-scene{margin:12px 12px 16px;padding:16px 12px 0;gap:22px;}
   .scene-item{min-width:64px;padding:6px 4px;}
