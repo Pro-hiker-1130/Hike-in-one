@@ -304,6 +304,7 @@
         <option value="weight">Sort: Weight</option>
         <option value="category">Sort: Category</option>
         <option value="price">Sort: Price</option>
+        <option value="used">Sort: Most used</option>
       </select>
       <button class="primary-btn" id="addGearBtn">+ Add item</button>
     </div>
@@ -453,6 +454,7 @@
         </div>
       </div>
       <p class="pack-split" id="tripPackSplit" hidden></p>
+      <p class="food-plan" id="tripBigThree" hidden></p>
       <p class="food-plan" id="tripFoodPlan" hidden></p>
       <p class="food-plan" id="tripWaterPlan" hidden></p>
       <p class="gear-wear-warning" id="tripWearWarning" hidden></p>
@@ -900,6 +902,10 @@
           <button type="button" class="rp-map-btn" id="rpLoopBtn" disabled title="Finish the route where it started" aria-label="Back to start: finish the route where it started">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 17a6 6 0 1 1 5 2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 22.5v-6h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-20 12 19.5)"/></svg>
             <span>Back to start</span>
+          </button>
+          <button type="button" class="rp-map-btn" id="rpBackBtn" disabled title="Go back the same way to the start" aria-label="Out and back: go back the same way to the start">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Out and back</span>
           </button>
           <button type="button" class="rp-map-btn" id="rpClearBtn" disabled title="Remove all points" aria-label="Remove all points">
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>

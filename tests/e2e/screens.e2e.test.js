@@ -248,6 +248,7 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
   // Shelter 1219 g + pack 1212 g are base; the quilt is set to worn here.
   await page.evaluate(()=>{ gearItems.find(g => g.id === 'g2').packRole = 'worn'; renderTripDetail(); });
   assert.equal(await text(page, '#tripPackSplit'), 'Base 2.4 kgWorn 640 gConsumable —');
+  assert.match(await text(page, '#tripBigThree'), /^Big three: 3\.1 kg \(pack 1\.2 kg · shelter 1\.2 kg · sleep system 640 g\) — usually the first place to save weight\.$/);
   await page.click('#tripPackBtn');
   assert.equal(await page.getAttribute('#tripPackBtn', 'aria-pressed'), 'true');
   assert.equal(await page.locator('#tripGearSummaryList .pack-row').count(), 3);
@@ -630,6 +631,23 @@ test('gear stats: total value shows a dash until prices are entered, then the su
   await page.evaluate(()=>{ gearItems[0].price = 450; gearItems[0].currency = 'EUR'; gearItems[1].price = 230; gearItems[1].currency = 'EUR'; refreshGear(); });
   assert.equal(await text(page, '#gearStatValue'), '€680');
   assert.equal(await page.getAttribute('#gearStatValue', 'title'), '2 of 4 owned items have a price');
+  assert.deepEqual(errors, []);
+});
+
+test('gear: "Most used" sorts by completed trips, unused gear last', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.evaluate(async ()=>{
+    trips.push({ id: 'tu1', name: 'A', trackIds: [], gearIds: ['g2', 'g1'], status: 'completed', date: '2025-06-01', createdAt: 1 },
+      { id: 'tu2', name: 'B', trackIds: [], gearIds: ['g2'], status: 'completed', date: '2025-07-01', createdAt: 2 },
+      { id: 'tu3', name: 'C', trackIds: [], gearIds: ['g3', 'g3b'], status: 'planned', date: '2030-07-01', createdAt: 3 });
+    await saveTrips();
+  });
+  await page.click('.nav-tab[data-page="gear"]');
+  await page.click('#viewAllGearBtn');
+  await page.selectOption('#gearSort', 'used');
+  const names = await page.$$eval('#gearGrid .gear-card-name', els => els.map(e => e.textContent));
+  // Two trips, then one, then the rest by name (a planned trip doesn't count).
+  assert.deepEqual(names, ['Revelation 20', 'Exos 58', 'Copper Spur HV UL2', 'Distance Carbon Z', 'NeoAir XLite NXT']);
   assert.deepEqual(errors, []);
 });
 
@@ -1237,6 +1255,15 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   assert.equal(loop.length, 4);
   assert.equal(loop[3], loop[0], 'ends where it started');
   assert.ok(await page.isDisabled('#rpLoopBtn'), 'already a round trip');
+  await page.click('#rpUndoBtn');
+  await page.waitForFunction(()=> rp.waypoints.length === 3);
+  // Out and back retraces the points, each leg drawn the way it went out.
+  const out = await page.evaluate(()=> rp.waypoints.map(w => [w.ll.join(','), w.mode]));
+  await page.click('#rpBackBtn');
+  const both = await page.evaluate(()=> rp.waypoints.map(w => [w.ll.join(','), w.mode]));
+  assert.deepEqual(both.map(w => w[0]), out.map(w => w[0]).concat([out[1][0], out[0][0]]));
+  assert.deepEqual(both.slice(3).map(w => w[1]), [out[2][1], out[1][1]]);
+  assert.ok(await page.isDisabled('#rpBackBtn') && await page.isDisabled('#rpLoopBtn'), 'back at the start');
   await page.click('#rpUndoBtn');
   await page.waitForFunction(()=> rp.waypoints.length === 3);
 

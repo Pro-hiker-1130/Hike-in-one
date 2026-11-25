@@ -3,6 +3,64 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-24 — research (owner asked for 3 research days: C of 3)
+
+Looked at: gear-closet apps. HikerKit shows a usage rate per item, and
+OutPack and PackTrack count how often each item was packed. Here the
+gear cards already say "Used on N trips · last …", but there was no way
+to see the most- and least-used gear together. Budget used: 1 search,
+0 fetches.
+Changed: the Gear Room's sort menu has "Sort: Most used", ordered by the
+number of completed trips each item went on. Gear that was never used
+comes last, so the end of the list shows what might not need keeping.
+Planned trips don't count. New e2e test. Service worker cache
+`waypoints-v59`. All tests pass: 62 unit, 66 e2e.
+For the owner: nothing to decide.
+
+## 2026-11-24 — research (owner asked for 3 research days: B of 3)
+
+Looked at: how route planners finish a route. Gaia GPS, AllTrails,
+HiiKER, Footpath and Apple Maps each have both "back to start" (one more
+leg to the start) and "out and back" (the same way back). This planner
+had only "Back to start". Budget used: 1 search, 0 fetches.
+Changed: the route planner has an "Out and back" button on the map. It
+adds the points in reverse, so the route goes back the same way, and
+draws each leg back the way it went out (on trails or a straight line).
+Undo takes it back off. It is disabled when the route already ends at
+the start. The route planner e2e test checks the points and the modes.
+Service worker cache `waypoints-v58`. All tests pass: 62 unit, 65 e2e.
+For the owner: nothing to decide.
+
+## 2026-11-24 — research (owner asked for 3 research days: A of 3)
+
+Looked at: pack-planning apps (Packstack, OutPack, TrailBound, HikerKit,
+PackTrack). They all split base, worn and consumable weight, which this
+app already does; the other number lightweight hikers watch is the "big
+three" (pack, shelter, sleep system), usually the heaviest part of the
+base weight. Budget used: 1 search, 0 fetches.
+Changed: a trip's gear shows a line like "Big three: 3.1 kg (pack 1.2 kg
+· shelter 1.2 kg · sleep system 640 g) — usually the first place to save
+weight." It counts the Backpack, Shelter and Sleep system categories and
+is hidden when the trip has none of them. The packing e2e test checks
+it. Service worker cache `waypoints-v57`. All tests pass: 62 unit,
+65 e2e.
+For the owner: nothing to decide.
+
+## 2026-11-24 — polish
+
+Looked at: phone screenshots (390 px) of a loadout page and a trip page,
+measuring where each block starts and ends.
+Changed: on a loadout page the breakdown card was indented twice (its
+section's padding plus its own margin), so on phones it ran 36–354 px
+while the stat cards above ran 12–378 px. The card no longer adds its own
+margin inside a section, and on phones the sections use the same 12 px
+sides as the stat cards. Trip pages share those sections, so their
+daylight line, weather and track cards now line up with the stats too.
+Desktop is unchanged apart from the loadout card matching its section.
+Service worker cache `waypoints-v56`. All tests pass: 62 unit, 65 e2e.
+Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-23 — research (owner asked for several research days: C of 3)
 
 Looked at: multi-day stage planners. HiiKER, AllTrails Peak, komoot and

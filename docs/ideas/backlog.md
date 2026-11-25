@@ -18,7 +18,6 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 
 ## Polish
 
-- Loadout page on phones: the breakdown panel is narrower than the rest of the page — S
 
 
 
@@ -50,6 +49,10 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-04 — Toast slides in and fades out (polish)
 - 2026-11-23 — Water estimate uses the forecast high (research)
 - 2026-11-23 — Day boundaries on the planned route's elevation profile (research)
+- 2026-11-24 — Loadout breakdown and trip sections line up with the stat cards on phones (polish)
+- 2026-11-24 — "Big three" weight on a trip's gear (research)
+- 2026-11-24 — Route planner: Out and back (research)
+- 2026-11-24 — Gear Room: Sort by most used (research)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)
