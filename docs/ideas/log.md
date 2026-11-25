@@ -3,6 +3,19 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-25 — polish (owner asked for 4 polish days: 3 of 4)
+
+Looked at: where blocks start on a 390 px phone on the Trips page and in
+the Gear Room. Stat cards, the next-trip card and the completed-trips
+timeline started 12 px from the edge, but section labels ("Also
+planned", "Completed trips") and card grids (planned trips, gear on a
+shelf, loadouts) started at 24 px, so the page had two left edges.
+Changed: on phones, section labels and card grids use the same 12 px
+sides. Page titles keep their wider inset. Desktop is unchanged. CSS
+only. Service worker cache `waypoints-v66`. All tests pass: 62 unit,
+66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-25 — polish (owner asked for 4 polish days: 2 of 4)
 
 Looked at: the Gear Room's shelf view (All items or a category) on a

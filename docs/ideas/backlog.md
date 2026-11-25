@@ -59,6 +59,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-25 — A trip's planning lines grouped in one card with bold lead-ins (polish)
 - 2026-11-25 — Gear cards show the last-used date the friendly way (polish)
 - 2026-11-25 — Gear Room shelf toolbar in tidy rows on phones (polish)
+- 2026-11-25 — One left edge for section labels and card grids on phones (polish)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)

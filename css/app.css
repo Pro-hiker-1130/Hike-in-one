@@ -1220,6 +1220,8 @@ body{font-size:15px;}
   .timeline-grid{padding:8px 12px;grid-template-columns:1fr;}
   .pack-list{margin:0 12px 8px;}
   .gear-view-head{padding-left:12px;padding-right:12px;}
+  /* Section labels and card grids on the same 12 px sides as the stat cards and timeline. */
+  .section-subhead,.gear-grid{padding-left:12px;padding-right:12px;}
   .settings-card{margin:12px 12px 0;}
 }
 
