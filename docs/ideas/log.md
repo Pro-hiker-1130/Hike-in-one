@@ -3,6 +3,18 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-25 — polish (owner asked for 4 polish days: 4 of 4)
+
+Looked at: the Trips page header on phones (390 and 320 px). "Import
+activities" and "+ New trip" were stacked in a column, each at its own
+width, which looked unfinished next to the full-width cards below.
+Changed: on phones the two buttons sit side by side under the title as
+an equal-width pair (each 40 px or taller to tap), with the main action
+"Import activities" on the right, as on desktop. Desktop is unchanged.
+CSS only. Service worker cache `waypoints-v67`. All tests pass: 62 unit,
+66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-25 — polish (owner asked for 4 polish days: 3 of 4)
 
 Looked at: where blocks start on a 390 px phone on the Trips page and in

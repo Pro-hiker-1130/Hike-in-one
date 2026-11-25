@@ -722,7 +722,9 @@ select:focus-visible, textarea:focus-visible{
 .import-done-title{font-family:var(--font-display);font-size:18px;font-weight:600;}
 .import-done-sub{font-size:12.5px;color:var(--muted);line-height:1.5;}
 @media (max-width:560px){
-  .trips-header-actions{flex-direction:column-reverse;align-items:stretch;}
+  /* One row of two equal buttons under the title, main action on the right. */
+  .trips-header-actions{flex:1 1 100%;flex-wrap:nowrap;}
+  .trips-header-actions > button{flex:1 1 0;align-self:stretch;min-height:40px;}
   .import-step{padding:14px 14px;}
   .import-row{padding:8px 10px;}
 }
