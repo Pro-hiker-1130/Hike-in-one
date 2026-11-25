@@ -656,6 +656,8 @@ test('gear: "Most used" sorts by completed trips, unused gear last', { skip: !pl
   await page.click('#viewAllGearBtn');
   await page.selectOption('#gearSort', 'used');
   const names = await page.$$eval('#gearGrid .gear-card-name', els => els.map(e => e.textContent));
+  const usage = await page.$$eval('#gearGrid .gear-card:has-text("Revelation 20") .gear-card-meta', els => els.map(e => e.textContent).find(t => /^Used/.test(t)));
+  assert.equal(usage, 'Used on 2 trips · last 1 Jul 2025', 'dates read like the rest of the app');
   // Two trips, then one, then the rest by name (a planned trip doesn't count).
   assert.deepEqual(names, ['Revelation 20', 'Exos 58', 'Copper Spur HV UL2', 'Distance Carbon Z', 'NeoAir XLite NXT']);
   assert.deepEqual(errors, []);

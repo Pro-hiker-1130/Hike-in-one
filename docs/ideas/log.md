@@ -3,6 +3,17 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-25 — polish (owner asked for 4 polish days: 1 of 4)
+
+Looked at: phone screenshots (390 px) of the Gear Room, Trips and
+Settings pages, to pick four small fixes for this run.
+Changed: gear cards said "Used on 2 trips · last 2026-05-01", the only
+place in the app showing a raw date. They now say "last 1 May 2026", like
+the trip pages. The "Most used" e2e test checks the line. Service worker
+cache `waypoints-v64`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-25 — polish
 
 Looked at: a phone screenshot (390 px) of a planned trip's gear section.

@@ -236,7 +236,7 @@ function gearUsageSummary(gearId){
     const km = gearDistanceKm(gearId);
     if(km >= 0.1) parts.push(km.toFixed(km < 100 ? 1 : 0)+' km');
     const dates = done.map(tripDisplayDate).filter(Boolean).sort();
-    if(dates.length) parts.push('last '+dates[dates.length-1]);
+    if(dates.length) parts.push('last '+friendlyDate(String(dates[dates.length-1]).slice(0, 10), false));
   }
   if(planned) parts.push('packed for '+planned+' planned trip'+(planned>1?'s':''));
   return parts.join(' · ');
