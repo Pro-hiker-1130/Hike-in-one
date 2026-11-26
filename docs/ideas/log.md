@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-26 — polish (owner asked for 4 polish days: 1 of 4)
+
+Looked at: phone (390 px) and desktop (1280 px) screenshots of the Gear
+Room, the add-gear catalog, the route planner and the Trips page, to
+pick this run's four fixes. The gear breakdown card (donut and legend)
+was the only khaki-grey card among white ones, and on desktop it ran
+the full page width, its legend numbers far from their names and its
+menu at the far right.
+Changed: the breakdown card is white like the other cards, with the
+same 12 px corners. On desktop it is capped at the width of the weight
+list above it (820 px), the legend at 420 px, and the heading's menu
+ends where the card does. The donut colours are unchanged. CSS only.
+Service worker cache `waypoints-v72`. All tests pass: 62 unit, 66 e2e.
+Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-26 — research
 
 Looked at: how packing-list apps share a list. PackList shares its
