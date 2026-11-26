@@ -258,16 +258,44 @@ function tripPlanText(trip){
   return lines.join('\n');
 }
 
+// Through the phone's share sheet where there is one, else the clipboard.
+async function shareOrCopyText(title, text, copied, failed){
+  if(navigator.share && (!navigator.canShare || navigator.canShare({ text }))){
+    try{ await navigator.share({ title, text }); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  try{ await navigator.clipboard.writeText(text); showGlobalToast(copied); }
+  catch(e){ showGlobalToast(failed, true); }
+}
 async function shareTripPlan(id){
   const trip = trips.find(t => t.id === id);
   if(!trip) return;
-  const text = tripPlanText(trip);
-  if(navigator.share && (!navigator.canShare || navigator.canShare({ text }))){
-    try{ await navigator.share({ title: 'Trip plan: ' + trip.name, text }); return; }
-    catch(e){ if(e && e.name === 'AbortError') return; }
-  }
-  try{ await navigator.clipboard.writeText(text); showGlobalToast('Trip plan copied — paste it into a message and fill in the blanks.'); }
-  catch(e){ showGlobalToast('Couldn\'t copy the trip plan here.', true); }
+  await shareOrCopyText('Trip plan: ' + trip.name, tripPlanText(trip),
+    'Trip plan copied — paste it into a message and fill in the blanks.', 'Couldn\'t copy the trip plan here.');
+}
+
+// A trip's gear as a plain-text checklist (☑ packed, ☐ not yet), grouped
+// by category with weights, for a message or a notes app.
+function tripPackingListText(trip){
+  const items = tripGearItemsList(trip), packed = tripPackedIds(trip), split = tripWeightSplit(trip);
+  const date = tripDisplayDate(trip);
+  const lines = [trip.name + ' — packing list' + (date ? ' (' + friendlyDate(String(date).slice(0, 10)) + ')' : ''),
+    'Total ' + formatWeight(tripGearWeight(trip)) + ' · base ' + formatWeight(split.base) + ' · worn ' + formatWeight(split.worn) +
+    ' · consumable ' + formatWeight(split.consumable)];
+  const cats = GEAR_CATEGORIES.concat(items.map(g => g.category).filter(c => !GEAR_CATEGORIES.includes(c)));
+  cats.filter((c, i) => cats.indexOf(c) === i).forEach(cat=>{
+    const inCat = items.filter(g => g.category === cat);
+    if(!inCat.length) return;
+    lines.push('', cat);
+    inCat.forEach(g => lines.push((packed.has(g.id) ? '☑ ' : '☐ ') + g.name + ((g.quantity || 1) > 1 ? ' ×' + g.quantity : '') +
+      ' — ' + formatWeight((g.weightGrams || 0) * (g.quantity || 1))));
+  });
+  return lines.join('\n');
+}
+async function shareTripPackingList(){
+  const trip = trips.find(t => t.id === currentTripId);
+  if(!trip || !tripGearItemsList(trip).length) return;
+  await shareOrCopyText('Packing list: ' + trip.name, tripPackingListText(trip), 'Packing list copied.', 'Couldn\'t copy the packing list here.');
 }
 
 // ---- A trip as a picture to send to friends ----
@@ -600,6 +628,7 @@ function renderTripGear(trip){
   const btn = document.getElementById('tripPackBtn');
   btn.hidden = !gearList.length;
   btn.textContent = packing ? 'Done packing' : 'Pack';
+  document.getElementById('tripCopyListBtn').hidden = !gearList.length;
   btn.setAttribute('aria-pressed', String(packing));
 
   const split = tripWeightSplit(trip);

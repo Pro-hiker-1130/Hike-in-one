@@ -741,6 +741,9 @@ select:focus-visible, textarea:focus-visible{
 @media (max-width:560px){
   .trip-detail-section-head:has(.trip-gear-actions){flex-wrap:wrap;gap:10px;}
   .trip-gear-actions{width:100%;justify-content:flex-start;}
+  /* Loadout menu on its own row, the buttons sharing the next one evenly. */
+  .trip-gear-actions > select{flex:1 1 100%;}
+  .trip-gear-actions > button:not([hidden]){flex:1 1 0;}
 }
 .garage-actions{display:flex;gap:8px;flex-wrap:wrap;}
 .garage-actions>*{white-space:nowrap;}

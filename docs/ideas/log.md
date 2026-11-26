@@ -3,6 +3,24 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-26 — research
+
+Looked at: how packing-list apps share a list. PackList shares its
+checklist as text, GearsLib offers text or a long image, Packu shares
+an image with weights, and PackLight and Packstack share a link or CSV.
+None of the listings clearly show plain text with weights. Budget used:
+1 search, 0 fetches.
+Changed: a trip's gear section has a "Copy list" button. It shares
+(through the phone's share sheet) or copies the trip's gear as plain
+text: the trip and date, total/base/worn/consumable weights, then each
+category with "☑" for packed and "☐" for not yet, plus quantities and
+weights. "Trip plan" and "Copy list" now share one small helper. On
+phones the loadout menu gets its own row and Pack, Copy list and Edit
+gear share the next one evenly. The packing e2e test checks the copied
+text. Service worker cache `waypoints-v71`. All tests pass: 62 unit,
+66 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-25 — polish (owner asked for more polish days: 3 of 3)
 
 Looked at: the Account card on Settings, signed out and signed in. Its
