@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-26 — polish (owner asked for 4 polish days: 3 of 4)
+
+Looked at: empty sections on the Trips page and in the Gear Room
+("Nothing planned yet", "No completed trips yet", "No loadouts yet") on
+phone and desktop. Each took about 170 px, with the large drawing
+centred mid-page and an empty card grid's padding above it, which on
+desktop read as a hole in the page.
+Changed: an empty section is now a compact dashed placeholder (smaller
+drawing, same text) on the cards' left edge and capped at 820 px; the
+empty grid above it takes no space. Whole-page empty states keep their
+large drawing. CSS only. Service worker cache `waypoints-v74`. All
+tests pass: 62 unit, 66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-26 — polish (owner asked for 4 polish days: 2 of 4)
 
 Looked at: the route planner on a 390 px phone before any route is
