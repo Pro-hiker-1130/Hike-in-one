@@ -140,3 +140,5 @@ pin down to "Skipped" with a reason.
 - Peak Refuel Homestyle Chicken & Rice (2 servings): single listing gives 5.15 oz, not confirmed elsewhere.
 - Mountain House Chicken Tikka Masala (2 servings): single retailer figure of 4.2 oz.
 - Backpacker's Pantry Chicken Tikka Masala: no weight found.
+- Petzl Swift RL: listed weights differ by version (92, 100 and 110 g).
+- Sawyer Mini: filter-alone figure of about 57 g conflicts with Sawyer's own 140 g page, which does not say what it covers.
