@@ -147,6 +147,7 @@ function rpChanged(){
   document.getElementById('rpClearBtn').disabled = !rp.waypoints.length;
   document.getElementById('rpLoopBtn').disabled = !rpCanLoop();
   document.getElementById('rpBackBtn').disabled = !rpCanLoop();
+  document.getElementById('rpReverseBtn').disabled = rp.waypoints.length < 2;
   document.getElementById('rpHint').hidden = rp.waypoints.length > 1;
   document.getElementById('rpHint').textContent = rp.waypoints.length
     ? 'Now tap where the route goes next.'
@@ -212,7 +213,8 @@ function rpDrawRoute(){
   profileEl.innerHTML = '';
   if(wps.length < 2){ stats.textContent = ''; return; }
   if(!ready){ stats.textContent = 'Finding the route…'; return; }
-  stats.textContent = rpRoute.distanceKm.toFixed(1) + ' km · ' + trackClimbSummary(rpRoute);
+  // The same difficulty label the trip page gives the route, updated as you draw.
+  stats.innerHTML = escapeHtml(rpRoute.distanceKm.toFixed(1) + ' km · ' + trackClimbSummary(rpRoute)) + ' ' + trackDifficultyBadgeHtml(rpRoute);
   // Distance markers along the route, so it's easy to see where 5 km is.
   TrackCore.kmMarkers(rpRoute.points).forEach(m => addKmMarker(m, rpLineLayer));
   if(rpRoute.profile && rpRoute.profile.length > 1){
@@ -251,6 +253,14 @@ function rpOutAndBack(){
   const w = rp.waypoints, back = [];
   for(let i = w.length - 2; i >= 0; i--) back.push({ ll: w[i].ll.slice(), mode: w[i+1].mode });
   rp.waypoints = w.concat(back);
+  rpChanged();
+}
+// Walk it the other way: the points in reverse, each leg drawn as before.
+function rpReverse(){
+  if(!rp || rp.waypoints.length < 2) return;
+  rpRemember();
+  const w = rp.waypoints, n = w.length;
+  rp.waypoints = w.map((_, k) => ({ ll: w[n-1-k].ll.slice(), mode: k ? w[n-k].mode : w[0].mode }));
   rpChanged();
 }
 function rpClear(){
@@ -314,6 +324,7 @@ document.getElementById('rpUndoBtn').addEventListener('click', rpUndo);
 document.getElementById('rpClearBtn').addEventListener('click', rpClear);
 document.getElementById('rpLoopBtn').addEventListener('click', rpLoop);
 document.getElementById('rpBackBtn').addEventListener('click', rpOutAndBack);
+document.getElementById('rpReverseBtn').addEventListener('click', rpReverse);
 document.getElementById('rpSaveBtn').addEventListener('click', saveRoutePlan);
 document.getElementById('rpDeleteBtn').addEventListener('click', deleteRoutePlan);
 document.getElementById('rpDownloadBtn').addEventListener('click', downloadRoutePlan);

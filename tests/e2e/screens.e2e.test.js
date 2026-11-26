@@ -248,6 +248,16 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
   // Shelter 1219 g + pack 1212 g are base; the quilt is set to worn here.
   await page.evaluate(()=>{ gearItems.find(g => g.id === 'g2').packRole = 'worn'; renderTripDetail(); });
   assert.equal(await text(page, '#tripPackSplit'), 'Base 2.4 kgWorn 640 gConsumable —');
+  assert.ok(await page.isHidden('#tripBaseCompare'), 'no earlier trip to compare with');
+  await page.evaluate(async ()=>{
+    trips.push({ id: 'tb1', name: 'Old loop', trackIds: [], gearIds: ['g0', 'g1', 'g3'], status: 'completed', date: '2029-05-01', createdAt: 2 },
+      { id: 'tb2', name: 'Older loop', trackIds: [], gearIds: ['g0'], status: 'completed', date: '2028-05-01', createdAt: 3 },
+      { id: 'tb3', name: 'Later loop', trackIds: [], gearIds: ['g0'], status: 'completed', date: '2031-05-01', createdAt: 4 });
+    renderTripDetail();
+  });
+  // 2,431 g now against 2,801 g on the latest trip before this one.
+  assert.equal(await text(page, '#tripBaseCompare'), 'Base weight: 370 g lighter than on Old loop (1 May 2029).');
+  await page.evaluate(()=>{ trips = trips.filter(tr => !/^tb/.test(tr.id)); renderTripDetail(); });
   assert.match(await text(page, '#tripBigThree'), /^Big three: 3\.1 kg \(pack 1\.2 kg · shelter 1\.2 kg · sleep system 640 g\) — usually the first place to save weight\.$/);
   await page.click('#tripPackBtn');
   assert.equal(await page.getAttribute('#tripPackBtn', 'aria-pressed'), 'true');
@@ -646,6 +656,8 @@ test('gear: "Most used" sorts by completed trips, unused gear last', { skip: !pl
   await page.click('#viewAllGearBtn');
   await page.selectOption('#gearSort', 'used');
   const names = await page.$$eval('#gearGrid .gear-card-name', els => els.map(e => e.textContent));
+  const usage = await page.$$eval('#gearGrid .gear-card:has-text("Revelation 20") .gear-card-meta', els => els.map(e => e.textContent).find(t => /^Used/.test(t)));
+  assert.equal(usage, 'Used on 2 trips · last 1 Jul 2025', 'dates read like the rest of the app');
   // Two trips, then one, then the rest by name (a planned trip doesn't count).
   assert.deepEqual(names, ['Revelation 20', 'Exos 58', 'Copper Spur HV UL2', 'Distance Carbon Z', 'NeoAir XLite NXT']);
   assert.deepEqual(errors, []);
@@ -1217,6 +1229,7 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   await page.click('#rpModeToggle [data-mode="line"]');
   await tap(550, 250);   // a straight line, elevation from Open-Meteo
   await page.waitForFunction(()=> /km · ↑ 100 m · ↓ 0 m · about \d+ (h|min)/.test(document.getElementById('rpStats').textContent));
+  assert.equal(await text(page, '#rpStats .difficulty-badge'), await page.evaluate(()=> DIFFICULTY_LABELS[trackDifficulty(rpRoute).level]), 'difficulty while planning');
   assert.equal(elevationCalls, 1);
   assert.equal(await page.locator('#rpProfile .ele-profile').count(), 1);
   // Pointing at the profile shows that spot on the map; moving away hides it.
@@ -1266,6 +1279,13 @@ test('route planner: draw a route on trails and straight lines, save it to a pla
   assert.ok(await page.isDisabled('#rpBackBtn') && await page.isDisabled('#rpLoopBtn'), 'back at the start');
   await page.click('#rpUndoBtn');
   await page.waitForFunction(()=> rp.waypoints.length === 3);
+  // Reverse walks it the other way: same points backwards, each leg drawn as before.
+  await page.click('#rpReverseBtn');
+  const rev = await page.evaluate(()=> rp.waypoints.map(w => [w.ll.join(','), w.mode]));
+  assert.deepEqual(rev.map(w => w[0]), out.map(w => w[0]).reverse());
+  assert.deepEqual(rev.slice(1).map(w => w[1]), [out[2][1], out[1][1]]);
+  await page.click('#rpUndoBtn');
+  assert.deepEqual(await page.evaluate(()=> rp.waypoints.map(w => w.ll.join(','))), out.map(w => w[0]), 'Undo puts it back');
 
   // Download it, then save it to the trip.
   await page.fill('#rpName', 'Haute Route day 1');

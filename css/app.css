@@ -218,6 +218,11 @@ select:focus-visible, textarea:focus-visible{
   .app{flex-direction:column;}
   .sidebar{width:100%;min-width:0;max-height:46vh;border-right:none;border-bottom:1px solid var(--line);}
   .gear-toolbar{flex-wrap:wrap;}
+  /* Shelf view: back, title and Add on one row, then search, then the two menus side by side. */
+  #categoryView .gear-toolbar{gap:8px;}
+  #categoryView .category-view-heading{flex:1;min-width:0;}
+  #gearSearch{order:2;flex:1 1 100%;}
+  #gearStatusFilter,#gearSort{order:3;flex:1 1 0;max-width:none;min-width:0;}
   .gear-grid{grid-template-columns:1fr;}
   .gear-scene{margin:12px 12px 16px;padding:16px 12px 0;gap:22px;}
   .scene-item{min-width:64px;padding:6px 4px;}
@@ -717,7 +722,9 @@ select:focus-visible, textarea:focus-visible{
 .import-done-title{font-family:var(--font-display);font-size:18px;font-weight:600;}
 .import-done-sub{font-size:12.5px;color:var(--muted);line-height:1.5;}
 @media (max-width:560px){
-  .trips-header-actions{flex-direction:column-reverse;align-items:stretch;}
+  /* One row of two equal buttons under the title, main action on the right. */
+  .trips-header-actions{flex:1 1 100%;flex-wrap:nowrap;}
+  .trips-header-actions > button{flex:1 1 0;align-self:stretch;min-height:40px;}
   .import-step{padding:14px 14px;}
   .import-row{padding:8px 10px;}
 }
@@ -843,6 +850,12 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .pack-split-consumable::before{background:#B87333;}
 .food-plan{margin:0 0 10px;font-size:13px;color:var(--muted);}
 .food-plan[hidden]{display:none;}
+/* The trip's planning lines (big three, base weight, food, water) as one card. */
+.trip-plan-notes{margin:0 0 12px;padding:2px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);}
+.trip-plan-notes:not(:has(> p:not([hidden]))){display:none;}
+.trip-plan-notes > .food-plan{margin:0;padding:9px 0;line-height:1.45;}
+.trip-plan-notes > p:not([hidden]) ~ p:not([hidden]){border-top:1px solid var(--line);}
+.trip-plan-notes strong{font-weight:600;color:var(--parchment);}
 /* Worn gear on a planned trip */
 .gear-wear-warning{margin:0 0 10px;padding:8px 12px;border-radius:8px;font-size:13px;color:#7A2E0E;background:#F6E3D8;}
 .gear-wear-warning[hidden]{display:none;}
@@ -1209,6 +1222,8 @@ body{font-size:15px;}
   .timeline-grid{padding:8px 12px;grid-template-columns:1fr;}
   .pack-list{margin:0 12px 8px;}
   .gear-view-head{padding-left:12px;padding-right:12px;}
+  /* Section labels and card grids on the same 12 px sides as the stat cards and timeline. */
+  .section-subhead,.gear-grid{padding-left:12px;padding-right:12px;}
   .settings-card{margin:12px 12px 0;}
 }
 
@@ -1295,6 +1310,7 @@ body{font-size:15px;}
 }
 .rp-hint[hidden]{display:none;}
 .rp-stats{font-size:13.5px;font-weight:600;color:var(--parchment);min-height:1.2em;}
+.rp-stats .difficulty-badge{margin-top:0;vertical-align:1px;}
 .rp-profile:empty{display:none;}
 .rp-credit{font-size:11px;color:var(--muted);margin:0;}
 .rp-credit a{color:inherit;}

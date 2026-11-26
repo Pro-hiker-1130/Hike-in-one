@@ -3,6 +3,109 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-25 — polish (owner asked for 4 polish days: 4 of 4)
+
+Looked at: the Trips page header on phones (390 and 320 px). "Import
+activities" and "+ New trip" were stacked in a column, each at its own
+width, which looked unfinished next to the full-width cards below.
+Changed: on phones the two buttons sit side by side under the title as
+an equal-width pair (each 40 px or taller to tap), with the main action
+"Import activities" on the right, as on desktop. Desktop is unchanged.
+CSS only. Service worker cache `waypoints-v67`. All tests pass: 62 unit,
+66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-25 — polish (owner asked for 4 polish days: 3 of 4)
+
+Looked at: where blocks start on a 390 px phone on the Trips page and in
+the Gear Room. Stat cards, the next-trip card and the completed-trips
+timeline started 12 px from the edge, but section labels ("Also
+planned", "Completed trips") and card grids (planned trips, gear on a
+shelf, loadouts) started at 24 px, so the page had two left edges.
+Changed: on phones, section labels and card grids use the same 12 px
+sides. Page titles keep their wider inset. Desktop is unchanged. CSS
+only. Service worker cache `waypoints-v66`. All tests pass: 62 unit,
+66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-25 — polish (owner asked for 4 polish days: 2 of 4)
+
+Looked at: the Gear Room's shelf view (All items or a category) on a
+390 px phone. The toolbar wrapped by itself: the search box squeezed
+next to the title, the two menus at different widths, and "+ Add item"
+alone on a third row.
+Changed: on phones the toolbar now has three tidy rows: Garage, the
+title and "+ Add item" on the first; a full-width search on the second;
+the status and sort menus side by side, equal width, on the third.
+Desktop is unchanged. CSS only. Service worker cache `waypoints-v65`.
+All tests pass: 62 unit, 66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-25 — polish (owner asked for 4 polish days: 1 of 4)
+
+Looked at: phone screenshots (390 px) of the Gear Room, Trips and
+Settings pages, to pick four small fixes for this run.
+Changed: gear cards said "Used on 2 trips · last 2026-05-01", the only
+place in the app showing a raw date. They now say "last 1 May 2026", like
+the trip pages. The "Most used" e2e test checks the line. Service worker
+cache `waypoints-v64`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-25 — polish
+
+Looked at: a phone screenshot (390 px) of a planned trip's gear section.
+After the last few research days it had four plain grey paragraphs in a
+row (big three, base weight, food, water), which read as a wall of text.
+Changed: those lines now sit together in one light card, separated by
+thin lines, each starting with a bold lead-in ("Big three:", "Base
+weight:", "Food for 2 days:", "Water:"). The wording is unchanged. The
+card hides itself when none of the lines apply. Nothing moves, so there
+is no motion to reduce. Service worker cache `waypoints-v63`. All tests
+pass: 62 unit, 66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-24 — research (owner asked for 3 more research days: F of 3)
+
+Looked at: how hikers track pack weight across trips. Base weight is the
+number they compare, because it stays about the same whatever the trip
+length. A common habit is to start from the gear list of the latest
+similar trip. I found no app documenting such a comparison. Budget used:
+1 search, 0 fetches.
+Changed: a trip's gear shows "Base weight: 370 g lighter than on Old loop
+(1 May 2029)." (or heavier, or "about the same as" within 50 g),
+against the latest completed trip before it that has gear. It is hidden
+when there's nothing to compare with. The packing e2e test checks it.
+Service worker cache `waypoints-v62`. All tests pass: 62 unit, 66 e2e.
+For the owner: it compares with the latest trip, whatever the season; a
+winter trip will usually come out heavier than a summer one.
+
+## 2026-11-24 — research (owner asked for 3 more research days: E of 3)
+
+Looked at: reversing a planned route. komoot lets you reverse a route's
+waypoints, and users note that you should check the route after doing so.
+Budget used: 0 searches (from D's search), 0 fetches.
+Changed: the route planner has a "Reverse" button on the map. It puts
+the points in the opposite order and keeps how each leg was drawn (on
+trails or a straight line), so the same path is fetched the other way.
+The distance, climb, profile and difficulty update to match. Undo puts
+it back. The route planner e2e test checks the points, the modes and
+Undo. Service worker cache `waypoints-v61`. All tests pass: 62 unit,
+66 e2e.
+For the owner: nothing to decide.
+
+## 2026-11-24 — research (owner asked for 3 more research days: D of 3)
+
+Looked at: what route planners show while you draw. komoot's planner
+shows distance, time and difficulty under the profile as the route
+changes, and lets you reverse a route. Budget used: 1 search, 0 fetches.
+Changed: the route planner's line under the map now ends with the same
+difficulty label (Easy, Moderate, Hard, Strenuous) the trip page gives a
+planned route, updating as you add, move or undo points. The route
+planner e2e test checks it. Service worker cache `waypoints-v60`. All
+tests pass: 62 unit, 66 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-24 — research (owner asked for 3 research days: C of 3)
 
 Looked at: gear-closet apps. HikerKit shows a usage rate per item, and

@@ -612,8 +612,15 @@ function renderTripGear(trip){
   const big = tripBigThree(trip);
   const bigEl = document.getElementById('tripBigThree');
   bigEl.hidden = !big.total;
-  bigEl.textContent = big.total ? 'Big three: ' + formatWeight(big.total) + ' (' +
-    big.parts.map(p => p.label + ' ' + formatWeight(p.grams)).join(' · ') + ') — usually the first place to save weight.' : '';
+  planLine(bigEl, big.total ? 'Big three: ' + formatWeight(big.total) + ' (' +
+    big.parts.map(p => p.label + ' ' + formatWeight(p.grams)).join(' · ') + ') — usually the first place to save weight.' : '');
+
+  const cmp = tripBaseCompare(trip);
+  const cmpEl = document.getElementById('tripBaseCompare');
+  cmpEl.hidden = !cmp;
+  if(cmp) planLine(cmpEl, 'Base weight: ' + (Math.abs(cmp.diff) < 50 ? 'about the same as' :
+    formatWeight(Math.abs(cmp.diff)) + (cmp.diff < 0 ? ' lighter than' : ' heavier than')) +
+    ' on ' + cmp.prev.name + ' (' + friendlyDate(String(tripDisplayDate(cmp.prev)).slice(0, 10), false) + ').');
 
   renderTripFoodPlan(trip, gearList);
   renderTripWaterPlan(trip);
@@ -679,10 +686,18 @@ function renderTripWaterPlan(trip){
   const high = tripForecastHigh[trip.id];
   const rate = TrackCore.waterLitresPerHour(high);
   const litres = v => (Math.round(v * 2) / 2).toFixed(1).replace(/\.0$/, '');
-  el.textContent = 'Water: about ' + litres(Math.max(0.5, hours * rate)) + ' L ' +
+  planLine(el, 'Water: about ' + litres(Math.max(0.5, hours * rate)) + ' L ' +
     (days.length > 1 ? 'on the longest day (' + formatDuration(sec) + ' of walking' : 'for ' + formatDuration(sec) + ' of walking') +
     (high != null ? (days.length > 1 ? ', ' : ' (') + 'forecast high ' + Math.round(high) + ' °C)' : days.length > 1 ? ')' : '') +
-    ' — up to ' + litres(Math.max(1, hours)) + ' L in heat or on hard climbs.' + (days.length > 1 || hours > 4 ? ' Plan where to refill.' : '');
+    ' — up to ' + litres(Math.max(1, hours)) + ' L in heat or on hard climbs.' + (days.length > 1 || hours > 4 ? ' Plan where to refill.' : ''));
+}
+
+// A planning line with its lead-in in bold: "Water:" then the rest.
+function planLine(el, text){
+  const i = text.indexOf(':') + 1;
+  const lead = document.createElement('strong');
+  lead.textContent = text.slice(0, i);
+  el.replaceChildren(...(i ? [lead, text.slice(i)] : [text]));
 }
 
 function renderTripFoodPlan(trip, gearList){
@@ -693,12 +708,12 @@ function renderTripFoodPlan(trip, gearList){
   if(el.hidden) return;
   const f = tripFoodPlan(trip, days);
   const kg = g => (g / 1000).toFixed(1).replace(/\.0$/, '');
-  el.textContent = 'Food for ' + days + ' day' + (days !== 1 ? 's' : '') + ': about ' + kg(f.low) + '–' + kg(f.high) + ' kg. ' + {
+  planLine(el, 'Food for ' + days + ' day' + (days !== 1 ? 's' : '') + ': about ' + kg(f.low) + '–' + kg(f.high) + ' kg. ' + {
     none: 'No food in the gear list yet.',
     short: 'Packed so far: ' + formatWeight(f.packedG) + ', ' + formatWeight(f.low - f.packedG) + ' short.',
     right: 'Packed: ' + formatWeight(f.packedG) + ', about right.',
     plenty: 'Packed: ' + formatWeight(f.packedG) + ', more than you\'ll likely eat.',
-  }[f.verdict];
+  }[f.verdict]);
 }
 
 function togglePacked(trip, gearId){
