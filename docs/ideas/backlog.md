@@ -66,6 +66,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-25 — Settings: Account card spaced like the others (polish)
 - 2026-11-26 — Copy a trip's packing list as text, with weights and ticks (research)
 - 2026-11-26 — Gear breakdown card white and capped like the panel above (polish)
+- 2026-11-26 — Route planner: no empty gap before a route, hint clear of the map credits (polish)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)

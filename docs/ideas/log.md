@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-26 — polish (owner asked for 4 polish days: 2 of 4)
+
+Looked at: the route planner on a 390 px phone before any route is
+drawn. Between the "Follow trails / Straight line" toggle and "Route
+name" sat 54 px of nothing: an empty stats line kept 16 px tall, an
+empty error line, and a gap for each. The map hint ("Tap the map to set
+the start…") was also half hidden behind the two-line map credits.
+Changed: with no route, the empty stats and error lines take no space,
+so the name field follows the toggle. The stats line stays in place so
+screen readers still announce it once a route appears. On phones the
+hint sits above the map credits. CSS only. Service worker cache
+`waypoints-v73`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-26 — polish (owner asked for 4 polish days: 1 of 4)
 
 Looked at: phone (390 px) and desktop (1280 px) screenshots of the Gear

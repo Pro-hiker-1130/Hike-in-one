@@ -1328,6 +1328,10 @@ body{font-size:15px;}
 .rp-hint[hidden]{display:none;}
 .rp-stats{font-size:13.5px;font-weight:600;color:var(--parchment);min-height:1.2em;}
 .rp-stats .difficulty-badge{margin-top:0;vertical-align:1px;}
+/* Before there's a route: no empty lines between the toggle and the name.
+   The stats line stays in place (height 0) so it is still announced when it fills in. */
+.rp-stats:empty{min-height:0;margin-top:-10px;}
+#rpError:empty{display:none;}
 .rp-profile:empty{display:none;}
 .rp-credit{font-size:11px;color:var(--muted);margin:0;}
 .rp-credit a{color:inherit;}
@@ -1372,7 +1376,8 @@ body{font-size:15px;}
   #routePlannerOverlay .rp-body{display:flex;flex-direction:column;flex:none;padding:10px 12px 14px;}
   #routePlannerOverlay .rp-map-wrap{height:62vh;height:62dvh;flex:none;}
   .rp-side{overflow:visible;}
-  .rp-hint{top:auto;bottom:10px;max-width:calc(100% - 24px);}
+  /* Above the map credits, which take two lines on a phone. */
+  .rp-hint{top:auto;bottom:46px;max-width:calc(100% - 24px);}
 }
 @media (max-width:640px){
   #sharedRouteOverlay{padding:0;}
