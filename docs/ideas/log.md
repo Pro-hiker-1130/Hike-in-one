@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-26 — polish (owner asked for 4 polish days: 4 of 4)
+
+Looked at: the "Add gear" catalog dialog while it loads. Its list area
+showed only the word "Loading…" until results arrived, so the dialog
+jumped in height when they did.
+Changed: while a new list loads (opening the dialog, searching, or
+changing a filter), four placeholder rows shaped like results (a square
+for the photo, two bars for name and details) fill the list, with the
+same soft sheen as the trip forecast's placeholders. They fade in after
+0.15 s so quick answers don't flash, and with reduced motion they are
+still bars with no sheen or fade. The catalog e2e test holds one answer
+back to check the rows and that results replace them. Service worker
+cache `waypoints-v75`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-26 — polish (owner asked for 4 polish days: 3 of 4)
 
 Looked at: empty sections on the Trips page and in the Gear Room

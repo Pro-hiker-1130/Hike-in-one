@@ -526,8 +526,18 @@ test('catalog browser: "+ Add item" lists the catalog, filters by category and b
 
   // Category filter, with counts; the brand list follows the category.
   await page.waitForFunction(()=> /Cooking \(20\)/.test(document.getElementById('cbCategory').textContent));
+  // While a new list loads: placeholder rows shaped like results.
+  await page.evaluate(()=>{
+    const browse = catalogApi.browse;
+    catalogApi.browse = o => new Promise(res => { window.releaseBrowse = () => { catalogApi.browse = browse; res(browse.call(catalogApi, o)); }; });
+  });
   await page.selectOption('#cbCategory', 'Shelter');
+  await page.waitForFunction(()=> typeof window.releaseBrowse === 'function');
+  assert.equal(await page.getAttribute('#cbList .cb-skeleton', 'aria-label'), 'Loading the catalog');
+  assert.equal(await page.locator('#cbList .cb-skel-row').count(), 4);
+  await page.evaluate(()=> window.releaseBrowse());
   await page.waitForFunction(()=> /21 products/.test(document.getElementById('cbCount').textContent));
+  assert.equal(await page.locator('#cbList .cb-skeleton').count(), 0, 'replaced by the results');
   const brands = await page.$$eval('#cbBrand option', os => os.map(o => o.textContent));
   assert.deepEqual(brands, ['All brands', 'Big Agnes (1)', 'Nemo (20)']);
   await page.selectOption('#cbBrand', 'Big Agnes');

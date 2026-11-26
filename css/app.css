@@ -773,7 +773,20 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
   animation:skeleton-sheen 1.2s ease-in-out infinite;}
 .trip-weather-skeleton span:first-child{width:85%;}
 .trip-weather-skeleton span:last-child{width:65%;}
-@media (prefers-reduced-motion: reduce){.trip-weather-skeleton span{animation:none;background:var(--sage-soft);}}
+/* The catalog's placeholder rows: same sheen, shown after a beat so fast answers don't flash. */
+@keyframes cb-skel-in{from{opacity:0;}to{opacity:1;}}
+.cb-skeleton{animation:cb-skel-in .2s ease .15s both;}
+.cb-skel-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
+.cb-skel-lines{flex:1;display:flex;flex-direction:column;gap:7px;}
+.cb-skel-thumb,.cb-skel-lines span{display:block;border-radius:6px;
+  background:linear-gradient(90deg,var(--sage-soft) 30%,#F4F5F0 50%,var(--sage-soft) 70%) 0 0/250% 100%;
+  animation:skeleton-sheen 1.2s ease-in-out infinite;}
+.cb-skel-thumb{flex:none;width:44px;height:44px;border-radius:8px;}
+.cb-skel-lines span{height:11px;width:70%;}
+.cb-skel-lines span + span{width:40%;}
+.cb-skel-row:nth-child(2) .cb-skel-lines span:first-child{width:55%;}
+.cb-skel-row:nth-child(3) .cb-skel-lines span:first-child{width:80%;}
+@media (prefers-reduced-motion: reduce){.trip-weather-skeleton span,.cb-skel-thumb,.cb-skel-lines span{animation:none;background:var(--sage-soft);}.cb-skeleton{animation:none;}}
 .trip-weather-credit{margin:6px 0 0;font-size:11.5px;color:var(--muted);}
 .trip-weather-credit a{color:inherit;}
 @media (max-width:560px){.trip-weather{margin:10px 12px 0;}}
