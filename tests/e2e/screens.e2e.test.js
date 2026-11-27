@@ -197,6 +197,14 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
   await page.waitForSelector('#nextTripCard:not([hidden])');
   assert.equal(await text(page, '#nextTripNum'), '30');
   assert.equal(await text(page, '#nextTripUnit'), 'days to go');
+  // Further off it counts in months, then years (the exact days on hover).
+  const far = async n => page.evaluate(async ([d]) => {
+    trips.find(tr => tr.name === 'Tour du Mont Blanc').date = d; renderTripCards();
+    return [document.getElementById('nextTripNum').textContent, document.getElementById('nextTripUnit').textContent, document.getElementById('nextTripCard').title];
+  }, [isoInDays(n)]);
+  assert.deepEqual(await far(200), ['7', 'months to go', '200 days to go']);
+  assert.deepEqual(await far(1316), ['4', 'years to go', '1,316 days to go']);
+  assert.deepEqual(await far(30), ['30', 'days to go', '']);
   assert.equal(await text(page, '#nextTripName'), 'Tour du Mont Blanc');
   assert.match(await text(page, '#nextTripMeta'), /nothing packed yet/);
   assert.ok(!(await page.isVisible('#tripPlannedGrid')), 'the only planned trip is in the countdown card, not repeated');

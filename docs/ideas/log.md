@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — polish (owner asked for 4 more polish days: 3 of 4)
+
+Looked at: the Trips page with a trip planned far ahead. The countdown
+card said "1,316 days to go", which is hard to picture, while the other
+planned-trip cards already say "In 4 years".
+Changed: the countdown uses the same steps as those labels: days up to
+60, then months (under 18), then years, e.g. "7 months to go" or "4
+years to go". Hovering shows the exact number of days. The unit's two
+lines are balanced ("months / to go") in the narrow box. The trips e2e
+test checks 30 days, 200 days and 1,316 days. Service worker cache
+`waypoints-v83`. All tests pass: 62 unit, 67 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — polish (owner asked for 4 more polish days: 2 of 4)
 
 Looked at: packing mode on a 390 px phone. The progress bar's track
