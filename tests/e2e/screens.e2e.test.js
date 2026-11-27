@@ -271,6 +271,13 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
   // Only the row just ticked plays the pop.
   assert.deepEqual(await page.$$eval('#tripGearSummaryList .just-packed', els => els.map(e => e.querySelector('.trip-track-row-name').textContent)), ['Exos 58']);
   assert.equal(await page.$eval('#tripGearSummaryList .just-packed .pack-check', el => getComputedStyle(el).animationName), 'pack-pop');
+  // Copy list: the gear as a checklist with weights, ticked where packed.
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.click('#tripCopyListBtn');
+  await page.waitForFunction(()=> /^Packing list copied/.test(document.getElementById('globalToast').textContent));
+  assert.deepEqual((await page.evaluate(()=> navigator.clipboard.readText())).split('\n'), [
+    'Hut weekend — packing list (Mon 1 Jul 2030)', 'Total 3.1 kg · base 2.4 kg · worn 640 g · consumable —',
+    '', 'Backpack', '☑ Exos 58 — 1.2 kg', '', 'Shelter', '☐ Copper Spur HV UL2 — 1.2 kg', '', 'Sleep system', '☐ Revelation 20 — 640 g']);
   assert.deepEqual(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_pack').packedIds), ['g1']);
   // Done packing: back to the plain list, the tick and progress stay.
   await page.click('#tripPackBtn');

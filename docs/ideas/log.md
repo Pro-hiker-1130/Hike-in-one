@@ -3,6 +3,65 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-26 — research
+
+Looked at: how packing-list apps share a list. PackList shares its
+checklist as text, GearsLib offers text or a long image, Packu shares
+an image with weights, and PackLight and Packstack share a link or CSV.
+None of the listings clearly show plain text with weights. Budget used:
+1 search, 0 fetches.
+Changed: a trip's gear section has a "Copy list" button. It shares
+(through the phone's share sheet) or copies the trip's gear as plain
+text: the trip and date, total/base/worn/consumable weights, then each
+category with "☑" for packed and "☐" for not yet, plus quantities and
+weights. "Trip plan" and "Copy list" now share one small helper. On
+phones the loadout menu gets its own row and Pack, Copy list and Edit
+gear share the next one evenly. The packing e2e test checks the copied
+text. Service worker cache `waypoints-v71`. All tests pass: 62 unit,
+66 e2e.
+For the owner: nothing to decide.
+
+## 2026-11-25 — polish (owner asked for more polish days: 3 of 3)
+
+Looked at: the Account card on Settings, signed out and signed in. Its
+lines are filled in by script inside a plain wrapper, so the card's
+spacing didn't reach them: the "Sign in" button touched the text above,
+and when signed in the email, sync status and "Sign out" were crammed
+together.
+Changed: the account lines now have the same 10 px spacing as the other
+Settings cards, and an empty sync-status line takes no space. CSS only.
+Service worker cache `waypoints-v70`. All tests pass: 62 unit, 66 e2e.
+Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-25 — polish (owner asked for more polish days: 2 of 3)
+
+Looked at: the gear form on a 390 px phone. The Name field was meant to
+be twice as wide as Category, but on phones it came out narrower, so a
+name like "Copper Spur" barely fit: the phone rule gave Category a
+140 px starting width while Name started from nothing.
+Changed: on phones the item name (and "Product name" in the add-to-
+catalog form) gets a full row, with Category on the next row. The
+"twice as wide" setting moved from an inline style into a CSS class so
+the phone rule can apply. Desktop is unchanged. Service worker cache
+`waypoints-v69`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-25 — polish (owner asked for more polish days: 1 of 3)
+
+Looked at: phone screenshots (390 and 320 px) of the map, Settings, a
+trip page and the gear form, to pick this run's fixes. On a trip page
+the action buttons wrapped right-aligned and ragged; on a planned trip
+"Edit" was left alone on its own row.
+Changed: on phones the trip actions sit in their own block under the
+title, in two equal columns: a planned trip gets a 2×2 block (Trip plan,
+Share image, View on map, Edit), and a completed trip has two buttons
+and then Edit across the full width. Desktop is unchanged. CSS only.
+Service worker cache `waypoints-v68`. All tests pass: 62 unit, 66 e2e.
+Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-25 — polish (owner asked for 4 polish days: 4 of 4)
 
 Looked at: the Trips page header on phones (390 and 320 px). "Import

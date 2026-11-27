@@ -741,6 +741,9 @@ select:focus-visible, textarea:focus-visible{
 @media (max-width:560px){
   .trip-detail-section-head:has(.trip-gear-actions){flex-wrap:wrap;gap:10px;}
   .trip-gear-actions{width:100%;justify-content:flex-start;}
+  /* Loadout menu on its own row, the buttons sharing the next one evenly. */
+  .trip-gear-actions > select{flex:1 1 100%;}
+  .trip-gear-actions > button:not([hidden]){flex:1 1 0;}
 }
 .garage-actions{display:flex;gap:8px;flex-wrap:wrap;}
 .garage-actions>*{white-space:nowrap;}
@@ -822,6 +825,12 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 
 .trip-detail-actions{margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;}
 .trip-detail-actions>*{white-space:nowrap;}
+@media (max-width:760px){
+  /* A block of its own under the title in two equal columns; with Trip plan
+     hidden (3 buttons), Edit spans the last row. */
+  .trip-detail-actions{flex:1 1 100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr;}
+  #tripPlanTextBtn[hidden] ~ #tripEditBtn{grid-column:1 / -1;}
+}
 
 /* "1 year ago this week" on the Trips page */
 .memory-card{display:flex;flex-direction:column;gap:2px;margin:12px 24px 0;padding:12px 16px;max-width:620px;flex:none;
@@ -918,6 +927,7 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .modal-form{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .form-row{display:flex;gap:10px;}
 .form-field{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;}
+.form-field-wide{flex:2;}
 .form-field label{color:var(--muted);}
 .form-field input, .form-field select, .form-field textarea{
   background:var(--panel-alt);border:1px solid var(--line);color:var(--parchment);
@@ -931,6 +941,8 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 @media (max-width:560px){
   .form-row{flex-wrap:wrap;}
   .form-row > .form-field{flex:1 1 140px;}
+  /* Names are long ("Copper Spur HV UL2"): a wide field gets a full row. */
+  .form-row > .form-field-wide{flex-basis:100%;}
 }
 .modal-actions{
   display:flex;justify-content:space-between;align-items:center;
@@ -1155,6 +1167,9 @@ body{font-size:15px;}
 .settings-card .upload-status:empty{display:none;}
 .settings-note{margin:0;font-size:14px;color:var(--muted);line-height:1.45;}
 .settings-account-email{margin:0;font-weight:600;}
+/* Filled in by JS: space its lines like the rest of the card. */
+#settingsAccount{display:flex;flex-direction:column;align-items:flex-start;gap:10px;}
+#settingsAccount .settings-note:empty{display:none;}
 .settings-error{color:var(--danger);}
 .catalog-browse-modal{max-width:640px;display:flex;flex-direction:column;}
 .cb-controls{padding:12px 20px 0;display:flex;flex-direction:column;gap:8px;}
