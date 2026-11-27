@@ -159,6 +159,7 @@ function renderTripDetail(){
 
   document.getElementById('tripDetailTitle').textContent = trip.name;
   document.getElementById('tripPlanTextBtn').hidden = !(tripStatus(trip) === 'planned' && tks.some(t => t.points && t.points.length > 1));
+  document.getElementById('tripPlanAgainBtn').hidden = tripStatus(trip) !== 'completed';
   document.getElementById('tripDetailSubtitle').textContent = trip.notes || '';
   const status = tripStatus(trip);
   const badge = document.getElementById('tripDetailStatusBadge');
@@ -1110,6 +1111,23 @@ async function handleTripGpxFiles(fileList){
     statusEl.textContent = 'Could not read: '+failed.join(', ');
     statusEl.className = 'upload-error';
   }
+}
+
+// A completed trip as the start of a new one: same gear list, colour and
+// planned routes; not the walked tracks, photos, date or packing ticks.
+async function planTripAgain(){
+  const from = trips.find(t => t.id === currentTripId);
+  if(!from) return;
+  const trip = { id: 'trip_'+Math.random().toString(36).slice(2,10), name: from.name, notes: from.notes || '',
+    trackIds: tripTracks(from).filter(t => t.planned).map(t => t.id), gearIds: (from.gearIds || []).slice(),
+    photoIds: [], date: null, status: 'planned', createdAt: Date.now() };
+  if(from.color) trip.color = from.color;
+  if(from.dailyKm > 0) trip.dailyKm = from.dailyKm;
+  trips.push(trip);
+  await saveTrips();
+  renderTripCards();
+  showTripDetail(trip.id);
+  showGlobalToast('Planned \u201c' + trip.name + '\u201d again, with the same gear.', false, { label: 'Set a date', fn: ()=> openTripModal(trip.id) });
 }
 
 async function handleTripFormSubmit(e){

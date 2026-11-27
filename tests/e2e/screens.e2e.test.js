@@ -567,6 +567,32 @@ test('trip cards lift on hover, show a focus ring for the keyboard, and stay sti
   assert.deepEqual(errors, []);
 });
 
+test('trips: "Plan again" on a completed trip starts a planned copy with the same gear and planned route', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    tracks.push({ id: 't_walk', name: 'Walked', distanceKm: 8, points: [[46, 7.5], [46.05, 7.5]] },
+      { id: 't_plan', name: 'The plan', planned: true, distanceKm: 9, points: [[46, 7.5], [46.06, 7.5]] });
+    trips.push({ id: 'tr_done', name: 'Hut weekend', trackIds: ['t_walk', 't_plan'], gearIds: ['g0', 'g1'], packedIds: ['g0'], photoIds: ['ph1'],
+      status: 'completed', date: '2025-07-01', color: '#6A4C93', dailyKm: 12, notes: 'Book the hut', createdAt: 1 });
+    await saveTracks(); await saveTrips();
+    showTripDetail('tr_done');
+  });
+  assert.ok(await page.isVisible('#tripPlanAgainBtn'));
+  await page.click('#tripPlanAgainBtn');
+  await page.waitForSelector('#globalToast:not([hidden]) .toast-action');
+  assert.match(await text(page, '#globalToast'), /^Planned “Hut weekend” again, with the same gear\.Set a date$/);
+  const copy = await page.evaluate(()=>{ const tr = trips.find(x => x.id === currentTripId); return Object.assign({}, tr, { id: tr.id === 'tr_done', createdAt: 0 }); });
+  assert.deepEqual(copy, { id: false, name: 'Hut weekend', notes: 'Book the hut', trackIds: ['t_plan'], gearIds: ['g0', 'g1'], photoIds: [],
+    date: null, status: 'planned', createdAt: 0, color: '#6A4C93', dailyKm: 12 });
+  assert.equal(await text(page, '#tripDetailStatusBadge'), 'Planned');
+  assert.ok(await page.isHidden('#tripPlanAgainBtn'), 'only on completed trips');
+  await page.click('#globalToast .toast-action');
+  await page.waitForSelector('#tripModalOverlay', { state: 'visible' });
+  assert.equal(await page.inputValue('#tripDate'), '');
+  assert.deepEqual(errors, []);
+});
+
 test('trips: "Trip plan" copies a plan to leave with someone — route, days, walking time, start link and blanks to fill in', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);

@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — research (owner asked for 3 research days: B of 3)
+
+Looked at: reusing a past trip. Packr lets you duplicate a previous
+trip to reuse its packing list; Packstack treats a trip and its pack as
+one thing, and travel planners (TripIt, Travefy, WeTravel) copy trips
+too. Here the only way was to rebuild the gear list by hand or through
+a loadout. Budget used: 1 search, 0 fetches.
+Changed: a completed trip has a "Plan again" button. It makes a new
+planned trip with the same name, notes, gear list, colour, daily
+distance and planned routes, but not the walked tracks, photos, date or
+packing ticks, opens it, and offers "Set a date" in the message. On
+phones the trip buttons stay a tidy 2×2 block. New e2e test. Service
+worker cache `waypoints-v86`. All tests pass: 63 unit, 68 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — research (owner asked for 3 research days: A of 3)
 
 Looked at: year-on-year stats. HiiKER's public stats pages list hikes,
