@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — polish (owner asked for 4 more polish days: 4 of 4)
+
+Looked at: the "Get started" checklist on the map sidebar (desktop and
+phone). Finished steps were struck through, which made them hard to
+read and look cancelled rather than done, and the heading didn't say
+how far along you were.
+Changed: finished steps keep their green tick and turn grey, without
+the strike-through, and the heading reads "Get started · 2 of 3 done",
+counting only the steps that apply (the sign-in step only where sync is
+set up). The getting-started e2e test checks the count and that done
+steps aren't struck through. Service worker cache `waypoints-v84`. All
+tests pass: 62 unit, 67 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — polish (owner asked for 4 more polish days: 3 of 4)
 
 Looked at: the Trips page with a trip planned far ahead. The countdown

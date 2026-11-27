@@ -462,4 +462,6 @@ function renderGettingStarted(){
     li.querySelector('.gs-go').hidden = done;
   });
   document.getElementById('gsSync').hidden = !CLOUD_SYNC_ENABLED;
+  const shown = steps.filter(([id]) => !document.getElementById(id).hidden);
+  document.getElementById('gsProgress').textContent = '· ' + shown.filter(([, done]) => done).length + ' of ' + shown.length + ' done';
 }

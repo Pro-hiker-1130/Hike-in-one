@@ -1151,9 +1151,14 @@ test('getting started: three steps on a new device, ticked off as they are done,
   assert.ok(await page.isVisible('#gettingStarted'));
   assert.ok(await page.$eval('#gsGear', li => li.classList.contains('is-done')));
   assert.ok(!(await page.$eval('#gsImport', li => li.classList.contains('is-done'))));
+  // The heading counts the steps that apply here (sign-in only when sync is set up).
+  const steps = await page.evaluate(()=> CLOUD_SYNC_ENABLED ? 3 : 2);
+  assert.equal(await text(page, '#gsProgress'), '· 1 of ' + steps + ' done');
+  assert.equal(await page.$eval('#gsGear .gs-text', el => getComputedStyle(el).textDecorationLine), 'none', 'done steps are not struck through');
   await importHikes(page);
   await page.click('.nav-tab[data-page="map"]');
   assert.ok(await page.$eval('#gsImport', li => li.classList.contains('is-done')), 'import ticked off');
+  if(steps === 3) assert.equal(await text(page, '#gsProgress'), '· 2 of 3 done');
   if(await page.isVisible('#gettingStarted')){
     await page.click('#gsDismiss');
     assert.ok(!(await page.isVisible('#gettingStarted')));
