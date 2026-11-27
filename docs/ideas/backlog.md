@@ -75,6 +75,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-27 — Deleting a track from the trip dialog can be undone; toasts show above dialogs (polish)
 - 2026-11-27 — Gear checklists: search box fits, lighter category headers (polish)
 - 2026-11-27 — Shelves view: tidy labels on phones, same column as the list on desktop (polish)
+- 2026-11-27 — Packing progress: visible bar, a finished state with a tick and glow (polish)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)

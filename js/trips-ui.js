@@ -669,6 +669,7 @@ function renderTripGear(trip){
   const done = gearList.filter(g => packed.has(g.id)).length;
   const progress = document.getElementById('tripPackProgress');
   progress.hidden = !(packing || done);
+  progress.classList.toggle('is-complete', !!done && done === gearList.length);
   document.getElementById('tripPackProgressText').textContent = done === gearList.length && done
     ? 'All ' + done + ' items packed' : done + ' of ' + gearList.length + ' packed';
   document.getElementById('tripPackProgressFill').style.width = (gearList.length ? done / gearList.length * 100 : 0) + '%';

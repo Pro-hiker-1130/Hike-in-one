@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — polish (owner asked for 4 more polish days: 2 of 4)
+
+Looked at: packing mode on a 390 px phone. The progress bar's track
+was so pale it was nearly invisible at "0 of 4 packed", and finishing
+looked the same as any other step: the text just said "All 4 items
+packed".
+Changed: the bar is a little thicker (8 px) on a visible track. When
+the last item is ticked, the text turns green with a ✓ and the full
+bar gives one soft glow; unticking an item takes it back. The glow is
+skipped with reduced motion. The packing e2e test ticks everything,
+checks the finished state, and unticks again. Service worker cache
+`waypoints-v82`. All tests pass: 62 unit, 67 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — polish (owner asked for 4 more polish days: 1 of 4)
 
 Looked at: phone (390 px) and desktop (1280 px) screenshots of the map

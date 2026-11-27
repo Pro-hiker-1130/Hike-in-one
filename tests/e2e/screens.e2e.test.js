@@ -287,6 +287,16 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
     'Hut weekend — packing list (Mon 1 Jul 2030)', 'Total 3.1 kg · base 2.4 kg · worn 640 g · consumable —',
     '', 'Backpack', '☑ Exos 58 — 1.2 kg', '', 'Shelter', '☐ Copper Spur HV UL2 — 1.2 kg', '', 'Sleep system', '☐ Revelation 20 — 640 g']);
   assert.deepEqual(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_pack').packedIds), ['g1']);
+  // Ticking the rest finishes it: green with a tick, then untick one to go back.
+  assert.equal(await page.locator('#tripPackProgress.is-complete').count(), 0);
+  await page.click('#tripGearSummaryList .pack-row >> text=Copper Spur HV UL2');
+  await page.click('#tripGearSummaryList .pack-row >> text=Revelation 20');
+  assert.equal(await text(page, '#tripPackProgressText'), 'All 3 items packed');
+  assert.equal(await page.locator('#tripPackProgress.is-complete').count(), 1);
+  assert.equal(await page.$eval('#tripPackProgressText', el => getComputedStyle(el, '::before').content), '"✓\u00a0"');
+  await page.click('#tripGearSummaryList .pack-row >> text=Copper Spur HV UL2');
+  await page.click('#tripGearSummaryList .pack-row >> text=Revelation 20');
+  assert.equal(await page.locator('#tripPackProgress.is-complete').count(), 0);
   // Done packing: back to the plain list, the tick and progress stay.
   await page.click('#tripPackBtn');
   assert.equal(await page.locator('#tripGearSummaryList .pack-row').count(), 0);

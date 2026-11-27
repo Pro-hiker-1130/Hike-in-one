@@ -915,7 +915,12 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 /* Packing mode: big tap rows with a round tick, and a progress bar. */
 .pack-progress{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-size:13px;color:var(--muted);}
 .pack-progress[hidden]{display:none;}
-.pack-progress-bar{flex:1;height:6px;border-radius:3px;background:var(--sage-soft);overflow:hidden;}
+.pack-progress-bar{flex:1;height:8px;border-radius:4px;background:rgba(52,78,65,0.12);overflow:hidden;}
+/* Everything packed: green text with a tick, and one soft glow on the full bar. */
+.pack-progress.is-complete .pack-progress-text{color:var(--fern);font-weight:600;}
+.pack-progress.is-complete .pack-progress-text::before{content:"\2713\00a0";}
+.pack-progress.is-complete .pack-progress-bar{animation:pack-done .9s ease-out .2s;}
+@keyframes pack-done{0%{box-shadow:0 0 0 0 rgba(88,129,87,0.45);}100%{box-shadow:0 0 0 8px rgba(88,129,87,0);}}
 .pack-progress-bar span{display:block;height:100%;width:0;background:var(--fern);border-radius:3px;transition:width .2s ease-out;}
 .pack-row{width:100%;color:inherit;min-height:52px;font:inherit;text-align:left;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:6px;}
 .pack-row:focus-visible{outline:2px solid var(--fern);outline-offset:2px;}
@@ -931,6 +936,7 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .pack-row.just-packed{animation:pack-glow 300ms ease-out;}
 @media (prefers-reduced-motion: reduce){
   .pack-progress-bar span,.pack-check{transition:none;}
+  .pack-progress.is-complete .pack-progress-bar{animation:none;}
   .just-packed .pack-check,.pack-row.just-packed{animation:none;}
 }
 
