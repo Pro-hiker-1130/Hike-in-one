@@ -3,6 +3,20 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — polish (owner asked for 4 polish days: 4 of 4)
+
+Looked at: the two dialogs that list your gear to tick (a trip's "Edit
+gear" and "New loadout") on a 390 px phone. In "New loadout" the search
+box ran past the list's right edge: the dialog's general rule for form
+inputs (full width) beat the search box's own width, leaving its side
+margins hanging out. In both, the category headers were heavy khaki
+bars.
+Changed: the search box keeps its own width in both dialogs, and the
+category headers use the light page tone with a thin line above and
+below. CSS only. Service worker cache `waypoints-v80`. All tests pass:
+62 unit, 67 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — polish (owner asked for 4 polish days: 3 of 4)
 
 Looked at: the new/edit trip dialog's "Tracks in this trip" list. Each
