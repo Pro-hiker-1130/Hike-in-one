@@ -151,6 +151,8 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   assert.match(await text(page, '#yearReviewText'), /^1 walk on 1 day · 7\.3 km · 300 m up/);
   assert.equal(await page.$eval('#yearReviewText', el => getComputedStyle(el).animationName), 'year-review-swap');
   await page.selectOption('#yearReviewSelect', '2025');
+  // ...and a year with one before it is set against that year.
+  assert.match(await text(page, '#yearReviewText'), /vs 2024: \+\d+\.\d km · \+600 m up · \+1 walk$/);
   await page.evaluate(()=>{ tracks.pop(); yearReviewYear = null; renderStats(); });
   // A hike in focus gets km markers once zoomed in; none without focus.
   const kmShown = () => page.locator('#map .km-marker').count();

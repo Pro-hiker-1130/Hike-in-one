@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — research (owner asked for 3 research days: A of 3)
+
+Looked at: year-on-year stats. HiiKER's public stats pages list hikes,
+distance, climb and time per year, and their current-year rows are
+"so far", which makes a straight comparison with last year misleading.
+Budget used: 1 search, 0 fetches.
+Changed: the map's Year in review adds a line against the year before,
+e.g. "vs 2025 by 27 Nov: +4.6 km · −200 m up · +1 walk". For the year
+we're in, both years count only up to today's date; a past year is set
+against the whole year before. No line when the year before has no
+walks. `TrackCore.yearCompare` has a unit test; the map overview e2e
+test checks the line. Service worker cache `waypoints-v85`. All tests
+pass: 63 unit, 67 e2e.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — polish (owner asked for 4 more polish days: 4 of 4)
 
 Looked at: the "Get started" checklist on the map sidebar (desktop and

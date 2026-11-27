@@ -348,6 +348,15 @@ function renderYearReview(){
       (s.highest ? ' · Highest: ' + s.highest.eleM.toLocaleString('en-US') + ' m on ' + s.highest.name : '') +
       ' · Busiest month: ' + MONTHS_LONG[s.busiestMonth],
   ];
+  // Against the year before (for this year, up to the same date).
+  const today = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0, 10);
+  const c = TrackCore.yearCompare(tracks.filter(t => !t.planned), yearReviewYear, today);
+  if(c){
+    const sign = (v, txt) => (v > 0 ? '+' : v < 0 ? '−' : '±') + txt(Math.abs(v));
+    lines.push('vs ' + c.prevYear + (c.toDate ? ' by ' + DATE_DAY_MONTH.format(new Date(today + 'T00:00:00Z')) : '') + ': ' +
+      sign(c.dKm, v => v.toFixed(1) + ' km') + ' · ' + sign(c.dGainM, v => compactNumber(v) + ' m up') + ' · ' +
+      sign(c.dCount, v => v + ' walk' + (v === 1 ? '' : 's')));
+  }
   renderPersonalBests();
   const text = document.getElementById('yearReviewText');
   text.innerHTML = '';

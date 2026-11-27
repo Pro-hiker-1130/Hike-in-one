@@ -615,10 +615,25 @@
     return maxTempC < 15 ? 0.4 : maxTempC < 25 ? 0.5 : maxTempC < 30 ? 0.65 : 0.8;
   }
 
+  // A year against the one before: walks, km and climb, as differences.
+  // For the year we're in (todayIso), both years count only up to today's
+  // date, so a half-done year isn't set against a whole one. Null when the
+  // year before has no walks.
+  function yearCompare(list, year, todayIso){
+    const prev = String(Number(year) - 1);
+    const cut = String(todayIso || '').slice(0, 4) === String(year) ? String(todayIso).slice(5, 10) : null;
+    const ts = cut ? (list || []).filter(t => t.date && String(t.date).slice(5, 10) <= cut) : list;
+    const b = yearSummary(ts, prev);
+    if(!b) return null;
+    const a = yearSummary(ts, year) || { count: 0, distanceKm: 0, gainM: 0 };
+    return { prevYear: prev, toDate: cut, dCount: a.count - b.count,
+      dKm: Math.round((a.distanceKm - b.distanceKm) * 10) / 10, dGainM: a.gainM - b.gainM };
+  }
+
   return {
     MAX_POINTS, MAX_PROFILE_POINTS, ELE_THRESHOLD_M,
     haversine, sampleIndices, elevationStats, cumulativeKm, profileEleAt,
     trackSeries, buildTrack, trim, split, merge, toGpx, gpxFileName, joinTracks, sliceKm,
-    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint, gradeBreakdown, pointAtKm, onThisDay, latestStart, waterLitresPerHour,
+    densifyLine, joinSegments, parseBrouter, estimateHikingSec, sunTimes, terrainSummary, splitDays, yearSummary, personalPace, difficulty, DIFFICULTY_LEVELS, kmMarkers, personalBests, highestPoint, gradeBreakdown, pointAtKm, onThisDay, latestStart, waterLitresPerHour, yearCompare,
   };
 });
