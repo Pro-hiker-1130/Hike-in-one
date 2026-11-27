@@ -295,6 +295,29 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
   assert.deepEqual(errors, []);
 });
 
+test('trips: × in the trip dialog deletes a track from the app, and Undo brings it back into its trips', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    tracks.push({ id: 't_a', name: 'Ridge walk', distanceKm: 8, points: [[46, 7.5], [46.05, 7.5]] },
+      { id: 't_b', name: 'Lake loop', distanceKm: 5, points: [[46.1, 7.5], [46.12, 7.5]] });
+    trips.push({ id: 'tr_u', name: 'Two walks', trackIds: ['t_a', 't_b'], gearIds: [], status: 'completed', date: '2026-05-01', createdAt: 1 });
+    await saveTracks(); await saveTrips();
+    openTripModal('tr_u');
+  });
+  await page.waitForSelector('#tripModalOverlay', { state: 'visible' });
+  assert.equal(await page.getAttribute('#tripTrackPicker .trip-gear-row:has-text("Ridge walk") .track-remove', 'aria-label'), 'Delete Ridge walk from the app');
+  await page.click('#tripTrackPicker .trip-gear-row:has-text("Ridge walk") .track-remove');
+  await page.waitForSelector('#globalToast:not([hidden]) .toast-action');
+  assert.match(await text(page, '#globalToast'), /^Deleted “Ridge walk” from the app\.Undo$/);
+  assert.deepEqual(await page.evaluate(()=> [tracks.map(x => x.id), trips.find(x => x.id === 'tr_u').trackIds]), [['t_b'], ['t_b']]);
+  await page.click('#globalToast .toast-action');
+  await page.waitForFunction(()=> tracks.length === 2);
+  assert.deepEqual(await page.evaluate(()=> [tracks.map(x => x.id), trips.find(x => x.id === 'tr_u').trackIds]), [['t_a', 't_b'], ['t_a', 't_b']], 'back in place');
+  assert.ok(await page.isChecked('#tripTrackPicker input[data-id="t_a"]'), 'still ticked for this trip');
+  assert.deepEqual(errors, []);
+});
+
 test('trips: a planned route splits into days of about the chosen distance', { skip: !playwright }, async t=>{
   const { page, errors } = await launch(t);
   await page.click('.nav-tab[data-page="trips"]');

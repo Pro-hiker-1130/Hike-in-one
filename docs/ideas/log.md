@@ -3,6 +3,23 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — polish (owner asked for 4 polish days: 3 of 4)
+
+Looked at: the new/edit trip dialog's "Tracks in this trip" list. Each
+row has a checkbox and a bare "×", which reads like "take it off this
+trip" but deleted the track from the whole app (every trip, the map and
+the totals) at once, with no way back. Testing an Undo also showed that
+every toast sat behind open dialogs (layer 950 against 1000), so a
+message shown from inside a dialog couldn't be seen or tapped.
+Changed: the × now says what it does ("Delete Ridge walk from the app";
+tooltip "Delete this track from the app (all trips)"), and deleting
+shows "Deleted “Ridge walk” from the app." with Undo for 8 s, which
+puts the track back in its place, in every trip it was in, and ticked
+again if it was ticked. Toasts now show above dialogs. New e2e test.
+Service worker cache `waypoints-v79`. All tests pass: 62 unit, 67 e2e.
+Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — polish (owner asked for 4 polish days: 2 of 4)
 
 Looked at: the "Import activities" dialog on a 390 px phone. Its three

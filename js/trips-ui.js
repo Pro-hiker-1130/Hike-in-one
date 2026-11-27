@@ -955,10 +955,15 @@ function renderTripTrackPicker(checkedIds){
         '<span class="trip-gear-row-name">'+escapeHtml(t.name)+'<span class="trip-gear-row-cat">'+(t.date?escapeHtml(friendlyDate(t.date)):'')+'</span></span>'+
       '</label>'+
       '<span class="trip-gear-row-weight">'+t.distanceKm.toFixed(1)+' km</span>'+
-      '<button type="button" class="track-remove" title="Delete track" aria-label="Delete track">&times;</button>';
+      '<button type="button" class="track-remove" title="Delete this track from the app (all trips)">&times;</button>';
+    row.querySelector('.track-remove').setAttribute('aria-label', 'Delete ' + t.name + ' from the app');
     row.querySelector('.track-remove').addEventListener('click', async (e)=>{
       e.preventDefault(); e.stopPropagation();
       const id = t.id;
+      // This deletes the track everywhere, not just from this trip, so it can be undone.
+      const index = tracks.findIndex(x => x.id === id);
+      const inTrips = trips.filter(tr => (tr.trackIds||[]).includes(id)).map(tr => [tr, tr.trackIds.indexOf(id)]);
+      const wasChecked = currentPickerChecked().has(id);
       const stillChecked = currentPickerChecked();
       stillChecked.delete(id);
       tracks = tracks.filter(x=>x.id!==id);
@@ -967,6 +972,23 @@ function renderTripTrackPicker(checkedIds){
       await saveTrips();
       renderTripTrackPicker(stillChecked);
       renderStats();
+      showGlobalToast('Deleted \u201c' + t.name + '\u201d from the app.', false, { label: 'Undo', fn: async ()=>{
+        if(tracks.some(x => x.id === id)) return;
+        tracks.splice(Math.min(index, tracks.length), 0, t);
+        inTrips.forEach(([tr, i]) => { if(!tr.trackIds.includes(id)) tr.trackIds.splice(Math.min(i, tr.trackIds.length), 0, id); });
+        await saveTracks();
+        await saveTrips();
+        if(document.getElementById('tripModalOverlay').style.display === 'flex'){
+          const checked = currentPickerChecked();
+          if(wasChecked) checked.add(id);
+          renderTripTrackPicker(checked);
+        } else {
+          renderTripCards();
+          if(currentTripId) renderTripDetail();
+        }
+        renderTracks();
+        renderStats();
+      } });
     });
     picker.appendChild(row);
   });

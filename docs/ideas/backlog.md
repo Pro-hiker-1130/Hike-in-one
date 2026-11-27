@@ -72,6 +72,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-27 — Steepest climb shaded on elevation profiles (research)
 - 2026-11-27 — Trip page in a readable column on desktop (polish)
 - 2026-11-27 — Import how-to sections as light cards with a chevron (polish)
+- 2026-11-27 — Deleting a track from the trip dialog can be undone; toasts show above dialogs (polish)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)

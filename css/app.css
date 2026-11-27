@@ -526,7 +526,7 @@ select:focus-visible, textarea:focus-visible{
 .chart-tooltip span{color:var(--muted);}
 
 .global-toast{
-  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:950;
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1200;
   border:1px solid var(--line);border-radius:7px;
   padding:11px 18px;font-size:13px;
   max-width:min(90vw,380px);text-align:center;transition:opacity .25s ease;
