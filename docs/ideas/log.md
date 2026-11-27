@@ -3,6 +3,19 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — polish (owner asked for 4 polish days: 2 of 4)
+
+Looked at: the "Import activities" dialog on a 390 px phone. Its three
+how-to sections ("Getting your whole Strava history" and so on) were
+heavy khaki bars with the browser's small ▶ markers, unlike every other
+expandable section in the app.
+Changed: they are now light cards with a thin border and the same
+turning chevron as "More details" in the gear form; the title turns
+orange on hover. The chevron turns without animation when reduced
+motion is on. CSS only. Service worker cache `waypoints-v78`. All tests
+pass: 62 unit, 66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — polish (owner asked for 4 polish days: 1 of 4)
 
 Looked at: phone (390 px) and desktop (1280 px) screenshots of the map,

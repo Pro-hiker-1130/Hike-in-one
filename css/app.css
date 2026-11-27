@@ -708,8 +708,15 @@ select:focus-visible, textarea:focus-visible{
 .import-step{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .import-dropzone{padding:28px 18px;align-items:center;text-align:center;gap:4px;}
 .import-privacy{font-size:11.5px;color:var(--muted);margin:0;}
-.import-help{background:var(--panel-alt);border-radius:6px;padding:10px 14px;font-size:12.5px;line-height:1.5;}
-.import-help summary{cursor:pointer;color:var(--parchment);font-weight:500;}
+/* How-to sections: light cards with the same turning chevron as "More details". */
+.import-help{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 14px;font-size:12.5px;line-height:1.5;}
+.import-help summary{display:flex;align-items:center;gap:10px;padding:11px 0;cursor:pointer;list-style:none;color:var(--parchment);font-weight:500;font-size:13px;}
+.import-help summary::-webkit-details-marker{display:none;}
+.import-help summary::before{content:'';flex:none;width:7px;height:7px;border-right:2px solid var(--brass);border-bottom:2px solid var(--brass);transform:rotate(-45deg);transition:transform .15s ease;}
+.import-help[open] summary::before{transform:rotate(45deg);}
+.import-help[open]{padding-bottom:10px;}
+.import-help summary:hover{color:var(--brass);}
+@media (prefers-reduced-motion: reduce){.import-help summary::before{transition:none;}}
 .import-help ol{margin:8px 0 6px;padding-left:20px;}
 .import-help p{margin:6px 0 0;color:var(--muted);}
 .import-help b{color:var(--parchment);font-weight:500;}
