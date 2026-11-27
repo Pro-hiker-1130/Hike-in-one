@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — research (owner asked for 3 research days: C of 3)
+
+Looked at: trip recaps. Trailfold's recap shows time alongside
+distance and climb, and AlpineQuest separates moving time from total
+time. A trip page here showed tracks, km and metres climbed, but not
+how long you were out. Budget used: 1 search, 0 fetches.
+Changed: a trip with walked hikes gets a "Time out" stat card, e.g.
+"4 h 10": the hikes' total time, stops included (the app keeps total
+time, not moving time; the card's tooltip says so). Planned routes
+don't count, and the card is hidden when no hike has a time. On phones
+the stat cards now make a neat 3×2 grid. The trips e2e tests check it
+on a walked trip and that a planned trip has none. Service worker cache
+`waypoints-v87`. All tests pass: 63 unit, 68 e2e.
+For the owner: moving time (without stops) would need the GPS points'
+timestamps kept per hike; say if you'd like that later.
+
 ## 2026-11-27 — research (owner asked for 3 research days: B of 3)
 
 Looked at: reusing a past trip. Packr lets you duplicate a previous

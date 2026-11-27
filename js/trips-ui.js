@@ -170,6 +170,12 @@ function renderTripDetail(){
   const climbTracks = tripCountedTracks(trip).filter(t => t.elevationGainM != null);
   document.getElementById('tripStatClimb').textContent = climbTracks.length
     ? climbTracks.reduce((s,t)=>s+t.elevationGainM, 0).toLocaleString('en-US') : '—';
+  // Time out: the walked hikes' total time (stops included), in hours.
+  const outSec = tks.filter(t => !t.planned && t.durationSec > 0).reduce((s, t) => s + t.durationSec, 0);
+  document.getElementById('tripStatTimeCard').hidden = !outSec;
+  const outMin = Math.round(outSec / 60);
+  document.getElementById('tripStatTime').textContent = outMin >= 60
+    ? Math.floor(outMin / 60) + ' h ' + String(outMin % 60).padStart(2, '0') : outMin + ' min';
   document.getElementById('tripStatGearCount').textContent = gearList.length;
   document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
 

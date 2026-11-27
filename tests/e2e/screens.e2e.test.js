@@ -239,6 +239,9 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
     return [first, document.querySelectorAll('#tripTrackList svg.ele-draw-in').length];
   });
   assert.deepEqual(sweeps, [1, 0]);
+  // A walked trip shows its time out (the test hikes take 39 min each).
+  assert.ok(await page.isVisible('#tripStatTimeCard'));
+  assert.match(await text(page, '#tripStatTime'), /^(39 min|1 h 18)$/);
   // Each walked track says how steep it gets (the test hikes climb steadily north).
   assert.match(await text(page, '#tripTrackList .track-terrain'), /^Steepest climb \d+ % at km \d+\.\d · top [\d,]+ m/);
   // The profile shades that climb when it's 6 % or more, with the same grade.
@@ -587,6 +590,7 @@ test('trips: "Plan again" on a completed trip starts a planned copy with the sam
     date: null, status: 'planned', createdAt: 0, color: '#6A4C93', dailyKm: 12 });
   assert.equal(await text(page, '#tripDetailStatusBadge'), 'Planned');
   assert.ok(await page.isHidden('#tripPlanAgainBtn'), 'only on completed trips');
+  assert.ok(await page.isHidden('#tripStatTimeCard'), 'no walked time on a planned trip');
   await page.click('#globalToast .toast-action');
   await page.waitForSelector('#tripModalOverlay', { state: 'visible' });
   assert.equal(await page.inputValue('#tripDate'), '');
