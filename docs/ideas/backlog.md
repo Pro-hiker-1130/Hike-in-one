@@ -69,6 +69,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-26 — Route planner: no empty gap before a route, hint clear of the map credits (polish)
 - 2026-11-26 — Empty sections as compact dashed placeholders (polish)
 - 2026-11-26 — Catalog shows placeholder rows while it loads (polish)
+- 2026-11-27 — Steepest climb shaded on elevation profiles (research)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)

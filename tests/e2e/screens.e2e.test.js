@@ -231,6 +231,14 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
   assert.deepEqual(sweeps, [1, 0]);
   // Each walked track says how steep it gets (the test hikes climb steadily north).
   assert.match(await text(page, '#tripTrackList .track-terrain'), /^Steepest climb \d+ % at km \d+\.\d · top [\d,]+ m/);
+  // The profile shades that climb when it's 6 % or more, with the same grade.
+  const steep = await page.evaluate(()=>{
+    const pct = +/^Steepest climb (\d+) %/.exec(document.querySelector('#tripTrackList .track-terrain').textContent)[1];
+    const band = document.querySelector('#tripTrackList .ele-steep');
+    return { pct, band: band ? band.textContent : null };
+  });
+  assert.ok(steep.pct >= 6, 'the test hikes climb 7–14 %');
+  assert.equal(steep.band, steep.pct + ' %');
   // ...and how its distance splits between up, down and flat (the test hikes only climb).
   assert.match(await page.$eval('#tripTrackList .track-terrain + .track-terrain', el => el.textContent), /^\d+\.\d km up( · \d+\.\d km flat)?$/);
   assert.deepEqual(errors, []);
@@ -310,6 +318,8 @@ test('trips: a planned route splits into days of about the chosen distance', { s
   // The profile marks where day 2 starts.
   assert.deepEqual(await page.$$eval('#tripTrackList .ele-day-mark', els => els.map(e => [e.textContent, e.style.left])), [['Day 2', '46.88%']]);
   assert.match(await page.getAttribute('#tripTrackList .ele-profile', 'aria-label'), / Day 2 starts at 15\.0 km\. /);
+  // The steepest climb (500 m up in the first 10 km: 5 %) is under the 6 % mark, so no band.
+  assert.equal(await page.locator('#tripTrackList .ele-steep').count(), 0);
   // ...and for the longest day once it is.
   assert.equal(await text(page, '#tripWaterPlan'), 'Water: about 2.5 L on the longest day (4 h 35 min of walking) — up to 4.5 L in heat or on hard climbs. Plan where to refill.');
   // Food for those days, against the food packed.

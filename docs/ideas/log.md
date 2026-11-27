@@ -3,6 +3,24 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — research
+
+Looked at: how planners show steep ground on an elevation profile.
+AllTrails shades its profile by grade (from 6 %, red from 11 %),
+Footpath and PeakVisor colour slopes along the route, and Plotaroute
+marks the steepest part of a selection. Budget used: 1 search,
+0 fetches.
+Changed: every elevation profile (trip pages, route planner) now shades
+the steepest half-kilometre of climbing with a soft orange band and its
+grade ("14 %"), when it's 6 % or more. It's the same climb the line
+above already names ("Steepest climb 14 % at km 2.3"), and it's added
+to the profile's screen-reader label. Gentler walks show no band. The
+trips e2e tests check the band matches the text, and that a 5 % route
+gets none. Service worker cache `waypoints-v76`. All tests pass:
+62 unit, 66 e2e.
+For the owner: the 6 % threshold follows AllTrails' first warning
+colour; say if you'd like it higher.
+
 ## 2026-11-26 — polish (owner asked for 4 polish days: 4 of 4)
 
 Looked at: the "Add gear" catalog dialog while it loads. Its list area
