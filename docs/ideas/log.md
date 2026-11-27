@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — polish (owner asked for 4 polish days: 1 of 4)
+
+Looked at: phone (390 px) and desktop (1280 px) screenshots of the map,
+a trip page, the new-trip dialog and the import dialog, to pick this
+run's four fixes. On desktop a trip page ran the full window width, so
+gear rows had the item name at one edge and its weight 1,200 px away,
+and the profile was a thin strip.
+Changed: on wide screens a trip page reads in a 1,000 px column: stats,
+tracks, gear, photos and the rest stop at the same right edge, and the
+header's buttons end there too (its divider line still spans the
+window). Phones are unchanged. CSS only. Service worker cache
+`waypoints-v77`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — research
 
 Looked at: how planners show steep ground on an elevation profile.

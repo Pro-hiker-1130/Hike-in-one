@@ -156,6 +156,9 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%;ov
 .trip-card-notes{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .trip-card-meta{font-size:12px;color:var(--muted);}
 .trip-detail-section{padding:4px 24px 20px;}
+/* On wide screens a trip reads in a column (1000 px plus padding), not across the whole window. */
+#tripDetailView > :not(.gear-toolbar){max-width:1048px;}
+#tripDetailView > .gear-toolbar{padding-right:max(24px, calc(100% - 1024px));}
 .trip-detail-section .breakdown-card{margin:0;}
 .trip-detail-section-head{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px;}
 .trip-track-row{
