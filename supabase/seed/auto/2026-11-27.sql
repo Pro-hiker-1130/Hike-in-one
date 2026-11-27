@@ -1,0 +1,6 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('MSR', 'Carbon Reflex 2', 'Original version', 'Shelter', 840, '{"capacity_persons": 2}', 'Ultralight two-person tent. Listed weight is the minimum trail weight (tent body, fly and poles, no stakes or bags); a newer version is lighter.', 'https://www.altitude-sports.com/products/msr-carbon-reflex-2-ultralight-tent-llll-msr-05837', 'seed'),
+('Nemo', 'Hornet Elite OSMO 2P', null, 'Shelter', 779, '{"capacity_persons": 2}', 'Ultralight two-person tent. Listed weight is the minimum trail weight, without stakes or stuff sacks; packed weight is about 935 g.', 'https://equipoutdoors.co.nz/nemo-hornet-elite-osmo-2p', 'seed'),
+('Sea to Summit', 'Alto TR2', null, 'Shelter', 1155, '{"capacity_persons": 2}', 'Semi-freestanding two-person tent. Listed weight is the minimum trail weight; retailers that count the full package list about 1.34 kg.', 'https://wildbounds.com/products/alto-tr2-green', 'seed'),
+('Zpacks', 'Hexamid Pocket Tarp', 'Standard', 'Shelter', 157, '{"capacity_persons": 1}', 'Minimal Dyneema tarp shelter. Listed weight is the brand figure of 157 g including guylines and stuff sack; the version with doors is about 172 g.', 'https://zpacks.com/products/hexamid-pocket-tarp-w-doors', 'seed')
+on conflict (normalized_key) do nothing;

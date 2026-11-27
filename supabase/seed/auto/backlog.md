@@ -142,3 +142,5 @@ pin down to "Skipped" with a reason.
 - Backpacker's Pantry Chicken Tikka Masala: no weight found.
 - Petzl Swift RL: listed weights differ by version (92, 100 and 110 g).
 - Sawyer Mini: filter-alone figure of about 57 g conflicts with Sawyer's own 140 g page, which does not say what it covers.
+- Big Agnes Tiger Wall UL2: weights differ by version (standard, mtnGLO, bikepack) and by trail versus packed weight.
+- Tarptent Aeon Li: body weight (448 g) and full kit weight (543 g) differ and no brand page was found.
