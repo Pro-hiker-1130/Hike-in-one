@@ -3,6 +3,21 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — polish (owner asked for 4 more polish days: 1 of 4)
+
+Looked at: phone (390 px) and desktop (1280 px) screenshots of the map
+sidebar with hikes, the Gear Room's Shelves view, packing mode and the
+photos section, to pick this run's four fixes. On phones the Shelves
+labels broke inside the weight ("1 owned · 1.2 / kg", "400 / g"). On
+desktop the shelves ran the whole window while the List/Shelves switch
+above them stopped at the list's 820 px column.
+Changed: on phones each label is two tidy lines ("1 owned" / "1.2 kg");
+on desktop it stays on one line and never breaks inside the weight. The
+shelves scene now uses the same 820 px column as the list view. Service
+worker cache `waypoints-v81`. All tests pass: 62 unit, 67 e2e. Budget
+used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — polish (owner asked for 4 polish days: 4 of 4)
 
 Looked at: the two dialogs that list your gear to tick (a trip's "Edit
