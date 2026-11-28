@@ -481,7 +481,7 @@ function renderGarage(){
       labelEl.className = 'bench-label';
       labelEl.innerHTML =
         '<span class="scene-item-name">'+escapeHtml(cat)+'</span>'+
-        '<span class="scene-item-count">'+count+' owned'+(weight?' · '+formatWeight(weight):'')+'</span>';
+        '<span class="scene-item-count">'+count+' owned'+(weight?'<span class="scene-sep"> · </span><span class="scene-item-weight">'+formatWeight(weight)+'</span>':'')+'</span>';
       wrap.appendChild(labelEl);
 
       bandEl.appendChild(wrap);
@@ -509,7 +509,7 @@ function renderGarage(){
         (band.type === 'hook' ? '<div class="hook-peg"></div><div class="hook-strap"></div>' : '') +
         '<div class="scene-item-icon">'+(GEAR_ICONS[cat]||GEAR_ICONS.Other)+'</div>'+
         '<div class="scene-item-name">'+escapeHtml(cat)+'</div>'+
-        '<div class="scene-item-count">'+count+' owned'+(weight?' · '+formatWeight(weight):'')+'</div>';
+        '<div class="scene-item-count">'+count+' owned'+(weight?'<span class="scene-sep"> · </span><span class="scene-item-weight">'+formatWeight(weight)+'</span>':'')+'</div>';
       item.addEventListener('click', ()=> showCategory(cat));
       row.appendChild(item);
     });

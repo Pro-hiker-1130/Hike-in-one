@@ -156,6 +156,9 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%;ov
 .trip-card-notes{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .trip-card-meta{font-size:12px;color:var(--muted);}
 .trip-detail-section{padding:4px 24px 20px;}
+/* On wide screens a trip reads in a column (1000 px plus padding), not across the whole window. */
+#tripDetailView > :not(.gear-toolbar){max-width:1048px;}
+#tripDetailView > .gear-toolbar{padding-right:max(24px, calc(100% - 1024px));}
 .trip-detail-section .breakdown-card{margin:0;}
 .trip-detail-section-head{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px;}
 .trip-track-row{
@@ -226,6 +229,9 @@ select:focus-visible, textarea:focus-visible{
   .gear-grid{grid-template-columns:1fr;}
   .gear-scene{margin:12px 12px 16px;padding:16px 12px 0;gap:22px;}
   .scene-item{min-width:64px;padding:6px 4px;}
+  /* Count and weight on two tidy lines instead of breaking inside "1.2 kg". */
+  .scene-sep{display:none;}
+  .scene-item-weight{display:block;}
   .scene-item-icon{width:32px;height:32px;}
   .bench-boot-icon{width:34px;height:34px;}
 }
@@ -314,6 +320,9 @@ select:focus-visible, textarea:focus-visible{
 .ele-axis-min{top:74px;}
 .ele-axis-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;}
 .ele-cursor{position:absolute;top:0;bottom:0;width:1px;margin-left:-0.5px;pointer-events:none;}
+/* The steepest climb: a soft band behind the line, its grade on top. */
+.ele-steep{position:absolute;top:0;bottom:0;background:rgba(196,80,28,0.12);border-radius:3px;pointer-events:none;}
+.ele-steep span{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:10px;line-height:1;font-weight:600;color:#A2410F;white-space:nowrap;}
 .ele-day-mark{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed var(--muted);opacity:0.7;pointer-events:none;}
 .ele-day-mark span{position:absolute;top:-2px;left:3px;font-size:10px;line-height:1;color:var(--muted);white-space:nowrap;}
 .ele-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--ele-color, var(--brass));box-shadow:0 0 0 2px var(--panel);pointer-events:none;}
@@ -340,6 +349,14 @@ select:focus-visible, textarea:focus-visible{
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 48' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 42 30 12l12 14 10-10 40 26'/%3E%3Cpath d='M25 18l5-6 5 6'/%3E%3Cpath d='M30 42c4-6 12-7 18-9s10-6 16-6' stroke-dasharray='1 5'/%3E%3Ccircle cx='76' cy='10' r='5'/%3E%3C/svg%3E") center/contain no-repeat;
 }
 .empty-hint::before{width:72px;height:36px;margin-bottom:8px;}
+/* An empty section (not a whole empty page): a compact dashed placeholder on the cards' edge. */
+#loadoutsEmpty,#tripPlannedEmpty,#tripCompletedEmpty{
+  margin:6px 24px 10px;padding:14px 16px;max-width:820px;flex:none;
+  border:1px dashed var(--line);border-radius:12px;
+}
+#loadoutsEmpty::before,#tripPlannedEmpty::before,#tripCompletedEmpty::before{width:64px;height:32px;margin-bottom:6px;}
+@media (max-width:760px){ #loadoutsEmpty,#tripPlannedEmpty,#tripCompletedEmpty{margin-left:12px;margin-right:12px;} }
+#tripPlannedGrid:empty,#loadoutCardsGrid:empty{display:none;}
 
 /* ---- Garage (gear category chooser) ---- */
 .garage-view{flex:1;display:flex;flex-direction:column;overflow-y:auto;width:100%;}
@@ -359,6 +376,7 @@ select:focus-visible, textarea:focus-visible{
 .gear-scene{
   flex:none;position:relative;display:flex;flex-direction:column;gap:32px;
   margin:18px 24px 24px;padding:22px 24px 0;overflow:hidden;border-radius:10px;
+  max-width:820px;   /* the same column as the list view and its List/Shelves switch */
 }
 .gear-scene::after{
   content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;
@@ -382,6 +400,7 @@ select:focus-visible, textarea:focus-visible{
 .scene-item-icon svg{width:100%;height:100%;filter:drop-shadow(0 5px 4px rgba(0,0,0,0.55));}
 .scene-item-name{color:var(--parchment);text-align:center;line-height:1.2;}
 .scene-item-count{color:var(--muted);text-align:center;}
+.scene-item-weight{white-space:nowrap;}
 /* a faint grounded shadow so items feel like they're resting/hanging, not floating */
 .scene-item-icon::after, .bench-boot-icon::after{
   content:'';position:absolute;left:50%;bottom:-3px;transform:translateX(-50%);
@@ -458,6 +477,8 @@ select:focus-visible, textarea:focus-visible{
 
 .garage-header .ghost-btn{align-self:flex-start;}
 .section-subhead{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 8px;flex:none;}
+/* Headings over the Gear Room's capped panels end where the panel does (820 px + 24 px each side). */
+.gear-view-head,.section-subhead:has(+ .breakdown-card){max-width:868px;}
 .mini-select{
   background:var(--panel-alt);border:1px solid var(--line);color:var(--parchment);
   font-size:12.5px;padding:7px 10px;border-radius:5px;
@@ -465,8 +486,8 @@ select:focus-visible, textarea:focus-visible{
 
 /* ---- Gear breakdown chart (donut + legend + table) ---- */
 .breakdown-card{
-  flex:none;margin:0 24px 24px;padding:20px;border-radius:10px;
-  background:var(--panel-alt);border:1px solid var(--line);
+  flex:none;margin:0 24px 24px;padding:20px;border-radius:12px;max-width:820px;
+  background:var(--panel);border:1px solid var(--line);
 }
 .breakdown-body{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
 .donut-wrap{flex:none;width:150px;height:150px;position:relative;}
@@ -478,7 +499,7 @@ select:focus-visible, textarea:focus-visible{
   font-family:var(--font-display);font-size:17px;font-weight:600;fill:var(--parchment);
 }
 .donut-center-label{font-size:9.5px;fill:var(--muted);letter-spacing:0.02em;}
-.breakdown-legend{flex:1;min-width:180px;display:flex;flex-direction:column;gap:9px;}
+.breakdown-legend{flex:1;min-width:180px;max-width:420px;display:flex;flex-direction:column;gap:9px;}
 .legend-row{
   display:flex;align-items:center;gap:9px;font-size:12.5px;cursor:pointer;
   padding:3px 4px;border-radius:4px;transition:background .12s ease,opacity .12s ease;
@@ -510,7 +531,7 @@ select:focus-visible, textarea:focus-visible{
 .chart-tooltip span{color:var(--muted);}
 
 .global-toast{
-  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:950;
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1200;
   border:1px solid var(--line);border-radius:7px;
   padding:11px 18px;font-size:13px;
   max-width:min(90vw,380px);text-align:center;transition:opacity .25s ease;
@@ -692,8 +713,15 @@ select:focus-visible, textarea:focus-visible{
 .import-step{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
 .import-dropzone{padding:28px 18px;align-items:center;text-align:center;gap:4px;}
 .import-privacy{font-size:11.5px;color:var(--muted);margin:0;}
-.import-help{background:var(--panel-alt);border-radius:6px;padding:10px 14px;font-size:12.5px;line-height:1.5;}
-.import-help summary{cursor:pointer;color:var(--parchment);font-weight:500;}
+/* How-to sections: light cards with the same turning chevron as "More details". */
+.import-help{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 14px;font-size:12.5px;line-height:1.5;}
+.import-help summary{display:flex;align-items:center;gap:10px;padding:11px 0;cursor:pointer;list-style:none;color:var(--parchment);font-weight:500;font-size:13px;}
+.import-help summary::-webkit-details-marker{display:none;}
+.import-help summary::before{content:'';flex:none;width:7px;height:7px;border-right:2px solid var(--brass);border-bottom:2px solid var(--brass);transform:rotate(-45deg);transition:transform .15s ease;}
+.import-help[open] summary::before{transform:rotate(45deg);}
+.import-help[open]{padding-bottom:10px;}
+.import-help summary:hover{color:var(--brass);}
+@media (prefers-reduced-motion: reduce){.import-help summary::before{transition:none;}}
 .import-help ol{margin:8px 0 6px;padding-left:20px;}
 .import-help p{margin:6px 0 0;color:var(--muted);}
 .import-help b{color:var(--parchment);font-weight:500;}
@@ -763,7 +791,20 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
   animation:skeleton-sheen 1.2s ease-in-out infinite;}
 .trip-weather-skeleton span:first-child{width:85%;}
 .trip-weather-skeleton span:last-child{width:65%;}
-@media (prefers-reduced-motion: reduce){.trip-weather-skeleton span{animation:none;background:var(--sage-soft);}}
+/* The catalog's placeholder rows: same sheen, shown after a beat so fast answers don't flash. */
+@keyframes cb-skel-in{from{opacity:0;}to{opacity:1;}}
+.cb-skeleton{animation:cb-skel-in .2s ease .15s both;}
+.cb-skel-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
+.cb-skel-lines{flex:1;display:flex;flex-direction:column;gap:7px;}
+.cb-skel-thumb,.cb-skel-lines span{display:block;border-radius:6px;
+  background:linear-gradient(90deg,var(--sage-soft) 30%,#F4F5F0 50%,var(--sage-soft) 70%) 0 0/250% 100%;
+  animation:skeleton-sheen 1.2s ease-in-out infinite;}
+.cb-skel-thumb{flex:none;width:44px;height:44px;border-radius:8px;}
+.cb-skel-lines span{height:11px;width:70%;}
+.cb-skel-lines span + span{width:40%;}
+.cb-skel-row:nth-child(2) .cb-skel-lines span:first-child{width:55%;}
+.cb-skel-row:nth-child(3) .cb-skel-lines span:first-child{width:80%;}
+@media (prefers-reduced-motion: reduce){.trip-weather-skeleton span,.cb-skel-thumb,.cb-skel-lines span{animation:none;background:var(--sage-soft);}.cb-skeleton{animation:none;}}
 .trip-weather-credit{margin:6px 0 0;font-size:11.5px;color:var(--muted);}
 .trip-weather-credit a{color:inherit;}
 @media (max-width:560px){.trip-weather{margin:10px 12px 0;}}
@@ -826,10 +867,10 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .trip-detail-actions{margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;}
 .trip-detail-actions>*{white-space:nowrap;}
 @media (max-width:760px){
-  /* A block of its own under the title in two equal columns; with Trip plan
-     hidden (3 buttons), Edit spans the last row. */
+  /* A block of its own under the title in two equal columns; with an odd
+     number of buttons (neither Trip plan nor Plan again), Edit spans the last row. */
   .trip-detail-actions{flex:1 1 100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr;}
-  #tripPlanTextBtn[hidden] ~ #tripEditBtn{grid-column:1 / -1;}
+  #tripPlanTextBtn[hidden] ~ #tripPlanAgainBtn[hidden] ~ #tripEditBtn{grid-column:1 / -1;}
 }
 
 /* "1 year ago this week" on the Trips page */
@@ -874,7 +915,12 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 /* Packing mode: big tap rows with a round tick, and a progress bar. */
 .pack-progress{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-size:13px;color:var(--muted);}
 .pack-progress[hidden]{display:none;}
-.pack-progress-bar{flex:1;height:6px;border-radius:3px;background:var(--sage-soft);overflow:hidden;}
+.pack-progress-bar{flex:1;height:8px;border-radius:4px;background:rgba(52,78,65,0.12);overflow:hidden;}
+/* Everything packed: green text with a tick, and one soft glow on the full bar. */
+.pack-progress.is-complete .pack-progress-text{color:var(--fern);font-weight:600;}
+.pack-progress.is-complete .pack-progress-text::before{content:"\2713\00a0";}
+.pack-progress.is-complete .pack-progress-bar{animation:pack-done .9s ease-out .2s;}
+@keyframes pack-done{0%{box-shadow:0 0 0 0 rgba(88,129,87,0.45);}100%{box-shadow:0 0 0 8px rgba(88,129,87,0);}}
 .pack-progress-bar span{display:block;height:100%;width:0;background:var(--fern);border-radius:3px;transition:width .2s ease-out;}
 .pack-row{width:100%;color:inherit;min-height:52px;font:inherit;text-align:left;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:6px;}
 .pack-row:focus-visible{outline:2px solid var(--fern);outline-offset:2px;}
@@ -890,6 +936,7 @@ label.ghost-btn{display:inline-flex;align-items:center;cursor:pointer;}
 .pack-row.just-packed{animation:pack-glow 300ms ease-out;}
 @media (prefers-reduced-motion: reduce){
   .pack-progress-bar span,.pack-check{transition:none;}
+  .pack-progress.is-complete .pack-progress-bar{animation:none;}
   .just-packed .pack-check,.pack-row.just-packed{animation:none;}
 }
 
@@ -1090,7 +1137,7 @@ body{font-size:15px;}
   padding:12px 6px;background:var(--brass);color:var(--on-accent);text-align:center;
 }
 .next-trip-num{font-family:var(--font-display);font-weight:700;font-size:36px;line-height:1;}
-.next-trip-unit{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+.next-trip-unit{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;text-wrap:balance;}
 .next-trip-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding:12px 16px;}
 .next-trip-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
 .next-trip-name{font-family:var(--font-display);font-weight:700;font-size:23px;text-transform:uppercase;letter-spacing:0.02em;line-height:1.1;}
@@ -1258,11 +1305,12 @@ body{font-size:15px;}
 .cb-footer-links{display:flex;flex-wrap:wrap;gap:4px 14px;}
 
 /* ---- Gear checklist (packing a trip, building a loadout) ---- */
-.gear-check-search{
+/* input.… so it wins over .form-field input{width:100%} inside the loadout dialog. */
+input.gear-check-search{
   position:sticky;top:0;z-index:1;display:block;width:calc(100% - 24px);margin:10px 12px 6px;padding:9px 11px;
   border:1px solid rgba(52,78,65,0.22);border-radius:8px;background:var(--panel);font:inherit;font-size:15px;color:var(--parchment);
 }
-.gear-check-head{display:flex;align-items:baseline;gap:8px;padding:12px 20px 4px;background:var(--panel-alt);border-bottom:1px solid var(--line);}
+.gear-check-head{display:flex;align-items:baseline;gap:8px;padding:12px 20px 6px;background:var(--ink);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
 .gear-check-cat{font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:var(--parchment);}
 .gear-check-count{flex:1;font-size:12.5px;color:var(--muted);}
 .gear-check-all{font-size:13px;}
@@ -1282,7 +1330,9 @@ body{font-size:15px;}
 .gs-check{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--sage);}
 .gs-steps li.is-done .gs-check{background:var(--fern);border-color:var(--fern);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3L15 7' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
-.gs-steps li.is-done .gs-text{color:var(--muted);text-decoration:line-through;}
+/* Done: the tick says it; the text just steps back (no strike-through to read through). */
+.gs-steps li.is-done .gs-text{color:var(--muted);}
+.gs-progress{font-weight:500;letter-spacing:0.02em;text-transform:none;color:var(--muted);}
 .gs-text{flex:1;min-width:0;}
 .gs-go{flex:none;padding:6px 12px;font-size:13px;}
 
@@ -1326,6 +1376,10 @@ body{font-size:15px;}
 .rp-hint[hidden]{display:none;}
 .rp-stats{font-size:13.5px;font-weight:600;color:var(--parchment);min-height:1.2em;}
 .rp-stats .difficulty-badge{margin-top:0;vertical-align:1px;}
+/* Before there's a route: no empty lines between the toggle and the name.
+   The stats line stays in place (height 0) so it is still announced when it fills in. */
+.rp-stats:empty{min-height:0;margin-top:-10px;}
+#rpError:empty{display:none;}
 .rp-profile:empty{display:none;}
 .rp-credit{font-size:11px;color:var(--muted);margin:0;}
 .rp-credit a{color:inherit;}
@@ -1370,7 +1424,8 @@ body{font-size:15px;}
   #routePlannerOverlay .rp-body{display:flex;flex-direction:column;flex:none;padding:10px 12px 14px;}
   #routePlannerOverlay .rp-map-wrap{height:62vh;height:62dvh;flex:none;}
   .rp-side{overflow:visible;}
-  .rp-hint{top:auto;bottom:10px;max-width:calc(100% - 24px);}
+  /* Above the map credits, which take two lines on a phone. */
+  .rp-hint{top:auto;bottom:46px;max-width:calc(100% - 24px);}
 }
 @media (max-width:640px){
   #sharedRouteOverlay{padding:0;}

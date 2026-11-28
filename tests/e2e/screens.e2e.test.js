@@ -151,6 +151,8 @@ test('map overview shows km, metres up, trips and countries, and opens the impor
   assert.match(await text(page, '#yearReviewText'), /^1 walk on 1 day · 7\.3 km · 300 m up/);
   assert.equal(await page.$eval('#yearReviewText', el => getComputedStyle(el).animationName), 'year-review-swap');
   await page.selectOption('#yearReviewSelect', '2025');
+  // ...and a year with one before it is set against that year.
+  assert.match(await text(page, '#yearReviewText'), /vs 2024: \+\d+\.\d km · \+600 m up · \+1 walk$/);
   await page.evaluate(()=>{ tracks.pop(); yearReviewYear = null; renderStats(); });
   // A hike in focus gets km markers once zoomed in; none without focus.
   const kmShown = () => page.locator('#map .km-marker').count();
@@ -197,6 +199,14 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
   await page.waitForSelector('#nextTripCard:not([hidden])');
   assert.equal(await text(page, '#nextTripNum'), '30');
   assert.equal(await text(page, '#nextTripUnit'), 'days to go');
+  // Further off it counts in months, then years (the exact days on hover).
+  const far = async n => page.evaluate(async ([d]) => {
+    trips.find(tr => tr.name === 'Tour du Mont Blanc').date = d; renderTripCards();
+    return [document.getElementById('nextTripNum').textContent, document.getElementById('nextTripUnit').textContent, document.getElementById('nextTripCard').title];
+  }, [isoInDays(n)]);
+  assert.deepEqual(await far(200), ['7', 'months to go', '200 days to go']);
+  assert.deepEqual(await far(1316), ['4', 'years to go', '1,316 days to go']);
+  assert.deepEqual(await far(30), ['30', 'days to go', '']);
   assert.equal(await text(page, '#nextTripName'), 'Tour du Mont Blanc');
   assert.match(await text(page, '#nextTripMeta'), /nothing packed yet/);
   assert.ok(!(await page.isVisible('#tripPlannedGrid')), 'the only planned trip is in the countdown card, not repeated');
@@ -229,8 +239,19 @@ test('trips: countdown card for the next trip, completed trips grouped by month 
     return [first, document.querySelectorAll('#tripTrackList svg.ele-draw-in').length];
   });
   assert.deepEqual(sweeps, [1, 0]);
+  // A walked trip shows its time out (the test hikes take 39 min each).
+  assert.ok(await page.isVisible('#tripStatTimeCard'));
+  assert.match(await text(page, '#tripStatTime'), /^(39 min|1 h 18)$/);
   // Each walked track says how steep it gets (the test hikes climb steadily north).
   assert.match(await text(page, '#tripTrackList .track-terrain'), /^Steepest climb \d+ % at km \d+\.\d · top [\d,]+ m/);
+  // The profile shades that climb when it's 6 % or more, with the same grade.
+  const steep = await page.evaluate(()=>{
+    const pct = +/^Steepest climb (\d+) %/.exec(document.querySelector('#tripTrackList .track-terrain').textContent)[1];
+    const band = document.querySelector('#tripTrackList .ele-steep');
+    return { pct, band: band ? band.textContent : null };
+  });
+  assert.ok(steep.pct >= 6, 'the test hikes climb 7–14 %');
+  assert.equal(steep.band, steep.pct + ' %');
   // ...and how its distance splits between up, down and flat (the test hikes only climb).
   assert.match(await page.$eval('#tripTrackList .track-terrain + .track-terrain', el => el.textContent), /^\d+\.\d km up( · \d+\.\d km flat)?$/);
   assert.deepEqual(errors, []);
@@ -279,11 +300,44 @@ test('trips: packing mode ticks gear off with big rows and keeps the ticks', { s
     'Hut weekend — packing list (Mon 1 Jul 2030)', 'Total 3.1 kg · base 2.4 kg · worn 640 g · consumable —',
     '', 'Backpack', '☑ Exos 58 — 1.2 kg', '', 'Shelter', '☐ Copper Spur HV UL2 — 1.2 kg', '', 'Sleep system', '☐ Revelation 20 — 640 g']);
   assert.deepEqual(await page.evaluate(()=> trips.find(tr => tr.id === 'trip_pack').packedIds), ['g1']);
+  // Ticking the rest finishes it: green with a tick, then untick one to go back.
+  assert.equal(await page.locator('#tripPackProgress.is-complete').count(), 0);
+  await page.click('#tripGearSummaryList .pack-row >> text=Copper Spur HV UL2');
+  await page.click('#tripGearSummaryList .pack-row >> text=Revelation 20');
+  assert.equal(await text(page, '#tripPackProgressText'), 'All 3 items packed');
+  assert.equal(await page.locator('#tripPackProgress.is-complete').count(), 1);
+  assert.equal(await page.$eval('#tripPackProgressText', el => getComputedStyle(el, '::before').content), '"✓\u00a0"');
+  await page.click('#tripGearSummaryList .pack-row >> text=Copper Spur HV UL2');
+  await page.click('#tripGearSummaryList .pack-row >> text=Revelation 20');
+  assert.equal(await page.locator('#tripPackProgress.is-complete').count(), 0);
   // Done packing: back to the plain list, the tick and progress stay.
   await page.click('#tripPackBtn');
   assert.equal(await page.locator('#tripGearSummaryList .pack-row').count(), 0);
   assert.equal(await page.locator('#tripGearSummaryList .is-packed').count(), 1);
   assert.equal(await text(page, '#tripPackProgressText'), '1 of 3 packed');
+  assert.deepEqual(errors, []);
+});
+
+test('trips: × in the trip dialog deletes a track from the app, and Undo brings it back into its trips', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    tracks.push({ id: 't_a', name: 'Ridge walk', distanceKm: 8, points: [[46, 7.5], [46.05, 7.5]] },
+      { id: 't_b', name: 'Lake loop', distanceKm: 5, points: [[46.1, 7.5], [46.12, 7.5]] });
+    trips.push({ id: 'tr_u', name: 'Two walks', trackIds: ['t_a', 't_b'], gearIds: [], status: 'completed', date: '2026-05-01', createdAt: 1 });
+    await saveTracks(); await saveTrips();
+    openTripModal('tr_u');
+  });
+  await page.waitForSelector('#tripModalOverlay', { state: 'visible' });
+  assert.equal(await page.getAttribute('#tripTrackPicker .trip-gear-row:has-text("Ridge walk") .track-remove', 'aria-label'), 'Delete Ridge walk from the app');
+  await page.click('#tripTrackPicker .trip-gear-row:has-text("Ridge walk") .track-remove');
+  await page.waitForSelector('#globalToast:not([hidden]) .toast-action');
+  assert.match(await text(page, '#globalToast'), /^Deleted “Ridge walk” from the app\.Undo$/);
+  assert.deepEqual(await page.evaluate(()=> [tracks.map(x => x.id), trips.find(x => x.id === 'tr_u').trackIds]), [['t_b'], ['t_b']]);
+  await page.click('#globalToast .toast-action');
+  await page.waitForFunction(()=> tracks.length === 2);
+  assert.deepEqual(await page.evaluate(()=> [tracks.map(x => x.id), trips.find(x => x.id === 'tr_u').trackIds]), [['t_a', 't_b'], ['t_a', 't_b']], 'back in place');
+  assert.ok(await page.isChecked('#tripTrackPicker input[data-id="t_a"]'), 'still ticked for this trip');
   assert.deepEqual(errors, []);
 });
 
@@ -310,6 +364,8 @@ test('trips: a planned route splits into days of about the chosen distance', { s
   // The profile marks where day 2 starts.
   assert.deepEqual(await page.$$eval('#tripTrackList .ele-day-mark', els => els.map(e => [e.textContent, e.style.left])), [['Day 2', '46.88%']]);
   assert.match(await page.getAttribute('#tripTrackList .ele-profile', 'aria-label'), / Day 2 starts at 15\.0 km\. /);
+  // The steepest climb (500 m up in the first 10 km: 5 %) is under the 6 % mark, so no band.
+  assert.equal(await page.locator('#tripTrackList .ele-steep').count(), 0);
   // ...and for the longest day once it is.
   assert.equal(await text(page, '#tripWaterPlan'), 'Water: about 2.5 L on the longest day (4 h 35 min of walking) — up to 4.5 L in heat or on hard climbs. Plan where to refill.');
   // Food for those days, against the food packed.
@@ -511,6 +567,33 @@ test('trip cards lift on hover, show a focus ring for the keyboard, and stay sti
   await page.hover(card);
   await page.waitForTimeout(250);
   assert.equal((await style()).transform, 'none', 'no movement with reduced motion');
+  assert.deepEqual(errors, []);
+});
+
+test('trips: "Plan again" on a completed trip starts a planned copy with the same gear and planned route', { skip: !playwright }, async t=>{
+  const { page, errors } = await launch(t);
+  await page.click('.nav-tab[data-page="trips"]');
+  await page.evaluate(async ()=>{
+    tracks.push({ id: 't_walk', name: 'Walked', distanceKm: 8, points: [[46, 7.5], [46.05, 7.5]] },
+      { id: 't_plan', name: 'The plan', planned: true, distanceKm: 9, points: [[46, 7.5], [46.06, 7.5]] });
+    trips.push({ id: 'tr_done', name: 'Hut weekend', trackIds: ['t_walk', 't_plan'], gearIds: ['g0', 'g1'], packedIds: ['g0'], photoIds: ['ph1'],
+      status: 'completed', date: '2025-07-01', color: '#6A4C93', dailyKm: 12, notes: 'Book the hut', createdAt: 1 });
+    await saveTracks(); await saveTrips();
+    showTripDetail('tr_done');
+  });
+  assert.ok(await page.isVisible('#tripPlanAgainBtn'));
+  await page.click('#tripPlanAgainBtn');
+  await page.waitForSelector('#globalToast:not([hidden]) .toast-action');
+  assert.match(await text(page, '#globalToast'), /^Planned “Hut weekend” again, with the same gear\.Set a date$/);
+  const copy = await page.evaluate(()=>{ const tr = trips.find(x => x.id === currentTripId); return Object.assign({}, tr, { id: tr.id === 'tr_done', createdAt: 0 }); });
+  assert.deepEqual(copy, { id: false, name: 'Hut weekend', notes: 'Book the hut', trackIds: ['t_plan'], gearIds: ['g0', 'g1'], photoIds: [],
+    date: null, status: 'planned', createdAt: 0, color: '#6A4C93', dailyKm: 12 });
+  assert.equal(await text(page, '#tripDetailStatusBadge'), 'Planned');
+  assert.ok(await page.isHidden('#tripPlanAgainBtn'), 'only on completed trips');
+  assert.ok(await page.isHidden('#tripStatTimeCard'), 'no walked time on a planned trip');
+  await page.click('#globalToast .toast-action');
+  await page.waitForSelector('#tripModalOverlay', { state: 'visible' });
+  assert.equal(await page.inputValue('#tripDate'), '');
   assert.deepEqual(errors, []);
 });
 
@@ -1100,9 +1183,14 @@ test('getting started: three steps on a new device, ticked off as they are done,
   assert.ok(await page.isVisible('#gettingStarted'));
   assert.ok(await page.$eval('#gsGear', li => li.classList.contains('is-done')));
   assert.ok(!(await page.$eval('#gsImport', li => li.classList.contains('is-done'))));
+  // The heading counts the steps that apply here (sign-in only when sync is set up).
+  const steps = await page.evaluate(()=> CLOUD_SYNC_ENABLED ? 3 : 2);
+  assert.equal(await text(page, '#gsProgress'), '· 1 of ' + steps + ' done');
+  assert.equal(await page.$eval('#gsGear .gs-text', el => getComputedStyle(el).textDecorationLine), 'none', 'done steps are not struck through');
   await importHikes(page);
   await page.click('.nav-tab[data-page="map"]');
   assert.ok(await page.$eval('#gsImport', li => li.classList.contains('is-done')), 'import ticked off');
+  if(steps === 3) assert.equal(await text(page, '#gsProgress'), '· 2 of 3 done');
   if(await page.isVisible('#gettingStarted')){
     await page.click('#gsDismiss');
     assert.ok(!(await page.isVisible('#gettingStarted')));

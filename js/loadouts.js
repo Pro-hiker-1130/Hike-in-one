@@ -371,8 +371,13 @@ function renderNextTrip(planned){
   if(!upcoming) return null;
   const date = tripDisplayDate(upcoming);
   const days = Math.round((new Date(date + 'T00:00:00') - today) / 86400000);
-  document.getElementById('nextTripNum').textContent = days === 0 ? 'Today' : days.toLocaleString('en-US');
-  document.getElementById('nextTripUnit').textContent = days === 0 ? '' : days === 1 ? 'day to go' : 'days to go';
+  // Days up close, then months, then years — the same steps as the "In 3 months" labels.
+  const months = Math.round(days / 30.44), years = Math.round(days / 365.25);
+  const [num, unit] = days === 0 ? ['Today', ''] : days <= 60 ? [days, days === 1 ? 'day' : 'days']
+    : months < 18 ? [months, 'months'] : [years, 'years'];
+  document.getElementById('nextTripNum').textContent = num;
+  document.getElementById('nextTripUnit').textContent = unit ? unit + ' to go' : '';
+  document.getElementById('nextTripCard').title = days > 60 ? days.toLocaleString('en-US') + ' days to go' : '';
   document.getElementById('nextTripName').textContent = upcoming.name;
   const gearList = tripGearItemsList(upcoming);
   const weight = tripGearWeight(upcoming);

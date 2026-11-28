@@ -159,6 +159,7 @@ function renderTripDetail(){
 
   document.getElementById('tripDetailTitle').textContent = trip.name;
   document.getElementById('tripPlanTextBtn').hidden = !(tripStatus(trip) === 'planned' && tks.some(t => t.points && t.points.length > 1));
+  document.getElementById('tripPlanAgainBtn').hidden = tripStatus(trip) !== 'completed';
   document.getElementById('tripDetailSubtitle').textContent = trip.notes || '';
   const status = tripStatus(trip);
   const badge = document.getElementById('tripDetailStatusBadge');
@@ -169,6 +170,12 @@ function renderTripDetail(){
   const climbTracks = tripCountedTracks(trip).filter(t => t.elevationGainM != null);
   document.getElementById('tripStatClimb').textContent = climbTracks.length
     ? climbTracks.reduce((s,t)=>s+t.elevationGainM, 0).toLocaleString('en-US') : '—';
+  // Time out: the walked hikes' total time (stops included), in hours.
+  const outSec = tks.filter(t => !t.planned && t.durationSec > 0).reduce((s, t) => s + t.durationSec, 0);
+  document.getElementById('tripStatTimeCard').hidden = !outSec;
+  const outMin = Math.round(outSec / 60);
+  document.getElementById('tripStatTime').textContent = outMin >= 60
+    ? Math.floor(outMin / 60) + ' h ' + String(outMin % 60).padStart(2, '0') : outMin + ' min';
   document.getElementById('tripStatGearCount').textContent = gearList.length;
   document.getElementById('tripStatWeight').textContent = weight ? formatWeight(weight) : '0 g';
 
@@ -669,6 +676,7 @@ function renderTripGear(trip){
   const done = gearList.filter(g => packed.has(g.id)).length;
   const progress = document.getElementById('tripPackProgress');
   progress.hidden = !(packing || done);
+  progress.classList.toggle('is-complete', !!done && done === gearList.length);
   document.getElementById('tripPackProgressText').textContent = done === gearList.length && done
     ? 'All ' + done + ' items packed' : done + ' of ' + gearList.length + ' packed';
   document.getElementById('tripPackProgressFill').style.width = (gearList.length ? done / gearList.length * 100 : 0) + '%';
@@ -955,10 +963,15 @@ function renderTripTrackPicker(checkedIds){
         '<span class="trip-gear-row-name">'+escapeHtml(t.name)+'<span class="trip-gear-row-cat">'+(t.date?escapeHtml(friendlyDate(t.date)):'')+'</span></span>'+
       '</label>'+
       '<span class="trip-gear-row-weight">'+t.distanceKm.toFixed(1)+' km</span>'+
-      '<button type="button" class="track-remove" title="Delete track" aria-label="Delete track">&times;</button>';
+      '<button type="button" class="track-remove" title="Delete this track from the app (all trips)">&times;</button>';
+    row.querySelector('.track-remove').setAttribute('aria-label', 'Delete ' + t.name + ' from the app');
     row.querySelector('.track-remove').addEventListener('click', async (e)=>{
       e.preventDefault(); e.stopPropagation();
       const id = t.id;
+      // This deletes the track everywhere, not just from this trip, so it can be undone.
+      const index = tracks.findIndex(x => x.id === id);
+      const inTrips = trips.filter(tr => (tr.trackIds||[]).includes(id)).map(tr => [tr, tr.trackIds.indexOf(id)]);
+      const wasChecked = currentPickerChecked().has(id);
       const stillChecked = currentPickerChecked();
       stillChecked.delete(id);
       tracks = tracks.filter(x=>x.id!==id);
@@ -967,6 +980,23 @@ function renderTripTrackPicker(checkedIds){
       await saveTrips();
       renderTripTrackPicker(stillChecked);
       renderStats();
+      showGlobalToast('Deleted \u201c' + t.name + '\u201d from the app.', false, { label: 'Undo', fn: async ()=>{
+        if(tracks.some(x => x.id === id)) return;
+        tracks.splice(Math.min(index, tracks.length), 0, t);
+        inTrips.forEach(([tr, i]) => { if(!tr.trackIds.includes(id)) tr.trackIds.splice(Math.min(i, tr.trackIds.length), 0, id); });
+        await saveTracks();
+        await saveTrips();
+        if(document.getElementById('tripModalOverlay').style.display === 'flex'){
+          const checked = currentPickerChecked();
+          if(wasChecked) checked.add(id);
+          renderTripTrackPicker(checked);
+        } else {
+          renderTripCards();
+          if(currentTripId) renderTripDetail();
+        }
+        renderTracks();
+        renderStats();
+      } });
     });
     picker.appendChild(row);
   });
@@ -1087,6 +1117,23 @@ async function handleTripGpxFiles(fileList){
     statusEl.textContent = 'Could not read: '+failed.join(', ');
     statusEl.className = 'upload-error';
   }
+}
+
+// A completed trip as the start of a new one: same gear list, colour and
+// planned routes; not the walked tracks, photos, date or packing ticks.
+async function planTripAgain(){
+  const from = trips.find(t => t.id === currentTripId);
+  if(!from) return;
+  const trip = { id: 'trip_'+Math.random().toString(36).slice(2,10), name: from.name, notes: from.notes || '',
+    trackIds: tripTracks(from).filter(t => t.planned).map(t => t.id), gearIds: (from.gearIds || []).slice(),
+    photoIds: [], date: null, status: 'planned', createdAt: Date.now() };
+  if(from.color) trip.color = from.color;
+  if(from.dailyKm > 0) trip.dailyKm = from.dailyKm;
+  trips.push(trip);
+  await saveTrips();
+  renderTripCards();
+  showTripDetail(trip.id);
+  showGlobalToast('Planned \u201c' + trip.name + '\u201d again, with the same gear.', false, { label: 'Set a date', fn: ()=> openTripModal(trip.id) });
 }
 
 async function handleTripFormSubmit(e){

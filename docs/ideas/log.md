@@ -3,6 +3,248 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-27 — research (owner asked for 3 research days: C of 3)
+
+Looked at: trip recaps. Trailfold's recap shows time alongside
+distance and climb, and AlpineQuest separates moving time from total
+time. A trip page here showed tracks, km and metres climbed, but not
+how long you were out. Budget used: 1 search, 0 fetches.
+Changed: a trip with walked hikes gets a "Time out" stat card, e.g.
+"4 h 10": the hikes' total time, stops included (the app keeps total
+time, not moving time; the card's tooltip says so). Planned routes
+don't count, and the card is hidden when no hike has a time. On phones
+the stat cards now make a neat 3×2 grid. The trips e2e tests check it
+on a walked trip and that a planned trip has none. Service worker cache
+`waypoints-v87`. All tests pass: 63 unit, 68 e2e.
+For the owner: moving time (without stops) would need the GPS points'
+timestamps kept per hike; say if you'd like that later.
+
+## 2026-11-27 — research (owner asked for 3 research days: B of 3)
+
+Looked at: reusing a past trip. Packr lets you duplicate a previous
+trip to reuse its packing list; Packstack treats a trip and its pack as
+one thing, and travel planners (TripIt, Travefy, WeTravel) copy trips
+too. Here the only way was to rebuild the gear list by hand or through
+a loadout. Budget used: 1 search, 0 fetches.
+Changed: a completed trip has a "Plan again" button. It makes a new
+planned trip with the same name, notes, gear list, colour, daily
+distance and planned routes, but not the walked tracks, photos, date or
+packing ticks, opens it, and offers "Set a date" in the message. On
+phones the trip buttons stay a tidy 2×2 block. New e2e test. Service
+worker cache `waypoints-v86`. All tests pass: 63 unit, 68 e2e.
+For the owner: nothing to decide.
+
+## 2026-11-27 — research (owner asked for 3 research days: A of 3)
+
+Looked at: year-on-year stats. HiiKER's public stats pages list hikes,
+distance, climb and time per year, and their current-year rows are
+"so far", which makes a straight comparison with last year misleading.
+Budget used: 1 search, 0 fetches.
+Changed: the map's Year in review adds a line against the year before,
+e.g. "vs 2025 by 27 Nov: +4.6 km · −200 m up · +1 walk". For the year
+we're in, both years count only up to today's date; a past year is set
+against the whole year before. No line when the year before has no
+walks. `TrackCore.yearCompare` has a unit test; the map overview e2e
+test checks the line. Service worker cache `waypoints-v85`. All tests
+pass: 63 unit, 67 e2e.
+For the owner: nothing to decide.
+
+## 2026-11-27 — polish (owner asked for 4 more polish days: 4 of 4)
+
+Looked at: the "Get started" checklist on the map sidebar (desktop and
+phone). Finished steps were struck through, which made them hard to
+read and look cancelled rather than done, and the heading didn't say
+how far along you were.
+Changed: finished steps keep their green tick and turn grey, without
+the strike-through, and the heading reads "Get started · 2 of 3 done",
+counting only the steps that apply (the sign-in step only where sync is
+set up). The getting-started e2e test checks the count and that done
+steps aren't struck through. Service worker cache `waypoints-v84`. All
+tests pass: 62 unit, 67 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-27 — polish (owner asked for 4 more polish days: 3 of 4)
+
+Looked at: the Trips page with a trip planned far ahead. The countdown
+card said "1,316 days to go", which is hard to picture, while the other
+planned-trip cards already say "In 4 years".
+Changed: the countdown uses the same steps as those labels: days up to
+60, then months (under 18), then years, e.g. "7 months to go" or "4
+years to go". Hovering shows the exact number of days. The unit's two
+lines are balanced ("months / to go") in the narrow box. The trips e2e
+test checks 30 days, 200 days and 1,316 days. Service worker cache
+`waypoints-v83`. All tests pass: 62 unit, 67 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-27 — polish (owner asked for 4 more polish days: 2 of 4)
+
+Looked at: packing mode on a 390 px phone. The progress bar's track
+was so pale it was nearly invisible at "0 of 4 packed", and finishing
+looked the same as any other step: the text just said "All 4 items
+packed".
+Changed: the bar is a little thicker (8 px) on a visible track. When
+the last item is ticked, the text turns green with a ✓ and the full
+bar gives one soft glow; unticking an item takes it back. The glow is
+skipped with reduced motion. The packing e2e test ticks everything,
+checks the finished state, and unticks again. Service worker cache
+`waypoints-v82`. All tests pass: 62 unit, 67 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-27 — polish (owner asked for 4 more polish days: 1 of 4)
+
+Looked at: phone (390 px) and desktop (1280 px) screenshots of the map
+sidebar with hikes, the Gear Room's Shelves view, packing mode and the
+photos section, to pick this run's four fixes. On phones the Shelves
+labels broke inside the weight ("1 owned · 1.2 / kg", "400 / g"). On
+desktop the shelves ran the whole window while the List/Shelves switch
+above them stopped at the list's 820 px column.
+Changed: on phones each label is two tidy lines ("1 owned" / "1.2 kg");
+on desktop it stays on one line and never breaks inside the weight. The
+shelves scene now uses the same 820 px column as the list view. Service
+worker cache `waypoints-v81`. All tests pass: 62 unit, 67 e2e. Budget
+used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-27 — polish (owner asked for 4 polish days: 4 of 4)
+
+Looked at: the two dialogs that list your gear to tick (a trip's "Edit
+gear" and "New loadout") on a 390 px phone. In "New loadout" the search
+box ran past the list's right edge: the dialog's general rule for form
+inputs (full width) beat the search box's own width, leaving its side
+margins hanging out. In both, the category headers were heavy khaki
+bars.
+Changed: the search box keeps its own width in both dialogs, and the
+category headers use the light page tone with a thin line above and
+below. CSS only. Service worker cache `waypoints-v80`. All tests pass:
+62 unit, 67 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-27 — polish (owner asked for 4 polish days: 3 of 4)
+
+Looked at: the new/edit trip dialog's "Tracks in this trip" list. Each
+row has a checkbox and a bare "×", which reads like "take it off this
+trip" but deleted the track from the whole app (every trip, the map and
+the totals) at once, with no way back. Testing an Undo also showed that
+every toast sat behind open dialogs (layer 950 against 1000), so a
+message shown from inside a dialog couldn't be seen or tapped.
+Changed: the × now says what it does ("Delete Ridge walk from the app";
+tooltip "Delete this track from the app (all trips)"), and deleting
+shows "Deleted “Ridge walk” from the app." with Undo for 8 s, which
+puts the track back in its place, in every trip it was in, and ticked
+again if it was ticked. Toasts now show above dialogs. New e2e test.
+Service worker cache `waypoints-v79`. All tests pass: 62 unit, 67 e2e.
+Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-27 — polish (owner asked for 4 polish days: 2 of 4)
+
+Looked at: the "Import activities" dialog on a 390 px phone. Its three
+how-to sections ("Getting your whole Strava history" and so on) were
+heavy khaki bars with the browser's small ▶ markers, unlike every other
+expandable section in the app.
+Changed: they are now light cards with a thin border and the same
+turning chevron as "More details" in the gear form; the title turns
+orange on hover. The chevron turns without animation when reduced
+motion is on. CSS only. Service worker cache `waypoints-v78`. All tests
+pass: 62 unit, 66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-27 — polish (owner asked for 4 polish days: 1 of 4)
+
+Looked at: phone (390 px) and desktop (1280 px) screenshots of the map,
+a trip page, the new-trip dialog and the import dialog, to pick this
+run's four fixes. On desktop a trip page ran the full window width, so
+gear rows had the item name at one edge and its weight 1,200 px away,
+and the profile was a thin strip.
+Changed: on wide screens a trip page reads in a 1,000 px column: stats,
+tracks, gear, photos and the rest stop at the same right edge, and the
+header's buttons end there too (its divider line still spans the
+window). Phones are unchanged. CSS only. Service worker cache
+`waypoints-v77`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-27 — research
+
+Looked at: how planners show steep ground on an elevation profile.
+AllTrails shades its profile by grade (from 6 %, red from 11 %),
+Footpath and PeakVisor colour slopes along the route, and Plotaroute
+marks the steepest part of a selection. Budget used: 1 search,
+0 fetches.
+Changed: every elevation profile (trip pages, route planner) now shades
+the steepest half-kilometre of climbing with a soft orange band and its
+grade ("14 %"), when it's 6 % or more. It's the same climb the line
+above already names ("Steepest climb 14 % at km 2.3"), and it's added
+to the profile's screen-reader label. Gentler walks show no band. The
+trips e2e tests check the band matches the text, and that a 5 % route
+gets none. Service worker cache `waypoints-v76`. All tests pass:
+62 unit, 66 e2e.
+For the owner: the 6 % threshold follows AllTrails' first warning
+colour; say if you'd like it higher.
+
+## 2026-11-26 — polish (owner asked for 4 polish days: 4 of 4)
+
+Looked at: the "Add gear" catalog dialog while it loads. Its list area
+showed only the word "Loading…" until results arrived, so the dialog
+jumped in height when they did.
+Changed: while a new list loads (opening the dialog, searching, or
+changing a filter), four placeholder rows shaped like results (a square
+for the photo, two bars for name and details) fill the list, with the
+same soft sheen as the trip forecast's placeholders. They fade in after
+0.15 s so quick answers don't flash, and with reduced motion they are
+still bars with no sheen or fade. The catalog e2e test holds one answer
+back to check the rows and that results replace them. Service worker
+cache `waypoints-v75`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-26 — polish (owner asked for 4 polish days: 3 of 4)
+
+Looked at: empty sections on the Trips page and in the Gear Room
+("Nothing planned yet", "No completed trips yet", "No loadouts yet") on
+phone and desktop. Each took about 170 px, with the large drawing
+centred mid-page and an empty card grid's padding above it, which on
+desktop read as a hole in the page.
+Changed: an empty section is now a compact dashed placeholder (smaller
+drawing, same text) on the cards' left edge and capped at 820 px; the
+empty grid above it takes no space. Whole-page empty states keep their
+large drawing. CSS only. Service worker cache `waypoints-v74`. All
+tests pass: 62 unit, 66 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-26 — polish (owner asked for 4 polish days: 2 of 4)
+
+Looked at: the route planner on a 390 px phone before any route is
+drawn. Between the "Follow trails / Straight line" toggle and "Route
+name" sat 54 px of nothing: an empty stats line kept 16 px tall, an
+empty error line, and a gap for each. The map hint ("Tap the map to set
+the start…") was also half hidden behind the two-line map credits.
+Changed: with no route, the empty stats and error lines take no space,
+so the name field follows the toggle. The stats line stays in place so
+screen readers still announce it once a route appears. On phones the
+hint sits above the map credits. CSS only. Service worker cache
+`waypoints-v73`. All tests pass: 62 unit, 66 e2e. Budget used:
+0 searches, 0 fetches.
+For the owner: nothing to decide.
+
+## 2026-11-26 — polish (owner asked for 4 polish days: 1 of 4)
+
+Looked at: phone (390 px) and desktop (1280 px) screenshots of the Gear
+Room, the add-gear catalog, the route planner and the Trips page, to
+pick this run's four fixes. The gear breakdown card (donut and legend)
+was the only khaki-grey card among white ones, and on desktop it ran
+the full page width, its legend numbers far from their names and its
+menu at the far right.
+Changed: the breakdown card is white like the other cards, with the
+same 12 px corners. On desktop it is capped at the width of the weight
+list above it (820 px), the legend at 420 px, and the heading's menu
+ends where the card does. The donut colours are unchanged. CSS only.
+Service worker cache `waypoints-v72`. All tests pass: 62 unit, 66 e2e.
+Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-26 — research
 
 Looked at: how packing-list apps share a list. PackList shares its

@@ -394,3 +394,13 @@ test('latestStart works back from sunset: an hour early, walking plus 10 minutes
 test('waterLitresPerHour rises with the forecast temperature', () => {
   assert.deepEqual([null, 8, 18, 24.9, 25, 29, 30, 36].map(T.waterLitresPerHour), [0.5, 0.4, 0.5, 0.5, 0.65, 0.65, 0.8, 0.8]);
 });
+
+test('yearCompare sets a year against the one before, to the same date for the current year', () => {
+  const w = (date, km, up) => ({ date, distanceKm: km, elevationGainM: up });
+  const list = [w('2025-03-01', 10, 500), w('2025-10-01', 20, 900), w('2026-02-01', 12, 300), w('2026-04-01', 5, 100), w('2024-06-01', 8, 200)];
+  // A past year: whole years.
+  assert.deepEqual(T.yearCompare(list, '2025', '2026-11-27'), { prevYear: '2024', toDate: null, dCount: 1, dKm: 22, dGainM: 1200 });
+  // This year, on 15 May: 2026 so far against 2025 up to 15 May too.
+  assert.deepEqual(T.yearCompare(list, '2026', '2026-05-15'), { prevYear: '2025', toDate: '05-15', dCount: 1, dKm: 7, dGainM: -100 });
+  assert.equal(T.yearCompare(list, '2024', '2026-11-27'), null, 'nothing in 2023');
+});

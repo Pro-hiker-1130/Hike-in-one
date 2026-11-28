@@ -636,7 +636,12 @@ async function loadCatalogPage(reset){
   const seq = ++state.seq;
   const list = document.getElementById('cbList');
   const countEl = document.getElementById('cbCount');
-  if(reset){ list.innerHTML = ''; countEl.textContent = 'Loading…'; }
+  // Placeholder rows shaped like results while the first page loads.
+  if(reset){
+    countEl.textContent = 'Loading…';
+    list.innerHTML = '<div class="cb-skeleton" role="status" aria-label="Loading the catalog">' +
+      '<div class="cb-skel-row"><span class="cb-skel-thumb"></span><span class="cb-skel-lines"><span></span><span></span></span></div>'.repeat(4) + '</div>';
+  }
   const more = list.querySelector('.cb-more');
   if(more){ more.disabled = true; more.textContent = 'Loading…'; }
   try{

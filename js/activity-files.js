@@ -341,6 +341,11 @@ const drawnProfiles = new Set();
 function buildElevationProfile(t, onPoint, opts){
   const pts = t.profile;
   const dayMarks = ((opts && opts.dayMarks) || []).filter(m => m.km > pts[0][0] && m.km < pts[pts.length-1][0]);
+  // The steepest half-kilometre of climbing, shaded when it's 6 % or more
+  // (where planners start warning), so the hard bit is easy to find.
+  const terrain = TrackCore.terrainSummary(pts, 0.5);
+  const steep = terrain && terrain.steepestUpPct >= 6 ? { pct: terrain.steepestUpPct,
+    from: pts[0][0] + terrain.steepestUpAtKm, to: Math.min(pts[pts.length-1][0], pts[0][0] + terrain.steepestUpAtKm + 0.5) } : null;
   const totalKm = pts[pts.length-1][0] || t.distanceKm || 1;
   let lo = t.minEleM, hi = t.maxEleM;
   // A near-flat walk shouldn't have 3 m of GPS noise blown up to fill
@@ -358,7 +363,8 @@ function buildElevationProfile(t, onPoint, opts){
   el.tabIndex = 0;
   el.setAttribute('role', 'img');
   el.setAttribute('aria-label', 'Elevation profile: '+t.minEleM+' to '+t.maxEleM+' m over '+totalKm.toFixed(1)+' km, '+t.elevationGainM+' m climbed.'+
-    dayMarks.map(m => ' '+m.label+' starts at '+m.km.toFixed(1)+' km.').join('')+' Use left and right arrow keys to read points.');
+    dayMarks.map(m => ' '+m.label+' starts at '+m.km.toFixed(1)+' km.').join('')+
+    (steep ? ' Steepest climb '+steep.pct+' % at km '+(steep.from - pts[0][0]).toFixed(1)+'.' : '')+' Use left and right arrow keys to read points.');
   el.innerHTML =
     '<div class="ele-axis ele-axis-max">'+t.maxEleM+' m</div>'+
     '<div class="ele-axis ele-axis-min">'+t.minEleM+' m</div>'+
@@ -367,6 +373,8 @@ function buildElevationProfile(t, onPoint, opts){
         '<path class="ele-area" d="'+area+'"/>'+
         '<path class="ele-line" d="'+line+'" vector-effect="non-scaling-stroke"/>'+
       '</svg>'+
+      (steep ? '<div class="ele-steep" aria-hidden="true" style="left:'+(steep.from / totalKm * 100).toFixed(2)+'%;width:'+
+        Math.max(0.6, (steep.to - steep.from) / totalKm * 100).toFixed(2)+'%"><span>'+steep.pct+' %</span></div>' : '')+
       dayMarks.map(m => '<div class="ele-day-mark" aria-hidden="true" style="left:'+(m.km / totalKm * 100).toFixed(2)+'%"><span>'+escapeHtml(m.label)+'</span></div>').join('')+
       '<div class="ele-cursor" hidden></div><div class="ele-dot" hidden></div>'+
     '</div>'+
