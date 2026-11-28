@@ -3,6 +3,22 @@
 Newest first. Each run: date, research or polish, what was looked at,
 what changed, anything for the owner.
 
+## 2026-11-28 — polish
+
+Looked at: Settings on desktop, the track editor on a phone, and the
+pop-up message with an action button (Undo, Set a date) that several
+recent features use. On a 390 px phone the message was a narrow
+195 px block, three lines of centred text with the action as an
+underlined word squeezed underneath. Cause: it is centred with
+left: 50%, which held its width to half the screen, so its 90 % limit
+never applied.
+Changed: the message sizes to its text, up to the screen width minus
+32 px (420 px at most). With an action, the text sits on the left and
+the action is a small outlined button on the right; plain messages
+stay centred. CSS only. Service worker cache `waypoints-v88`. All tests
+pass: 63 unit, 68 e2e. Budget used: 0 searches, 0 fetches.
+For the owner: nothing to decide.
+
 ## 2026-11-27 — research (owner asked for 3 research days: C of 3)
 
 Looked at: trip recaps. Trailfold's recap shows time alongside

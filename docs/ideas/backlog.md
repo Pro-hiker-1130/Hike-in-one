@@ -81,6 +81,7 @@ One line each: idea — seen in — why it helps here — size (S/M/L).
 - 2026-11-27 — Year in review compared with the year before, to the same date (research)
 - 2026-11-27 — Plan again: a planned copy of a completed trip (research)
 - 2026-11-27 — Time out stat on a trip page (research)
+- 2026-11-28 — Pop-up messages use the screen width; actions as a small button (polish)
 
 - 2026-11-04 — Back to start (round trip) in the route planner (research, Komoot idea)
 - 2026-11-04 — Food estimate for a planned trip (research, Packstack idea)
