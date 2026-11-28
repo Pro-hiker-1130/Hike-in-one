@@ -144,3 +144,6 @@ pin down to "Skipped" with a reason.
 - Sawyer Mini: filter-alone figure of about 57 g conflicts with Sawyer's own 140 g page, which does not say what it covers.
 - Big Agnes Tiger Wall UL2: weights differ by version (standard, mtnGLO, bikepack) and by trail versus packed weight.
 - Tarptent Aeon Li: body weight (448 g) and full kit weight (543 g) differ and no brand page was found.
+- Zpacks Altaplex Classic: Zpacks pages give conflicting weights (380 g and 467 g).
+- Tarptent StratoSpire Li: weight depends on version and year (737 to 853 g).
+- Arc'teryx Atom Hoody: already in the catalog.
