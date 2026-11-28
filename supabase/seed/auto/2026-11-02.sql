@@ -1,0 +1,8 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Vargo', 'Titanium Emergency Whistle', null, 'Safety', 3, '{}', 'Pealess titanium whistle. Listed weight is the brand''s 2.8 g, rounded to 3 g.', 'https://vargooutdoors.com/products/titanium-emergency-whistle', 'seed'),
+('CAO Outdoor', 'Dural Whistle', null, 'Safety', 9, '{}', 'Aluminium-alloy whistle with a keyring. Listed weight is 9 g; one listing says 12 g.', 'https://www.natureetdecouvertes.com/outdoor/camping-bivouac/secours-et-survie/sifflet-de-survie-cao-dural-97252870', 'seed'),
+('SOL', 'Escape Lite Bivvy', null, 'Safety', 156, '{}', 'Breathable emergency bivvy, 82 x 32 inches. Listed weight is 5.5 oz (about 156 g); retailers list 154-156 g.', 'https://www.decathlon.co.uk/p/mp/escape-lite-bivvy-ultralight-survival-shelter-emergency-sleeping-bag/5821a617-75bb-4c8c-b093-940c523e5c47/c255c20c9', 'seed'),
+('Leki', 'Legacy Lite', 'Pair', 'Other', 510, '{}', 'Telescopic aluminium trekking poles. Weight per pair; retailers list 500-522 g depending on the variant.', 'https://www.rei.com/product/203953', 'seed'),
+('Kahtoola', 'INSTAgaiter Low', 'S/M, pair', 'Other', 56, '{}', 'Ultralight low trail gaiters. Weight per pair for size S/M (2.0 oz); L/XL is about 62 g.', 'https://store.noc.com/products/instagaiter-low', 'seed'),
+('REI Co-op', 'Flash Gaiters', 'M, pair', 'Other', 62, '{}', 'Lightweight over-ankle gaiters. Weight per pair for size M (2.2 oz).', 'https://www.rei.com/product/216627/rei-co-op-flash-gaiters', 'seed')
+on conflict (normalized_key) do nothing;

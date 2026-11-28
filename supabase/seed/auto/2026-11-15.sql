@@ -1,0 +1,9 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Snow Peak', 'Titanium Single Wall 450 Mug', null, 'Cooking', 70, '{"capacity_ml":450}', 'Single-wall titanium mug. Listed weight is 70 g; some retailers list 66-68 g.', 'https://ultralightoutdoorgear.co.uk/titanium-single-wall-450-mug', 'seed'),
+('MSR', 'Titan Cup 450', null, 'Cooking', 68, '{"capacity_ml":450}', 'Single-wall titanium cup with folding handles. Listed weight is 68 g; some retailers list 70 g.', 'https://www.alpinstore.com/en/579626-msr-titan-cup-450-ml-.html', 'seed'),
+('Vargo', 'Titanium 450 Travel Mug', null, 'Cooking', 62, '{"capacity_ml":450}', 'Titanium mug with lid. Listed weight is the brand''s 62 g for the mug alone, without the mesh bag.', 'https://vargooutdoors.com/products/titanium-450-travel-mug', 'seed'),
+('GSI Outdoors', 'Infinity Backpacker Mug', null, 'Cooking', 100, '{}', 'Foam-insulated plastic mug. Listed weight is about 100 g (3.5 oz); one listing says 135 g.', 'https://packhacker.com/travel-gear/gsi-outdoors/infinity-backpacker-mug', 'seed'),
+('Sea to Summit', 'X-Mug', '480 ml', 'Cooking', 60, '{"capacity_ml":480}', 'Collapsible silicone mug. Listed weight is 60 g for the standard version; the Cool Grip version is about 72 g.', 'https://mountainequipment.com/a/s/products/x-mug', 'seed'),
+('Sea to Summit', 'Pocket Towel', 'Large, 60 x 120 cm', 'Hygiene', 112, '{}', 'Quick-drying microfibre towel. Listed weight is about 112 g; retailers list 110-117 g.', 'https://www.overtons.com/sea-to-summit-pocket-towel-lime-large-206248_LIME_L.html', 'seed'),
+('PackTowl', 'UltraLite Towel', 'Body', 'Hygiene', 96, '{}', 'Quick-drying body towel, 137 x 64 cm. Listed weight is 96 g (3.4 oz); the brand''s claimed weight is 100 g.', 'https://www.altitude-sports.com/p/packtowl-ultralite-body-towel-xl-pct-09096', 'seed')
+on conflict (normalized_key) do nothing;

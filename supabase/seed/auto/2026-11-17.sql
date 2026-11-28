@@ -1,0 +1,7 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Firepot', 'Spicy Pork Noodles', 'Regular serving', 'Food', 105, '{}', 'Dehydrated trekking meal. Listed weight is the 105 g regular pouch; one retailer lists 130 g.', 'https://www.ellis-brigham.com/firepot-spicy-pork-noodles-reg-105g-289526', 'seed'),
+('Firepot', 'Porcini Mushroom Risotto', 'Regular serving', 'Food', 135, '{}', 'Vegan dehydrated trekking meal. Listed weight is the 135 g regular pouch; one retailer lists 154 g.', 'https://www.cotswoldoutdoor.com/p/firepot-porcini-mushroom-risotto-E6214061.html', 'seed'),
+('Firepot', 'Baked Apple Porridge', 'Regular serving', 'Food', 125, '{}', 'Vegan dehydrated breakfast. Listed weight is the 125 g regular pouch; the XL pouch is about 165 g.', 'https://www.castlebergoutdoors.co.uk/firepot-baked-apple-porridge', 'seed'),
+('Lifeventure', 'Soap Leaves', '50 leaves', 'Hygiene', 14, '{}', 'Dissolving soap leaves in a small pack. Listed weight is 14 g; retailers list 12-14 g.', 'https://attwoolls.co.uk/lifeventure-soap-leaves', 'seed'),
+('Lifeventure', 'Dry Wash Gel', '100 ml', 'Hygiene', 125, '{}', 'Waterless antibacterial wash gel in a 100 ml bottle. Listed weight is 125 g; retailers list 120-133 g.', 'https://mont.com.au/collections/camping-toilets/products/lifeventure-dry-wash-gel-100ml', 'seed')
+on conflict (normalized_key) do nothing;

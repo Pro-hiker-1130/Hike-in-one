@@ -1,0 +1,7 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Mountain House', 'Lasagna with Meat Sauce', '2 servings', 'Food', 102, '{}', 'Freeze-dried trekking meal. Listed weight is the 3.6 oz net weight of dry food, not including water; older pouches were reportedly heavier.', 'https://www.rei.com/product/175894', 'seed'),
+('Mountain House', 'Breakfast Skillet', '2 servings', 'Food', 106, '{}', 'Freeze-dried breakfast meal. Listed weight is the 3.7 oz net weight of dry food, not including water.', 'https://www.rei.com/product/175695', 'seed'),
+('Peak Refuel', 'Chicken Teriyaki Rice', '2 servings', 'Food', 132, '{}', 'Freeze-dried trekking meal. Listed weight is the 4.66 oz net weight of dry food; one listing gives 4.7 oz.', 'https://www.rei.com/product/182724', 'seed'),
+('Good To-Go', 'Smoked Three Bean Chili', 'Single serving', 'Food', 99, '{}', 'Dehydrated vegan trekking meal. Listed weight is the 3.5 oz single-serving pouch of dry food.', 'https://garagegrowngear.com/products/smoked-three-bean-chili-by-good-to-go', 'seed'),
+('Nuun', 'Sport Hydration Tablets', '10 tablets', 'Food', 64, '{}', 'Electrolyte drink tablets in a tube. Listed weight is REI''s 2.25 oz figure for a full tube; MEC lists 56 g.', 'https://www.rei.com/product/156097/nuun-sport-hydration-tablets-10-servings', 'seed')
+on conflict (normalized_key) do nothing;

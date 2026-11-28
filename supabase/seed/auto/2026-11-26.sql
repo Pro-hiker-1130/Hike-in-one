@@ -1,0 +1,6 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Black Diamond', 'Cosmo 350-R', null, 'Electronics', 75, '{}', 'Rechargeable headlamp. Listed weight is with the rechargeable battery as given by several retailers; two list 83 g.', 'https://www.mec.ca/en/product/6017-042/black-diamond-cosmo-350-r-headlamp', 'seed'),
+('Nitecore', 'NU20 Classic', null, 'Electronics', 38, '{}', 'Ultralight rechargeable headlamp. Listed weight is the brand figure of 38 g including the headband.', 'https://www.nitecore.com/product/nu20classic', 'seed'),
+('Garmin', 'GPSMAP 66i', null, 'Navigation', 230, '{}', 'Handheld GPS with inReach satellite messaging. Listed weight is the brand figure with batteries; some retailers list 241 g.', 'https://www.dickssportinggoods.com/p/garmin-gpsmap-66i-handheld-gps-and-satellite-communicator-19gmnugpsmp66xxxxgps/19gmnugpsmp66xxxxgps', 'seed'),
+('Katadyn', 'BeFree Gravity', '3.0 L', 'Water', 192, '{"capacity_ml": 3000, "filter_type": "hollow fiber"}', 'Gravity-fed water filter system with a 3 L soft reservoir. Listed weight is the brand figure of about 192 g.', 'https://www.katadyngroup.com/ch/en/item~p6734', 'seed')
+on conflict (normalized_key) do nothing;

@@ -1,0 +1,7 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('MSR', 'Groundhog Tent Stake', 'Single stake', 'Other', 14, '{}', 'Y-beam aluminium tent stake. Listed weight is per stake; the brand lists 13.95 g and retailers 13 g.', 'https://cascadedesigns.com/products/groundhog-tent-stakes', 'seed'),
+('MSR', 'Mini Groundhog Tent Stake', 'Single stake', 'Other', 9, '{}', 'Shorter Y-beam aluminium tent stake. Listed weight is per stake; the brand lists 9.4 g and one retailer 10 g.', 'https://www.cascadedesigns.com/products/mini-groundhog-stakes', 'seed'),
+('Ortlieb', 'Dry-Bag PS10', '12 L', 'Other', 70, '{}', 'Lightweight roll-top waterproof bag. Listed weight is for the 12 L size without the valve; the valve version is about 74 g.', 'https://www.ortlieb.com/en_us/dry-bag-ps10+K20403', 'seed'),
+('Mountain House', 'Chili Mac with Beef', '2 servings', 'Food', 108, '{}', 'Freeze-dried trekking meal. Listed weight is the 3.8 oz net weight of dry food, not including water.', 'https://www.rei.com/product/175885/mountain-house-chili-mac-with-beef-2-servings', 'seed'),
+('Good To-Go', 'Herbed Mushroom Risotto', '2 servings', 'Food', 189, '{}', 'Dehydrated trekking meal. Listed weight is the 6.6 oz two-serving pouch of dry food; the single serving is about 96 g.', 'https://jetboil.johnsonoutdoors.com/us/shop/food-and-beverage/good-go-herbed-mushroom-risotto', 'seed')
+on conflict (normalized_key) do nothing;

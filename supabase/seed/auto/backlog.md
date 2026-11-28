@@ -6,12 +6,6 @@ pin down to "Skipped" with a reason.
 
 ## Candidates
 
-- Sea to Summit Pack Liner 50L (Other)
-
-- Forclaz MT900 Ultralight Down Jacket (Clothing)
-- Forclaz MT500 Hiking Pole (Other)
-- Jack Wolfskin Wolftrail 28 (Backpack)
-
 ## Skipped
 
 - Merrell Moab 3 (Footwear): listed per-pair weights disagree by about 25% (Merrell vs REI).
@@ -20,7 +14,6 @@ pin down to "Skipped" with a reason.
 - MSR FreeLite 2: V3/U24 version unclear.
 - Deuter Aircontact Lite 50+10: sources disagree (1640 vs 1750 g) and no size named.
 - Forclaz MT900 Hooded Down Jacket: several versions (660/800 fill) with different weights.
-- Forclaz MT500 Hiking Pole: only one source, pair weight is derived from the per-pole figure.
 - Forclaz MT100 boots: no men's pair weight found.
 - Tatonka Bison 75: only an old third-party weight (3.3 kg) found.
 - Fjällräven Keb Trousers: only one discontinued listing (REI) found.
@@ -48,3 +41,109 @@ pin down to "Skipped" with a reason.
 - Arc'teryx Proton Hoody: only one retailer lists the standard model; Proton variants weigh 343-540 g.
 - Arc'teryx Norvan Shell Jacket: listed weights disagree (170-215 g).
 - Arc'teryx Gamma Lightweight Hoody: original vs revised version (300-545 g).
+- Ursack AllMitey: retailer weights conflict (9.5 oz vs 13 oz).
+- Sea to Summit Pocket Trowel: alloy vs nylon versions list 68-110 g.
+- PackTowl Personal towel: weight depends on size and only one source per size.
+- Humangear GoToob+ 3oz: only one retailer gives a weight.
+- Fox 40 Classic whistle: listed weights disagree (9 vs 20 g).
+- Garcia Backpackers' Cache: listed weights disagree (2.12 lb vs 2.7 lb).
+- Counter Assault bear spray: weight listings mix fill size and loaded canister (10.2 oz vs 15 oz).
+- Garmin Fenix 8: weight depends on bezel/size (70-80 g), variant unclear.
+- Silva Expedition 4: model variants list 34-80 g.
+- Anker 511 Nano charger: listed weights 30-37 g and model generations (Nano 3/Nano 4) mixed.
+- Gossamer Gear Liteflex umbrella: no product by this name found; similar umbrellas list 178-194 g.
+- Ledlenser MH5: only one retailer listing gives a weight.
+- Esbit Pocket Stove: listed weights conflict (stove alone 88-100 g, kits mix tablets).
+- Keen Targhee IV: weights differ by version (vent, WP shoe, mid boot).
+- Hilleberg Nammatj 2: retailers disagree on minimum vs packed weight (2.3-3.7 kg).
+- Nordisk Telemark 2: several versions (2.0/2.2 LW) with different weights.
+- Cumulus Panyam 450: size not named for the 810 g spec.
+- Gossamer Gear The Two: weights differ by what is counted (667 g listed vs 788-803 g full kit).
+- Smartwool Classic Thermal Merino Base Layer Crew: only one source gives a garment weight.
+- Outdoor Research Ferrosi Pants: no current weight found; classic and Convert versions differ.
+- Gregory Stout 45: search returned nothing about the pack.
+- Fjällräven Abisko Trekking Tights: old and Pro versions list different weights (300 vs 348 g).
+- Mountain Hardwear Kor AirShell Hoody: listings mix hoody and full-zip versions (4.7-7.5 oz).
+- Zpacks Nero Ultra 38L: Zpacks lists 280 g and 316 g for different builds; version unclear.
+- Zpacks Arc Haul Ultra 50L: size/strap configuration not named for the 584 g listing.
+- Gregory Zulu 40: size not named; listings 1130-1570 g.
+- Altberg Fremington: per-boot and per-pair figures conflict (1050 vs ~1410 g).
+- Exped Ultra 6.5R: weight depends on width/shape (12.5-16 oz); no single variant sourced.
+- Rab Cirrus Flex Hoody: only one retailer (CampSaver) gives a men's weight.
+- Therm-a-Rest Trail Scout: R-value listed as 3.1 and 3.4; weight from one retailer only.
+- Hoka Kaha 3 GTX: retailers list 567 g and 1134-1185 g per pair.
+- Timberland White Ledge Mid Waterproof: weights disagree (820-1061 g per pair).
+- Columbia Newton Ridge Plus: per-shoe or per-pair unclear, 900-1000 g.
+- Lowe Alpine AirZone Trail 30: two versions at 1120 g and 1250 g, version unclear.
+- Six Moon Designs Fusion 50: discontinued.
+- Sea to Summit X-Pot 1.4L: listed weights disagree (250-298 g).
+- Six Moon Designs Lunar Duo: weight differs by version and what is included (1300-1600 g).
+- Arc'teryx Gamma Pant: only one source for the weight.
+- Osprey Stratos 36: weights disagree (1310-1550 g) and vary by size.
+- REI Co-op Trail 40: no weight found in search results.
+- Real Turmat Chicken Curry: only one retailer lists 132 g, and a Field Meal version lists 166 g.
+- Counter Assault bear spray 10.2 oz: 290 g is the contents only, and REI lists 15 oz.
+- SOL Deluxe Map Compass: no weight published.
+- SOL Emergency Blanket: listed weights disagree (about 71 g vs 83 g).
+- Huppy Toothpaste Tablets 62 ct: listed weights disagree (41-64 g) on tin versus refill.
+- Pika Outdoors Summit Suds: sizes differ and the 1 oz / 3 oz weights are unclear.
+- GU Energy Original Gel: the 32 g figure comes only from one retailer's listings.
+- Lifesystems Mountain SPF50+ 50 ml: retailers list 60-70 g, no clear single weight.
+- Sea to Summit DryLite / Pocket Towel: no published weight found.
+- Cascade Mountain Tech Carbon Fiber Quick Lock poles: several models with different weights (11-16 oz per pair).
+- Black Diamond Distance Gaiter: weight differs by size and by the UL version (28-75 g).
+- Radix Nutrition Original Chocolate Breakfast: listed weights disagree (90-108 g).
+- Summit To Eat Scrambled Egg with Cheese: listed weights disagree (80-104 g).
+- Sawyer Permethrin 24 oz spray: listings show packaged weights only.
+- Fox 40 Classic whistle: weights only from marketplace listings (9-30 g, versions differ).
+- Lifesystems Ultralight Survival Shelter (2 person): retailers list 180 g and 215 g.
+- Garmin fenix 8 47mm: weight differs by case material and strap (52-81 g).
+- UCO Titan Stormproof Match Kit: listed weights disagree (57-94 g).
+- Light My Fire Swedish FireSteel Scout: versions listed at 23-38 g, version unclear.
+- Nuun Sport Hydration Tablets (10): 55 g for the tablets vs 64 g with the tube.
+- Leukotape P (1.5 in x 15 yd): roll weights disagree (91-159 g).
+- Compeed Anti-Blister Stick 8 ml: listings give 0.58 g or 30 g, no clear figure.
+- Compeed Medium Blister Plasters (5): listings show 20 g and 30 g.
+- BodyGlide Original Anti-Chafe Balm 0.8 oz: only the label contents (22.7 g) is clear, not the tube weight.
+- Ursack Allmitey: weights disagree (269 g vs 369 g).
+- Platypus SoftBottle 1L: listed weights disagree (24-40 g) by cap and listing.
+- Sawyer Mini: listings give 41-65 g, filter alone vs full kit.
+- Aquamira Water Treatment Drops 2 oz: listings give 56.7 g (the nominal 2 oz) or 21 g, no confirmed weight.
+- Aquatabs 50 tablets: listings give 17 g and 29 g, unclear which.
+- Travellunch Chili con Carne: the 125 g single-portion weight comes from one retailer.
+- Lyofood Chicken Tikka Masala: 95 g from one retailer, 128 g from another.
+- Petzl Swift RL: Petzl's own pages disagree by region (92-110 g) and by lumen version.
+- Esbit Pocket Stove: weight depends on how many fuel tablets are counted (170-360 g); the 11 g titanium stove has a single source.
+- LifeStraw Go 650 ml: retailers list 221 g and 247 g (different versions).
+- Outdoor Research Crocodile Gaiters: weight depends on model and size (219-343 g).
+- Exped Fold Drybag L 13L: retailers list 60 g and 74 g.
+- Sea to Summit Lightweight Dry Bag 13L: listings give 2.9 oz and 3.3 oz.
+- Opinel No. 7 stainless: listed weights run 34-40 g, with some outliers up to 52 g.
+- MSR AutoFlow Gravity Microfilter 4 L: no gram weight found in search.
+- Fox 40 Classic whistle: listed weights differ by variant (4.5 to 28 g) and cannot be matched to one model.
+- Adventure Medical Kits Mountain Series Hiker: sources disagree (204 to 283 g).
+- ACR Bivy Stick: listings disagree (100 g, 142 g, 227 g) and the brand page does not match the common figure.
+- Dr. Bronner's Pure-Castile Liquid Soap 2 oz: no sourced gram weight found.
+- Badger SPF 30 stick: no gram weight found.
+- Coros Nomad: listed weights conflict (39 g, 49 g, 61 g) between reviews.
+- Platypus Platy Plus 1 L: sources disagree (23 to 38 g).
+- Gear Aid Tenacious Tape: listed weights range from 15 to 34 g depending on whether the case is counted.
+- Sea to Summit Ultra-Sil Compression Sack: weights and sizes conflict between sources.
+- Nemo Tensor Insulated (Regular): brand lists 425 g but the R-value differs between the brand (4.2) and REI (3.5), so the version is unclear.
+- Exped MegaMat Duo: weights differ by size and by whether the pump and bag are counted.
+- Counter Assault Bear Deterrent 8.1 oz: 230 g is net contents only; weighed gross figures run 281 to 333 g.
+- Esbit steel pocket stove: weight depends on kit contents (stove alone about 90 g, kits include fuel).
+- Fire-Maple Fixed Star 2: no weight found.
+- Darn Tough Hiker Micro Crew Cushion: no weight listed for this exact model; only a related model was found.
+- Montbell Versalite Pants: single review figure for size XL only.
+- Arc'teryx Beta LT Jacket: already in the catalog.
+- Peak Refuel Homestyle Chicken & Rice (2 servings): single listing gives 5.15 oz, not confirmed elsewhere.
+- Mountain House Chicken Tikka Masala (2 servings): single retailer figure of 4.2 oz.
+- Backpacker's Pantry Chicken Tikka Masala: no weight found.
+- Petzl Swift RL: listed weights differ by version (92, 100 and 110 g).
+- Sawyer Mini: filter-alone figure of about 57 g conflicts with Sawyer's own 140 g page, which does not say what it covers.
+- Big Agnes Tiger Wall UL2: weights differ by version (standard, mtnGLO, bikepack) and by trail versus packed weight.
+- Tarptent Aeon Li: body weight (448 g) and full kit weight (543 g) differ and no brand page was found.
+- Zpacks Altaplex Classic: Zpacks pages give conflicting weights (380 g and 467 g).
+- Tarptent StratoSpire Li: weight depends on version and year (737 to 853 g).
+- Arc'teryx Atom Hoody: already in the catalog.

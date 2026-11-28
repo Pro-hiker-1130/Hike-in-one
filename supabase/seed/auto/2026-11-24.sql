@@ -1,0 +1,5 @@
+insert into public.catalog_products (brand, name, model, category, weight_g, specs, description, source_url, origin) values
+('Marmot', 'PreCip Eco Jacket', 'Men''s M', 'Clothing', 292, '{"waterproof": true}', 'Packable waterproof rain jacket. Listed weight is a reviewer''s scale reading for a men''s medium; REI lists about 312 g with no size.', 'https://www.switchbacktravel.com/reviews/marmot-precip', 'seed'),
+('Outdoor Research', 'Helium Wind Hoodie', 'Men''s M', 'Clothing', 142, '{"waterproof": false}', 'Ultralight wind hoodie. Listed weight is for a men''s medium (5 oz); retailers list 150 g without a size.', 'https://thebigoutside.com/review-outdoor-research-helium-wind-hoodie/', 'seed'),
+('Smartwool', 'Hike Light Cushion Crew Socks', 'M, pair', 'Clothing', 72, '{}', 'Merino hiking socks with light cushioning. Listed weight is the 72 g retailer figure for one pair; the XL size is about 81 g.', 'https://www.ellis-brigham.com/smartwool-hike-light-cushion-crew-219152903', 'seed')
+on conflict (normalized_key) do nothing;
